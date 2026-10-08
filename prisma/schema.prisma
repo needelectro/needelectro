@@ -1,0 +1,421 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  phone         String?   @unique
+  passwordHash  String
+  role          String    @default("CUSTOMER") // CUSTOMER, TECHNICIAN, ADMIN, SUPER_ADMIN, SERVICE_MANAGER, ACCOUNTANT
+  status        String    @default("ACTIVE")   // ACTIVE, SUSPENDED, PENDING
+  avatarUrl     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  customerProfile   CustomerProfile?
+  technicianProfile TechnicianProfile?
+  supportTickets    SupportTicket[]
+  notifications     Notification[]
+  auditLogs         AuditLog[]
+}
+
+model CustomerProfile {
+  id                 String               @id @default(cuid())
+  userId             String               @unique
+  user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  alternativePhone   String?
+  addresses          Address[]
+  bookings           Booking[]
+  orders             Order[]
+  registeredDevices  DeviceRegistration[]
+  reviews            Review[]
+  createdAt          DateTime             @default(now())
+}
+
+model Address {
+  id            String           @id @default(cuid())
+  customerId    String
+  customer      CustomerProfile  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  label         String           @default("Home") // Home, Office, Other
+  recipientName String
+  phone         String
+  division      String           @default("Sylhet")
+  district      String           @default("Moulvibazar")
+  upazila       String           @default("Moulvibazar Sadar")
+  area          String
+  addressLine   String
+  landmark      String?
+  isDefault     Boolean          @default(false)
+  createdAt     DateTime         @default(now())
+
+  bookings      Booking[]
+  orders        Order[]
+}
+
+model TechnicianProfile {
+  id                    String               @id @default(cuid())
+  userId                String               @unique
+  user                  User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio                   String?
+  nidNumber             String?
+  nidCardUrl            String?
+  profilePhotoUrl       String?
+  certificateUrls       String?              // Comma-separated or JSON
+  experienceYears       Int                  @default(1)
+  skills                String               // Comma-separated or JSON string
+  specializations       String?
+  serviceAreas          String               @default("Moulvibazar Sadar, Kusumbag, Sreemangal")
+  verificationStatus    String               @default("PENDING") // PENDING, UNDER_REVIEW, VERIFIED, REJECTED, SUSPENDED
+  verificationNotes     String?
+  verifiedAt            DateTime?
+  emergencyAvailable    Boolean              @default(false)
+  workingHours          String               @default("9:00 AM - 8:00 PM")
+  preferredRadiusKm     Int                  @default(15)
+  availableStatus       String               @default("AVAILABLE") // AVAILABLE, BUSY, OFFLINE, ON_LEAVE
+  walletBalance         Float                @default(0.0)
+  totalWithdrawn        Float                @default(0.0)
+  ratingOverall         Float                @default(5.0)
+  ratingProfessionalism Float                @default(5.0)
+  ratingQuality         Float                @default(5.0)
+  ratingPunctuality     Float                @default(5.0)
+  ratingBehavior        Float                @default(5.0)
+  totalCompletedJobs    Int                  @default(0)
+  totalReviews          Int                  @default(0)
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+
+  assignedBookings      Booking[]
+  earnings              TechnicianEarnings[]
+  walletTransactions    WalletTransaction[]
+  reviewsReceived       Review[]
+}
+
+model ServiceCategory {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  icon        String?
+  imageUrl    String?
+  isActive    Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+
+  services    Service[]
+}
+
+model Service {
+  id                 String          @id @default(cuid())
+  categoryId         String
+  category           ServiceCategory @relation(fields: [categoryId], references: [id])
+  name               String
+  slug               String          @unique
+  shortDescription   String
+  fullDescription    String
+  imageUrl           String?
+  basePrice          Float           @default(0.0)
+  priceType          String          @default("FIXED") // FIXED, STARTING_FROM, INSPECTION_BASED
+  estimatedDuration  String          @default("1-2 Hours")
+  requiredSkills     String?
+  serviceAreas       String          @default("Moulvibazar, Sreemangal, Kamalganj, Rajnagar")
+  isEmergencyService Boolean         @default(false)
+  isActive           Boolean         @default(true)
+  sortOrder          Int             @default(0)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  bookings           Booking[]
+}
+
+model Booking {
+  id                 String               @id @default(cuid())
+  bookingNumber      String               @unique // NE202609300001
+  customerId         String
+  customer           CustomerProfile      @relation(fields: [customerId], references: [id])
+  technicianId       String?
+  technician         TechnicianProfile?   @relation(fields: [technicianId], references: [id])
+  serviceId          String
+  service            Service              @relation(fields: [serviceId], references: [id])
+  problemDescription String
+  addressId          String?
+  address            Address?             @relation(fields: [addressId], references: [id])
+  preferredDate      String
+  preferredTimeSlot  String
+  urgency            String               @default("NORMAL") // NORMAL, EMERGENCY
+  status             String               @default("RECEIVED") 
+  // RECEIVED -> MATCHING -> ASSIGNED -> ON_THE_WAY -> ARRIVED -> IN_PROGRESS -> COMPLETED -> CUSTOMER_CONFIRMED -> PAID -> CLOSED -> CANCELLED
+  customerNotes      String?
+  technicianNotes    String?
+  totalAmount        Float                @default(0.0)
+  paymentStatus      String               @default("PENDING") // PENDING, PAID, REFUNDED
+  paymentMethod      String               @default("CASH_ON_DELIVERY") // BKASH, NAGAD, CARD, BANK_TRANSFER, CASH_ON_DELIVERY
+  mediaUrls          String?              // Comma-separated photo/video urls
+  completedAt        DateTime?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  timeline           BookingTimeline[]
+  reviews            Review[]
+  earnings           TechnicianEarnings[]
+  disputes           Dispute[]
+}
+
+model BookingTimeline {
+  id         String   @id @default(cuid())
+  bookingId  String
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  status     String
+  actorId    String?
+  actorRole  String?
+  note       String?
+  timestamp  DateTime @default(now())
+}
+
+model ProductCategory {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  imageUrl    String?
+  isActive    Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+
+  products    Product[]
+}
+
+model Brand {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  logoUrl   String?
+  createdAt DateTime  @default(now())
+
+  products  Product[]
+}
+
+model Product {
+  id                   String              @id @default(cuid())
+  categoryId           String
+  category             ProductCategory     @relation(fields: [categoryId], references: [id])
+  brandId              String?
+  brand                Brand?              @relation(fields: [brandId], references: [id])
+  name                 String
+  slug                 String              @unique
+  sku                  String              @unique
+  shortDescription     String
+  description          String
+  specifications       String?             // JSON string: {"Processor": "i5", "RAM": "16GB"}
+  price                Float
+  discountPrice        Float?
+  stock                Int                 @default(10)
+  condition            String              @default("NEW") // NEW, REFURBISHED
+  warrantyPeriodMonths Int                 @default(12)
+  images               String              // Comma-separated or JSON list of URLs
+  deliveryInfo         String?             @default("Delivery within 24-48 hours in Moulvibazar. 3-5 days across Bangladesh.")
+  isFeatured           Boolean             @default(false)
+  isActive             Boolean             @default(true)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+
+  orderItems           OrderItem[]
+  deviceRegistrations  DeviceRegistration[]
+  serials              ProductSerial[]
+  reviews              Review[]
+}
+
+model ProductSerial {
+  id           String   @id @default(cuid())
+  productId    String
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  serialNumber String   @unique
+  status       String   @default("IN_STOCK") // IN_STOCK, SOLD, DEFECTIVE
+  createdAt    DateTime @default(now())
+}
+
+model Order {
+  id                String          @id @default(cuid())
+  orderNumber       String          @unique // ORD202609300001
+  customerId        String
+  customer          CustomerProfile @relation(fields: [customerId], references: [id])
+  status            String          @default("PLACED") 
+  // PLACED -> PAYMENT_CONFIRMED -> PROCESSING -> PACKED -> SHIPPED -> OUT_FOR_DELIVERY -> DELIVERED -> CANCELLED -> REFUNDED
+  subtotal          Float
+  deliveryCharge    Float           @default(60.0)
+  discount          Float           @default(0.0)
+  totalAmount       Float
+  paymentMethod     String          @default("CASH_ON_DELIVERY") // BKASH, NAGAD, CARD, BANK_TRANSFER, CASH_ON_DELIVERY
+  paymentStatus     String          @default("PENDING") // PENDING, PAID, REFUNDED
+  paymentTrxId      String?
+  deliveryAddressId String?
+  deliveryAddress   Address?        @relation(fields: [deliveryAddressId], references: [id])
+  notes             String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  items             OrderItem[]
+}
+
+model OrderItem {
+  id           String   @id @default(cuid())
+  orderId      String
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId    String
+  product      Product  @relation(fields: [productId], references: [id])
+  serialNumber String?
+  quantity     Int      @default(1)
+  unitPrice    Float
+  totalPrice   Float
+}
+
+model DeviceRegistration {
+  id                   String          @id @default(cuid())
+  customerId           String
+  customer             CustomerProfile @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  productId            String?
+  product              Product?        @relation(fields: [productId], references: [id])
+  productName          String
+  brand                String
+  model                String
+  serialNumber         String          @unique
+  invoiceNumber        String
+  purchaseDate         DateTime
+  warrantyPeriodMonths Int             @default(12)
+  warrantyExpiryDate   DateTime
+  status               String          @default("ACTIVE") // ACTIVE, EXPIRED, CLAIM_PENDING
+  createdAt            DateTime        @default(now())
+
+  claims               WarrantyClaim[]
+}
+
+model WarrantyClaim {
+  id               String             @id @default(cuid())
+  customerId       String
+  deviceId         String
+  device           DeviceRegistration @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  claimNumber      String             @unique // WCL202609300001
+  issueDescription String
+  status           String             @default("SUBMITTED") 
+  // SUBMITTED -> UNDER_REVIEW -> APPROVED -> REPAIRING -> REPLACED -> REJECTED -> RESOLVED
+  adminNotes       String?
+  createdAt        DateTime           @default(now())
+  resolvedAt       DateTime?
+}
+
+model TechnicianEarnings {
+  id               String            @id @default(cuid())
+  technicianId     String
+  technician       TechnicianProfile @relation(fields: [technicianId], references: [id])
+  bookingId        String
+  booking          Booking           @relation(fields: [bookingId], references: [id])
+  serviceAmount    Float
+  platformFee      Float
+  commissionRate   Float             @default(15.0) // 15% platform commission
+  technicianAmount Float
+  status           String            @default("AVAILABLE") // PENDING, AVAILABLE, WITHDRAWN
+  createdAt        DateTime          @default(now())
+}
+
+model WalletTransaction {
+  id           String            @id @default(cuid())
+  technicianId String
+  technician   TechnicianProfile @relation(fields: [technicianId], references: [id])
+  type         String            // JOB_EARNING, WITHDRAWAL, COMMISSION, ADJUSTMENT, BONUS
+  amount       Float
+  balanceAfter Float
+  description  String
+  status       String            @default("COMPLETED") // PENDING, COMPLETED, REJECTED
+  referenceId  String?
+  createdAt    DateTime          @default(now())
+}
+
+model Review {
+  id                    String             @id @default(cuid())
+  customerId            String
+  customer              CustomerProfile    @relation(fields: [customerId], references: [id])
+  bookingId             String?
+  booking               Booking?           @relation(fields: [bookingId], references: [id])
+  technicianId          String?
+  technician            TechnicianProfile? @relation(fields: [technicianId], references: [id])
+  productId             String?
+  product               Product?           @relation(fields: [productId], references: [id])
+  rating                Int                @default(5)
+  ratingProfessionalism Int?               @default(5)
+  ratingQuality         Int?               @default(5)
+  ratingPunctuality     Int?               @default(5)
+  ratingBehavior        Int?               @default(5)
+  comment               String
+  isApproved            Boolean            @default(true)
+  createdAt             DateTime           @default(now())
+}
+
+model SupportTicket {
+  id           String    @id @default(cuid())
+  ticketNumber String    @unique // TKT202609300001
+  userId       String
+  user         User      @relation(fields: [userId], references: [id])
+  category     String    // BOOKING, ORDER, PAYMENT, WARRANTY, TECHNICIAN, PRODUCT, DELIVERY, TECHNICAL, OTHER
+  subject      String
+  message      String
+  status       String    @default("OPEN") // OPEN, IN_PROGRESS, WAITING_CUSTOMER, RESOLVED, CLOSED
+  priority     String    @default("NORMAL") // NORMAL, HIGH, URGENT
+  adminReply   String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Dispute {
+  id              String    @id @default(cuid())
+  bookingId       String
+  booking         Booking   @relation(fields: [bookingId], references: [id])
+  reporterId      String
+  reporterRole    String    // CUSTOMER, TECHNICIAN
+  reason          String
+  description     String
+  status          String    @default("OPEN") // OPEN, INVESTIGATING, RESOLVED, DISMISSED
+  resolutionNotes String?
+  resolvedBy      String?
+  createdAt       DateTime  @default(now())
+  resolvedAt      DateTime?
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   @default("SYSTEM") // BOOKING, ORDER, WALLET, VERIFICATION, SUPPORT, SYSTEM
+  read      Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id])
+  userRole     String?
+  action       String
+  entity       String
+  entityId     String?
+  previousData String?  // JSON string
+  newData      String?  // JSON string
+  ipAddress    String?
+  createdAt    DateTime @default(now())
+}
+
+model SystemSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+}

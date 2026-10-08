@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #087FE5;
+  --primary-hover: #0267C1;
+  --dark: #0F172A;
+  --card-bg: #FFFFFF;
+  --border-color: #E2E8F0;
+  --bg-main: #F8FAFC;
+}
+
+@layer base {
+  body {
+    background-color: var(--bg-main);
+    color: #1E293B;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Custom interactive utility classes */
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center font-semibold px-5 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white shadow-sm hover:shadow-md transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center font-semibold px-5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 shadow-sm hover:shadow transition-all active:scale-[0.98] disabled:opacity-50;
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center font-semibold px-5 py-2.5 rounded-xl text-brand-600 border border-brand-500 hover:bg-brand-50 transition-all active:scale-[0.98];
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center font-semibold px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white shadow-sm transition-all active:scale-[0.98];
+  }
+
+  .card-premium {
+    @apply bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all duration-200;
+  }
+
+  .badge-status {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider;
+  }
+}
+
+/* Glassmorphism accent */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Pulse animation for emergency banner */
+@keyframes soft-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+.animate-soft-pulse {
+  animation: soft-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

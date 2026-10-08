@@ -1,0 +1,46 @@
+{
+  "name": "NEED ELECTRO - Trusted Electrical & Technological Solutions",
+  "short_name": "NEED ELECTRO",
+  "description": "Unified platform for electrical services, technology products, certified technicians, and warranties in Bangladesh.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F5F8FC",
+  "theme_color": "#087FE5",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Book a Service",
+      "url": "/services",
+      "description": "Book a professional electrical or tech service"
+    },
+    {
+      "name": "Emergency Service",
+      "url": "/services/emergency-electrical-troubleshooting",
+      "description": "24/7 Rapid electrical assistance"
+    },
+    {
+      "name": "Shop Products",
+      "url": "/shop",
+      "description": "Browse laptops, CCTV, and electrical gadgets"
+    },
+    {
+      "name": "Check Warranty",
+      "url": "/warranty",
+      "description": "Verify device warranty and submit claims"
+    }
+  ]
+}

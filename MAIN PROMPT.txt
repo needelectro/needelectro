@@ -1,0 +1,3205 @@
+Build a complete production ready website and Progressive Web App for NEED ELECTRO.
+
+IMPORTANT:
+
+This is not a simple company profile website.
+
+Build NEED ELECTRO as a complete digital electrical and technological service ecosystem where customers can discover services, book technicians, purchase products, track services, manage warranties, request support, and create accounts.
+
+Technicians must also be able to create accounts, submit verification information, create professional profiles, see available jobs, accept jobs, complete jobs, manage earnings, and build their work history.
+
+The system must be designed so that the website and PWA use the same backend, database, authentication, business logic, and APIs.
+
+The platform must be scalable and ready for future integration with NEED ELECTRO ERP.
+
+==================================================
+1. COMPANY INFORMATION
+==================================================
+
+Company Name:
+
+NEED ELECTRO
+
+Tagline:
+
+Trusted Electrical and Technological Solutions
+
+Founded:
+
+2023
+
+Main Branch:
+
+Moulvibazar, Bangladesh
+
+Current Address:
+
+Shop #5, MR Plaza, Kusumbag, Moulvibazar
+
+Phone:
+
+01733 983752
+
+Email:
+
+needelectro23@gmail.com
+
+Website:
+
+www.needelectro.com
+
+Organization:
+
+A sister concern of Amdads Group
+
+Primary Market:
+
+Bangladesh
+
+Core Business:
+
+Electrical Services
+
+Technology Products
+
+Computer and Laptop Products
+
+CCTV and Security Solutions
+
+Smart Electrical Solutions
+
+Technical Services
+
+Product Marketplace
+
+Technician Marketplace
+
+Training and Employment
+
+==================================================
+2. BRAND IDENTITY
+==================================================
+
+Use the existing NEED ELECTRO brand identity from the provided reference image.
+
+The existing logo contains:
+
+NEED
+
+ELECTRO
+
+Lightning symbol
+
+Blue and black visual identity
+
+Tagline:
+
+Trusted Electrical and Technological Solutions
+
+The website should preserve the existing brand identity but modernize the overall UI.
+
+Primary visual direction:
+
+Professional
+
+Modern
+
+Technology driven
+
+Clean
+
+Trustworthy
+
+Premium
+
+Fast
+
+Minimal
+
+Corporate
+
+Electrical technology inspired
+
+Use a professional blue, black, white and light neutral visual system inspired by the existing brand.
+
+Do not redesign the NEED ELECTRO logo unnecessarily.
+
+Use the provided NEED ELECTRO brand image as a visual reference for the logo, colors, typography direction, and overall identity.
+
+Do not make the website look like a generic template.
+
+==================================================
+3. MAIN OBJECTIVE
+==================================================
+
+Build NEED ELECTRO as a unified platform connecting:
+
+Customers
+
+Technicians
+
+Products
+
+Services
+
+Bookings
+
+Orders
+
+Payments
+
+Warranty
+
+Support
+
+Reviews
+
+Training
+
+Employment
+
+Business solutions
+
+ERP integration
+
+The platform should eventually allow a customer to solve most electrical and technological needs through one NEED ELECTRO account.
+
+==================================================
+4. TECHNOLOGY STACK
+==================================================
+
+Use a modern scalable architecture.
+
+Frontend:
+
+Next.js
+
+TypeScript
+
+App Router
+
+Tailwind CSS
+
+Modern component architecture
+
+Responsive design
+
+PWA support
+
+Backend:
+
+NestJS
+
+TypeScript
+
+REST API
+
+Swagger / OpenAPI
+
+Role based authorization
+
+Secure authentication
+
+Database:
+
+PostgreSQL
+
+Supabase can be used for PostgreSQL, authentication support, storage, realtime functionality, and other suitable infrastructure.
+
+Storage:
+
+Supabase Storage or equivalent object storage.
+
+Authentication:
+
+Email and password
+
+Phone based authentication where appropriate
+
+Password reset
+
+Email verification
+
+Role based access
+
+Secure sessions
+
+Do not expose sensitive information to the frontend.
+
+PWA:
+
+Installable on Android, iOS compatible where supported, Windows and desktop browsers.
+
+Service worker
+
+Offline fallback
+
+App manifest
+
+Install prompt
+
+Push notification architecture
+
+Responsive mobile first interface
+
+==================================================
+5. APPLICATION STRUCTURE
+==================================================
+
+Create one unified platform with different interfaces based on user role.
+
+Public Website
+
+Customer Portal
+
+Technician Portal
+
+Admin Dashboard
+
+Future Business Portal
+
+Future Training Portal
+
+The public website and customer experience must work perfectly on both desktop and mobile.
+
+The PWA must feel like a real mobile application when installed.
+
+==================================================
+6. PUBLIC WEBSITE
+==================================================
+
+Create these main pages:
+
+Home
+
+Services
+
+Service Details
+
+Shop
+
+Product Details
+
+About Us
+
+Become a Technician
+
+Technician Directory
+
+Warranty Check
+
+Support
+
+Contact
+
+FAQ
+
+Terms and Conditions
+
+Privacy Policy
+
+Refund Policy
+
+Service Policy
+
+==================================================
+7. HOMEPAGE
+==================================================
+
+Create a premium modern homepage.
+
+Hero section:
+
+Headline:
+
+Trusted Electrical and Technological Solutions
+
+Supporting text:
+
+Book professional electrical and technical services, explore technology products, and manage your service needs through one trusted platform.
+
+Primary button:
+
+Book a Service
+
+Secondary button:
+
+Shop Products
+
+Additional button:
+
+Become a Technician
+
+Show the NEED ELECTRO logo prominently.
+
+Use a modern electrical and technology visual style.
+
+Do not overcrowd the hero section.
+
+==================================================
+8. HOMEPAGE SECTIONS
+==================================================
+
+Create:
+
+Hero
+
+Popular Services
+
+Technology Products
+
+Why Choose NEED ELECTRO
+
+How It Works
+
+Verified Technician Network
+
+CCTV and Security Solutions
+
+Smart Electrical Solutions
+
+Featured Products
+
+Customer Reviews
+
+Service Areas
+
+Become a Technician
+
+Need Help
+
+Footer
+
+==================================================
+9. SERVICE CATEGORIES
+==================================================
+
+Create a complete service marketplace.
+
+Initial service categories:
+
+Electrical Services
+
+Home Electrical Work
+
+Commercial Electrical Work
+
+Electrical Installation
+
+Electrical Troubleshooting
+
+House Wiring
+
+Switch and Socket Installation
+
+Light Installation
+
+Fan Installation
+
+IPS and UPS Installation
+
+Solar Electrical Solutions
+
+Smart Electrical Solutions
+
+CCTV Installation
+
+CCTV Setup
+
+CCTV Maintenance
+
+Computer Services
+
+Laptop Services
+
+Desktop Services
+
+Computer Troubleshooting
+
+Laptop Troubleshooting
+
+Operating System Installation
+
+Software Installation
+
+Networking
+
+Router Setup
+
+Network Troubleshooting
+
+Printer Services
+
+Technology Installation
+
+Maintenance Services
+
+Emergency Electrical Services
+
+Allow administrators to add, remove, edit, reorder, activate, or deactivate service categories.
+
+==================================================
+10. SERVICE DETAIL PAGE
+==================================================
+
+Every service should have:
+
+Service name
+
+Service category
+
+Description
+
+Images
+
+Starting price if applicable
+
+Inspection based pricing option
+
+Estimated duration
+
+Required skills
+
+Service availability
+
+Service areas
+
+Customer reviews
+
+Frequently asked questions
+
+Book Now button
+
+Request Quote button
+
+==================================================
+11. SERVICE BOOKING SYSTEM
+==================================================
+
+Build a complete booking system.
+
+Customer flow:
+
+Select service
+
+Select problem
+
+Describe problem
+
+Upload photos
+
+Upload videos where supported
+
+Select address
+
+Select date
+
+Select preferred time
+
+Review booking
+
+Confirm booking
+
+Payment if required
+
+Receive booking ID
+
+Example booking ID:
+
+NE202609300001
+
+After booking, show:
+
+Booking Received
+
+Technician Matching
+
+Technician Assigned
+
+Technician Accepted
+
+Technician On The Way
+
+Technician Arrived
+
+Work Started
+
+Work Completed
+
+Customer Confirmation
+
+Payment Completed
+
+Booking Closed
+
+==================================================
+12. CUSTOMER ACCOUNT
+==================================================
+
+Create a customer dashboard.
+
+Sections:
+
+Overview
+
+My Bookings
+
+My Orders
+
+My Services
+
+My Devices
+
+My Warranty
+
+My Payments
+
+My Invoices
+
+My Addresses
+
+My Reviews
+
+Support Tickets
+
+Notifications
+
+Profile
+
+Security
+
+Logout
+
+Customer should be able to edit profile information and manage multiple addresses.
+
+==================================================
+13. MY DEVICES
+==================================================
+
+Create a powerful device management system.
+
+When a customer purchases a laptop, computer, CCTV system, electrical product, or other registered product from NEED ELECTRO, it can be connected to the customer's account.
+
+Store:
+
+Product
+
+Brand
+
+Model
+
+Serial Number
+
+Purchase Date
+
+Invoice
+
+Warranty
+
+Warranty Expiry
+
+Service History
+
+Warranty Claims
+
+The customer should be able to see all registered devices in one place.
+
+==================================================
+14. WARRANTY SYSTEM
+==================================================
+
+Create a warranty management system.
+
+Customer can check warranty by:
+
+Account
+
+Invoice
+
+Serial number
+
+Warranty ID
+
+Show:
+
+Product
+
+Serial Number
+
+Purchase Date
+
+Warranty Period
+
+Warranty Start
+
+Warranty End
+
+Warranty Status
+
+Service History
+
+Warranty Claims
+
+Create:
+
+Check Warranty
+
+button.
+
+Allow customer to submit warranty claims.
+
+==================================================
+15. PRODUCT MARKETPLACE
+==================================================
+
+Create a complete product marketplace.
+
+Categories:
+
+Laptops
+
+Computers
+
+Desktop PCs
+
+Monitors
+
+Smartphones
+
+Computer Accessories
+
+Laptop Accessories
+
+CCTV Cameras
+
+DVR and NVR
+
+Networking Products
+
+Routers
+
+Electrical Products
+
+Switches
+
+Sockets
+
+Lights
+
+Fans
+
+UPS
+
+IPS
+
+Solar Products
+
+Smart Devices
+
+Gadgets
+
+Cables
+
+Adapters
+
+Other Technology Products
+
+Each product must support:
+
+Product name
+
+SKU
+
+Brand
+
+Category
+
+Images
+
+Description
+
+Specifications
+
+Price
+
+Discount price
+
+Stock
+
+Availability
+
+Condition
+
+Serial number where applicable
+
+Warranty
+
+Delivery information
+
+Featured status
+
+Active status
+
+SEO information
+
+==================================================
+16. PRODUCT DETAIL PAGE
+==================================================
+
+Display:
+
+Images
+
+Product name
+
+Price
+
+Discount
+
+Availability
+
+Warranty
+
+Specifications
+
+Description
+
+Delivery information
+
+Related products
+
+Reviews
+
+Add to Cart
+
+Buy Now
+
+Add to Wishlist
+
+==================================================
+17. SHOPPING CART
+==================================================
+
+Create a complete shopping cart.
+
+Support:
+
+Add product
+
+Remove product
+
+Update quantity
+
+Save for later
+
+Coupon
+
+Delivery charge
+
+Subtotal
+
+Discount
+
+Total
+
+Checkout
+
+==================================================
+18. CHECKOUT
+==================================================
+
+Customer should be able to:
+
+Select address
+
+Add new address
+
+Select delivery method
+
+Select payment method
+
+Review order
+
+Confirm order
+
+Receive order number
+
+Support payment options designed for Bangladesh.
+
+Prepare architecture for:
+
+bKash
+
+Nagad
+
+Card
+
+Bank transfer
+
+Cash on delivery
+
+Online payment gateway
+
+Do not hardcode payment credentials.
+
+Use environment variables.
+
+==================================================
+19. ORDER TRACKING
+==================================================
+
+Order statuses:
+
+Order Placed
+
+Payment Confirmed
+
+Processing
+
+Packed
+
+Shipped
+
+Out for Delivery
+
+Delivered
+
+Cancelled
+
+Returned
+
+Refunded
+
+Customer should be able to track orders from the dashboard.
+
+==================================================
+20. TECHNICIAN REGISTRATION
+==================================================
+
+Create a dedicated:
+
+Become a Technician
+
+page.
+
+Technicians can register independently.
+
+Registration information:
+
+Full Name
+
+Profile Photo
+
+Phone
+
+Email
+
+Password
+
+Date of Birth
+
+Address
+
+Service Area
+
+NID information
+
+Experience
+
+Skills
+
+Specializations
+
+Training
+
+Certificates
+
+Previous Work Experience
+
+Emergency Availability
+
+Preferred Working Hours
+
+Payment Information
+
+Terms Agreement
+
+Do not expose sensitive NID information publicly.
+
+==================================================
+21. TECHNICIAN VERIFICATION
+==================================================
+
+Technicians must not automatically become verified.
+
+Create verification states:
+
+Pending
+
+Under Review
+
+Verified
+
+Rejected
+
+Suspended
+
+Blocked
+
+Admin can review submitted documents.
+
+Only approved technicians can accept customer jobs.
+
+Verified technicians should receive:
+
+NEED ELECTRO Verified Technician
+
+status.
+
+==================================================
+22. TECHNICIAN PROFILE
+==================================================
+
+Create professional technician profiles.
+
+Show publicly appropriate information such as:
+
+Name
+
+Profile photo
+
+Verification status
+
+Skills
+
+Specializations
+
+Experience
+
+Service areas
+
+Rating
+
+Completed jobs
+
+Availability
+
+Professional description
+
+Do not publicly display:
+
+NID
+
+Private phone number unless business rules allow it
+
+Private address
+
+Payment details
+
+Sensitive documents
+
+==================================================
+23. TECHNICIAN DASHBOARD
+==================================================
+
+Technician dashboard:
+
+Home
+
+Available Jobs
+
+My Jobs
+
+Upcoming Jobs
+
+Completed Jobs
+
+Earnings
+
+Wallet
+
+Reviews
+
+Availability
+
+Service Areas
+
+Profile
+
+Documents
+
+Notifications
+
+Support
+
+Settings
+
+==================================================
+24. AVAILABLE JOBS
+==================================================
+
+Technicians should be able to see available jobs that match their:
+
+Skills
+
+Service area
+
+Availability
+
+Service category
+
+Eligibility
+
+The system should show:
+
+Service
+
+Approximate location
+
+Date
+
+Time
+
+Job description
+
+Required skill
+
+Estimated earning
+
+Distance where appropriate
+
+Accept Job
+
+Do not reveal unnecessary customer personal information before job acceptance.
+
+==================================================
+25. JOB ACCEPTANCE
+==================================================
+
+Technician can:
+
+View job
+
+Accept job
+
+Decline job
+
+Report issue
+
+After accepting:
+
+Customer information required to perform the service becomes available.
+
+Job is assigned to the technician.
+
+Notify customer.
+
+Notify admin.
+
+Record the assignment in the database.
+
+==================================================
+26. JOB STATUS SYSTEM
+==================================================
+
+Technician can update:
+
+Accepted
+
+Confirmed
+
+On The Way
+
+Arrived
+
+Work Started
+
+Work Completed
+
+Customer Confirmation
+
+Closed
+
+Every status change must be stored with:
+
+Timestamp
+
+User
+
+Role
+
+Action
+
+Optional note
+
+==================================================
+27. TECHNICIAN EARNINGS
+==================================================
+
+Create:
+
+Today's Earnings
+
+Weekly Earnings
+
+Monthly Earnings
+
+Total Earnings
+
+Pending Earnings
+
+Available Balance
+
+Withdrawn Amount
+
+Transaction History
+
+For every completed job show:
+
+Service Amount
+
+Platform Fee
+
+Other Adjustments
+
+Technician Earnings
+
+The commission system must be configurable from the admin panel.
+
+Support:
+
+Percentage commission
+
+Fixed commission
+
+Service based commission
+
+Technician level based commission
+
+==================================================
+28. TECHNICIAN WALLET
+==================================================
+
+Create a wallet system.
+
+Wallet transactions:
+
+Job earnings
+
+Bonus
+
+Commission
+
+Adjustment
+
+Refund deduction
+
+Withdrawal
+
+Pending payment
+
+Completed payment
+
+Every transaction must have:
+
+Transaction ID
+
+Date
+
+Type
+
+Amount
+
+Description
+
+Status
+
+Reference
+
+==================================================
+29. TECHNICIAN AVAILABILITY
+==================================================
+
+Technician can set:
+
+Available
+
+Busy
+
+Offline
+
+On Leave
+
+Create working schedules.
+
+Technician can define:
+
+Working days
+
+Working hours
+
+Service radius
+
+Preferred areas
+
+Emergency availability
+
+==================================================
+30. TECHNICIAN RATINGS
+==================================================
+
+After completed service, customer can rate technician.
+
+Rating categories:
+
+Overall Experience
+
+Professionalism
+
+Quality
+
+Punctuality
+
+Behavior
+
+Allow written review.
+
+Prevent duplicate reviews for the same booking.
+
+Admin can moderate reviews according to platform rules.
+
+==================================================
+31. DISPUTE SYSTEM
+==================================================
+
+Create a dispute system.
+
+Customer can report:
+
+Poor service
+
+Incomplete work
+
+Payment issue
+
+Technician issue
+
+Other problem
+
+Technician can report:
+
+Customer issue
+
+Payment issue
+
+Unsafe environment
+
+Incorrect job description
+
+Other problem
+
+Admin can investigate.
+
+Store all relevant booking information and dispute history.
+
+==================================================
+32. EMERGENCY SERVICE
+==================================================
+
+Create:
+
+Emergency Electrical Service
+
+Customer can request urgent assistance.
+
+Show appropriate safety messaging.
+
+Collect:
+
+Problem
+
+Location
+
+Photo
+
+Phone
+
+Availability
+
+The system should identify eligible technicians based on:
+
+Service skill
+
+Location
+
+Availability
+
+Verification
+
+The platform must not make unsafe electrical instructions part of the customer interface.
+
+==================================================
+33. CUSTOMER SUPPORT
+==================================================
+
+Create support system.
+
+Customer can create ticket.
+
+Categories:
+
+Booking
+
+Order
+
+Payment
+
+Warranty
+
+Technician
+
+Product
+
+Delivery
+
+Technical Support
+
+Other
+
+Ticket statuses:
+
+Open
+
+In Progress
+
+Waiting for Customer
+
+Resolved
+
+Closed
+
+==================================================
+34. NOTIFICATION SYSTEM
+==================================================
+
+Create notification architecture.
+
+Notifications for:
+
+Account registration
+
+Verification
+
+Booking
+
+Technician assignment
+
+Job acceptance
+
+Technician arrival
+
+Job completion
+
+Payment
+
+Order
+
+Delivery
+
+Warranty
+
+Support
+
+Reviews
+
+Promotions
+
+Admin announcements
+
+Prepare for:
+
+In app notifications
+
+Email
+
+SMS
+
+Push notifications
+
+==================================================
+35. ADMIN DASHBOARD
+==================================================
+
+Create a powerful admin dashboard.
+
+Dashboard cards:
+
+Total Customers
+
+Total Technicians
+
+Verified Technicians
+
+Pending Technician Applications
+
+Today's Bookings
+
+Active Jobs
+
+Completed Jobs
+
+Today's Orders
+
+Revenue
+
+Pending Payments
+
+Low Stock
+
+Warranty Claims
+
+Support Tickets
+
+Disputes
+
+Show charts for:
+
+Sales
+
+Bookings
+
+Service revenue
+
+Product revenue
+
+Technician activity
+
+Customer growth
+
+==================================================
+36. ADMIN SERVICE MANAGEMENT
+==================================================
+
+Admin can:
+
+Create service
+
+Edit service
+
+Delete service
+
+Activate/deactivate service
+
+Manage pricing
+
+Manage service categories
+
+Manage service areas
+
+Manage required skills
+
+Manage service duration
+
+Manage booking rules
+
+Manage emergency service
+
+==================================================
+37. ADMIN TECHNICIAN MANAGEMENT
+==================================================
+
+Admin can:
+
+View technicians
+
+Approve technician
+
+Reject technician
+
+Suspend technician
+
+Block technician
+
+Verify documents
+
+Manage skills
+
+Manage service areas
+
+View jobs
+
+View earnings
+
+Manage commission
+
+View ratings
+
+View complaints
+
+View verification history
+
+==================================================
+38. ADMIN PRODUCT MANAGEMENT
+==================================================
+
+Admin can:
+
+Add product
+
+Edit product
+
+Delete product
+
+Manage categories
+
+Manage brands
+
+Manage stock
+
+Manage SKU
+
+Manage serial numbers
+
+Manage warranty
+
+Manage pricing
+
+Manage discounts
+
+Manage product images
+
+Manage featured products
+
+Manage inventory alerts
+
+==================================================
+39. ADMIN ORDER MANAGEMENT
+==================================================
+
+Admin can:
+
+View orders
+
+Confirm orders
+
+Process orders
+
+Update order status
+
+Cancel orders
+
+Process refunds
+
+Manage delivery
+
+View payment status
+
+Generate invoice
+
+==================================================
+40. ADMIN BOOKING MANAGEMENT
+==================================================
+
+Admin can:
+
+View all bookings
+
+Filter bookings
+
+Assign technicians
+
+Reassign technicians
+
+Cancel bookings
+
+Modify booking status
+
+View customer
+
+View technician
+
+View service details
+
+View payment
+
+View history
+
+Handle disputes
+
+==================================================
+41. ROLE BASED ACCESS CONTROL
+==================================================
+
+Create secure roles:
+
+Customer
+
+Technician
+
+Service Manager
+
+Sales Manager
+
+Inventory Manager
+
+Accountant
+
+Support Agent
+
+Training Manager
+
+Admin
+
+Super Admin
+
+Each role must have appropriate permissions.
+
+Never rely only on frontend permission checks.
+
+Permissions must also be enforced by the backend.
+
+==================================================
+42. ERP INTEGRATION READY
+==================================================
+
+NEED ELECTRO already has a separate ERP project.
+
+Design this platform so it can integrate with NEED ELECTRO ERP.
+
+Prepare API architecture for:
+
+Customers
+
+Products
+
+Inventory
+
+Orders
+
+Sales
+
+Bookings
+
+Technicians
+
+Employees
+
+Warranty
+
+Payments
+
+Cash transactions
+
+Expenses
+
+Invoices
+
+Service records
+
+Reports
+
+The website and PWA should not create conflicting financial records.
+
+The ERP should eventually become the central operational and financial management system.
+
+Do not duplicate business logic unnecessarily.
+
+==================================================
+43. CASH AND FINANCIAL DATA
+==================================================
+
+Prepare the architecture for future ERP synchronization.
+
+Track:
+
+Customer payment
+
+Service payment
+
+Product payment
+
+Technician earnings
+
+Platform fees
+
+Refunds
+
+Expenses
+
+Cash transactions
+
+Bank transactions
+
+Digital payments
+
+Pending payments
+
+Do not allow ordinary customers or technicians to directly edit financial records.
+
+==================================================
+44. DATABASE DESIGN
+==================================================
+
+Design a normalized scalable PostgreSQL database.
+
+Important entities:
+
+Users
+
+Roles
+
+Permissions
+
+Customers
+
+Technicians
+
+Employees
+
+Services
+
+Service Categories
+
+Bookings
+
+Booking Status History
+
+Products
+
+Product Categories
+
+Brands
+
+Product Variants
+
+Serial Numbers
+
+Inventory
+
+Orders
+
+Order Items
+
+Payments
+
+Invoices
+
+Warranties
+
+Warranty Claims
+
+Reviews
+
+Ratings
+
+Addresses
+
+Support Tickets
+
+Notifications
+
+Technician Earnings
+
+Wallet Transactions
+
+Disputes
+
+Documents
+
+Training Courses
+
+Training Applications
+
+Certificates
+
+Branches
+
+Service Areas
+
+Coupons
+
+Promotions
+
+Audit Logs
+
+==================================================
+45. SECURITY
+==================================================
+
+Implement:
+
+Secure authentication
+
+Password hashing
+
+Secure sessions
+
+Role based authorization
+
+Server side validation
+
+Input validation
+
+Rate limiting
+
+API protection
+
+File upload validation
+
+Image validation
+
+Secure storage
+
+Environment variables
+
+CSRF protection where applicable
+
+XSS protection
+
+SQL injection protection
+
+Audit logs
+
+Sensitive data protection
+
+Do not expose:
+
+Passwords
+
+NID information
+
+Payment credentials
+
+Private documents
+
+Internal admin information
+
+Environment variables
+
+==================================================
+46. PWA REQUIREMENTS
+==================================================
+
+The website must be a true Progressive Web App.
+
+Include:
+
+Web app manifest
+
+Service worker
+
+Installable application
+
+App icons
+
+Splash/loading experience
+
+Offline fallback
+
+Responsive interface
+
+Push notification architecture
+
+Mobile navigation
+
+Fast loading
+
+Caching strategy
+
+Connection aware behavior
+
+Add:
+
+Add to Home Screen
+
+Install App
+
+where supported.
+
+The installed PWA should feel like a native mobile application.
+
+==================================================
+47. MOBILE UX
+==================================================
+
+Design mobile first.
+
+Bottom navigation for logged in customers:
+
+Home
+
+Services
+
+Shop
+
+Orders
+
+Account
+
+Technician bottom navigation:
+
+Home
+
+Jobs
+
+Earnings
+
+Profile
+
+More
+
+Use large touch targets.
+
+Use mobile friendly forms.
+
+Avoid unnecessary popups.
+
+Make booking and ordering possible with minimal steps.
+
+==================================================
+48. LOCATION SYSTEM
+==================================================
+
+Customer should be able to save multiple addresses.
+
+Address fields:
+
+Name
+
+Phone
+
+Division
+
+District
+
+Upazila
+
+Area
+
+Detailed Address
+
+Landmark
+
+Location coordinates where permission is granted
+
+Technicians can define service areas.
+
+Use location only with appropriate user permission.
+
+Do not require precise location unnecessarily.
+
+==================================================
+49. SEARCH
+==================================================
+
+Create global search.
+
+Search:
+
+Services
+
+Products
+
+Technicians
+
+Categories
+
+FAQ
+
+Support
+
+Use filters.
+
+Product filters:
+
+Category
+
+Brand
+
+Price
+
+Availability
+
+Condition
+
+Warranty
+
+Service filters:
+
+Category
+
+Location
+
+Price
+
+Availability
+
+Rating
+
+==================================================
+50. SEO
+==================================================
+
+Implement proper SEO.
+
+Use:
+
+Metadata
+
+Open Graph
+
+Twitter cards where applicable
+
+Structured data
+
+Product schema
+
+Service schema
+
+Organization schema
+
+Local business information
+
+Sitemap
+
+Robots.txt
+
+Canonical URLs
+
+SEO friendly URLs
+
+Fast loading
+
+Mobile optimization
+
+Example:
+
+/services
+
+/services/electrical-wiring
+
+/shop
+
+/shop/laptops
+
+/product/hp-elitebook
+
+/become-a-technician
+
+/warranty
+
+/support
+
+==================================================
+51. PERFORMANCE
+==================================================
+
+The website must be fast.
+
+Use:
+
+Next.js optimization
+
+Server rendering where appropriate
+
+Image optimization
+
+Lazy loading
+
+Code splitting
+
+Caching
+
+Pagination
+
+Database indexing
+
+Efficient API queries
+
+Avoid unnecessary client side rendering.
+
+Do not load large libraries unnecessarily.
+
+==================================================
+52. DESIGN SYSTEM
+==================================================
+
+Create a consistent design system.
+
+Use:
+
+Rounded cards
+
+Clean spacing
+
+Professional typography
+
+Subtle shadows
+
+Modern icons
+
+Clear buttons
+
+Accessible contrast
+
+Professional forms
+
+Consistent status badges
+
+Responsive tables
+
+Mobile friendly cards
+
+Avoid excessive gradients.
+
+Avoid excessive animations.
+
+Use animation only where it improves the experience.
+
+The final design should feel like a serious technology company, not a template marketplace.
+
+==================================================
+53. HEADER
+==================================================
+
+Desktop header:
+
+NEED ELECTRO logo
+
+Services
+
+Shop
+
+Technicians
+
+Warranty
+
+Support
+
+About
+
+Search
+
+Account
+
+Cart
+
+Book Service button
+
+Mobile header:
+
+Logo
+
+Search
+
+Cart
+
+Account/menu
+
+==================================================
+54. FOOTER
+==================================================
+
+Footer should include:
+
+NEED ELECTRO
+
+Trusted Electrical and Technological Solutions
+
+Services
+
+Shop
+
+Become a Technician
+
+Warranty
+
+Support
+
+About
+
+Contact
+
+Privacy Policy
+
+Terms
+
+Refund Policy
+
+Address
+
+Phone
+
+Email
+
+Social media links
+
+Amdads Group relationship
+
+Copyright
+
+==================================================
+55. CONTACT INFORMATION
+==================================================
+
+Display current public contact information:
+
+Main Branch Moulvibazar
+
+Shop #5, MR Plaza, Kusumbag
+
+01733 983752
+
+needelectro23@gmail.com
+
+www.needelectro.com
+
+Do not invent additional branches or contact information.
+
+==================================================
+56. ABOUT PAGE
+==================================================
+
+Explain that NEED ELECTRO is a Bangladesh based electrical and technological solutions company.
+
+Core areas:
+
+Electrical Services
+
+Technology Products
+
+Computer and Laptop Solutions
+
+CCTV and Security
+
+Smart Electrical Solutions
+
+Technical Services
+
+Technician Network
+
+Training
+
+Employment
+
+Mention that NEED ELECTRO is a sister concern of Amdads Group.
+
+==================================================
+57. BECOME A TECHNICIAN PAGE
+==================================================
+
+Create a strong recruitment page.
+
+Headline:
+
+Build Your Career With NEED ELECTRO
+
+Supporting message:
+
+Create your professional profile, receive service opportunities, complete jobs, and grow your career through the NEED ELECTRO technician network.
+
+Show:
+
+Flexible work opportunities
+
+Professional profile
+
+Verified technician status
+
+Job opportunities
+
+Earnings tracking
+
+Work history
+
+Customer ratings
+
+Professional growth
+
+CTA:
+
+Join as a Technician
+
+==================================================
+58. TECHNICIAN MARKETPLACE LOGIC
+==================================================
+
+Do not automatically assign every job to one technician.
+
+Create a matching system.
+
+Match technicians based on:
+
+Service category
+
+Skills
+
+Verification
+
+Service area
+
+Availability
+
+Distance
+
+Current workload
+
+Eligibility
+
+The system can send the job to eligible technicians.
+
+Technicians can accept available work.
+
+Prevent two technicians from successfully accepting the same job.
+
+Use transactional database logic to prevent race conditions.
+
+==================================================
+59. ADMIN AUDIT SYSTEM
+==================================================
+
+Every important administrative action should be logged.
+
+Examples:
+
+Technician approved
+
+Technician suspended
+
+Price changed
+
+Product price changed
+
+Stock changed
+
+Booking reassigned
+
+Refund issued
+
+Payment modified
+
+User blocked
+
+Role changed
+
+Store:
+
+User
+
+Action
+
+Date
+
+Time
+
+Entity
+
+Previous value where appropriate
+
+New value where appropriate
+
+==================================================
+60. ERROR HANDLING
+==================================================
+
+Create professional error states.
+
+404 page
+
+500 page
+
+Network error
+
+Payment error
+
+Booking error
+
+Authentication error
+
+Permission error
+
+Empty states
+
+Loading states
+
+Skeleton loaders
+
+Retry buttons
+
+Do not expose technical errors to normal users.
+
+Log detailed errors internally.
+
+==================================================
+61. ACCESSIBILITY
+==================================================
+
+Follow good accessibility practices.
+
+Keyboard navigation
+
+Semantic HTML
+
+ARIA where required
+
+Accessible forms
+
+Accessible buttons
+
+Proper contrast
+
+Readable typography
+
+Focus states
+
+Screen reader support
+
+==================================================
+62. LANGUAGE
+==================================================
+
+Initial language:
+
+English
+
+Architecture should support future:
+
+Bangla
+
+The interface should eventually allow:
+
+English
+
+বাংলা
+
+Design database and translation architecture accordingly.
+
+==================================================
+63. BANGLADESH FIRST
+==================================================
+
+The platform is initially designed for Bangladesh.
+
+Use:
+
+BDT / ৳ currency
+
+Bangladesh address structure
+
+Bangladesh phone number format
+
+Bangladesh payment ecosystem
+
+Bangladesh service areas
+
+Bangladesh focused delivery and service logic
+
+Do not assume international payment or address structures as the primary system.
+
+==================================================
+64. ADMIN SETTINGS
+==================================================
+
+Create a settings system where admins can configure:
+
+Company information
+
+Phone
+
+Email
+
+Address
+
+Logo
+
+Services
+
+Categories
+
+Commission
+
+Taxes where applicable
+
+Delivery charges
+
+Payment methods
+
+Booking rules
+
+Cancellation rules
+
+Warranty rules
+
+Notification settings
+
+Service areas
+
+Technician requirements
+
+User permissions
+
+==================================================
+65. FUTURE MULTI BRANCH SUPPORT
+==================================================
+
+Design the database to support multiple branches.
+
+Each branch can eventually have:
+
+Name
+
+Address
+
+Phone
+
+Manager
+
+Inventory
+
+Technicians
+
+Services
+
+Orders
+
+Bookings
+
+Cash account
+
+Bank account
+
+Reports
+
+Do not hardcode the current branch as the only possible branch.
+
+==================================================
+66. FUTURE MARKETPLACE SUPPORT
+==================================================
+
+Prepare architecture for future third party sellers.
+
+A future seller can:
+
+Register
+
+Submit verification
+
+Add products
+
+Manage inventory
+
+Receive orders
+
+Track sales
+
+Receive payments
+
+Pay platform fees
+
+However, do not make the first version unnecessarily complex.
+
+Keep the architecture extensible.
+
+==================================================
+67. ANALYTICS
+==================================================
+
+Create analytics architecture.
+
+Track:
+
+Users
+
+Bookings
+
+Orders
+
+Revenue
+
+Service revenue
+
+Product revenue
+
+Technician activity
+
+Customer retention
+
+Popular services
+
+Popular products
+
+Cancellation rate
+
+Completion rate
+
+Average rating
+
+Support tickets
+
+Warranty claims
+
+Do not expose private analytics to normal users.
+
+==================================================
+68. MOBILE APP EXPERIENCE
+==================================================
+
+When opened as a PWA on mobile, prioritize:
+
+Book Service
+
+Emergency Service
+
+Shop
+
+Track Booking
+
+Track Order
+
+Warranty
+
+Support
+
+Account
+
+Make these actions available within one or two taps.
+
+==================================================
+69. HOMEPAGE MOBILE ORDER
+==================================================
+
+Mobile homepage should show:
+
+NEED ELECTRO logo
+
+Search
+
+Book a Service
+
+Emergency Service
+
+Shop Products
+
+Popular Services
+
+Active Booking
+
+Featured Products
+
+Become a Technician
+
+Warranty Check
+
+Support
+
+Footer
+
+==================================================
+70. ADMIN MOBILE RESPONSIVENESS
+==================================================
+
+The admin dashboard should also be responsive.
+
+Admins should be able to check:
+
+Bookings
+
+Orders
+
+Technicians
+
+Customers
+
+Payments
+
+Notifications
+
+Support tickets
+
+from mobile.
+
+Advanced accounting and ERP functions can remain desktop optimized.
+
+==================================================
+71. API ARCHITECTURE
+==================================================
+
+Create clean REST APIs.
+
+Example:
+
+/api/auth
+
+/api/users
+
+/api/customers
+
+/api/technicians
+
+/api/services
+
+/api/bookings
+
+/api/products
+
+/api/categories
+
+/api/orders
+
+/api/payments
+
+/api/warranty
+
+/api/reviews
+
+/api/support
+
+/api/notifications
+
+/api/wallet
+
+/api/earnings
+
+/api/admin
+
+/api/branches
+
+/api/analytics
+
+Use versioning:
+
+/api/v1/
+
+Document APIs with Swagger.
+
+==================================================
+72. DEVELOPMENT QUALITY
+==================================================
+
+Write clean production quality TypeScript.
+
+Use:
+
+Reusable components
+
+Reusable services
+
+DTO validation
+
+Database migrations
+
+Type safe APIs
+
+Centralized error handling
+
+Logging
+
+Environment configuration
+
+Modular architecture
+
+Unit tests where appropriate
+
+Integration tests for critical flows
+
+Do not write one giant component.
+
+Do not duplicate code.
+
+Do not hardcode business logic unnecessarily.
+
+==================================================
+73. CRITICAL USER FLOWS TO TEST
+==================================================
+
+Test these complete flows.
+
+Flow 1:
+
+Customer registration
+
+Login
+
+Browse services
+
+Book service
+
+Technician accepts
+
+Technician completes job
+
+Customer confirms
+
+Payment
+
+Review
+
+Flow 2:
+
+Technician registration
+
+Document upload
+
+Admin verification
+
+Technician becomes verified
+
+Technician receives available job
+
+Accept job
+
+Complete job
+
+Earnings recorded
+
+Flow 3:
+
+Customer product purchase
+
+Add to cart
+
+Checkout
+
+Payment
+
+Order confirmation
+
+Admin processing
+
+Delivery
+
+Order completion
+
+Flow 4:
+
+Product warranty
+
+Customer purchases product
+
+Product registered
+
+Serial number stored
+
+Customer checks warranty
+
+Warranty claim
+
+Admin processes claim
+
+Flow 5:
+
+Support
+
+Customer creates ticket
+
+Support agent responds
+
+Customer receives notification
+
+Ticket resolved
+
+Flow 6:
+
+Dispute
+
+Customer reports problem
+
+Admin investigates
+
+Admin resolves
+
+All actions logged
+
+==================================================
+74. IMPORTANT BUSINESS RULES
+==================================================
+
+Customers cannot directly modify completed financial transactions.
+
+Technicians cannot accept jobs until verified.
+
+Technicians cannot modify customer payment records.
+
+Technicians cannot see sensitive customer information unnecessarily.
+
+Customers cannot see another customer's information.
+
+Technicians cannot see another technician's private information.
+
+Admins can manage appropriate records according to permissions.
+
+Super Admin has full platform control.
+
+Prevent duplicate booking acceptance.
+
+Prevent duplicate payments.
+
+Prevent duplicate reviews.
+
+Prevent unauthorized wallet manipulation.
+
+All critical actions must be authenticated and authorized.
+
+==================================================
+75. NO FAKE DATA IN PRODUCTION
+==================================================
+
+During development, demo data can be used.
+
+Clearly separate:
+
+Demo data
+
+Real production data
+
+Do not present fake customers, fake reviews, fake technicians, fake sales, or fake statistics as real business information in production.
+
+==================================================
+76. RESPONSIVE BREAKPOINTS
+==================================================
+
+Support:
+
+Mobile
+
+Tablet
+
+Laptop
+
+Desktop
+
+Large desktop
+
+The platform must look professional at all common screen sizes.
+
+==================================================
+77. FINAL UI QUALITY
+==================================================
+
+The final result should feel comparable to a modern technology marketplace and professional service platform.
+
+It should communicate:
+
+Trust
+
+Safety
+
+Technology
+
+Professionalism
+
+Speed
+
+Reliability
+
+Accessibility
+
+Do not make it look like a generic electronics store.
+
+Do not make it look like a generic electrician website.
+
+It must clearly communicate that NEED ELECTRO combines electrical services, technology, products, technicians, and digital convenience.
+
+==================================================
+78. IMPORTANT BRAND MESSAGE
+==================================================
+
+Use this positioning throughout the platform:
+
+NEED ELECTRO
+
+Trusted Electrical and Technological Solutions
+
+A unified platform for electrical services, technology products, technical solutions, professional technicians, and customer support.
+
+==================================================
+79. IMPLEMENTATION ORDER
+==================================================
+
+Build the project in this order.
+
+Step 1:
+
+Project architecture
+
+Step 2:
+
+Database schema
+
+Step 3:
+
+Authentication
+
+Step 4:
+
+Role based authorization
+
+Step 5:
+
+Public website
+
+Step 6:
+
+Customer dashboard
+
+Step 7:
+
+Service marketplace
+
+Step 8:
+
+Booking system
+
+Step 9:
+
+Technician registration
+
+Step 10:
+
+Technician verification
+
+Step 11:
+
+Technician dashboard
+
+Step 12:
+
+Job marketplace
+
+Step 13:
+
+Product marketplace
+
+Step 14:
+
+Cart and checkout
+
+Step 15:
+
+Order management
+
+Step 16:
+
+Warranty
+
+Step 17:
+
+Reviews
+
+Step 18:
+
+Support
+
+Step 19:
+
+Notifications
+
+Step 20:
+
+Admin dashboard
+
+Step 21:
+
+PWA functionality
+
+Step 22:
+
+ERP integration architecture
+
+Step 23:
+
+Security audit
+
+Step 24:
+
+Performance optimization
+
+Step 25:
+
+Complete testing
+
+==================================================
+80. IMPORTANT INSTRUCTION TO THE AI DEVELOPER
+==================================================
+
+Do not only generate a visual frontend.
+
+Build the actual functional application.
+
+Every major button should have a real workflow.
+
+Forms should save real data.
+
+Authentication must work.
+
+Bookings must work.
+
+Technician registration must work.
+
+Technician verification must work.
+
+Job acceptance must work.
+
+Products must work.
+
+Cart must work.
+
+Orders must work.
+
+Customer accounts must work.
+
+Admin management must work.
+
+Warranty must work.
+
+Notifications should have a proper architecture.
+
+Use real database relationships.
+
+Use secure APIs.
+
+Use proper validation.
+
+Use proper error handling.
+
+Build the application so another developer can continue development easily.
+
+Do not replace backend functionality with static JSON.
+
+Do not create fake frontend functionality that does not connect to the backend.
+
+==================================================
+81. FINAL PRODUCT
+==================================================
+
+The final product should be:
+
+NEED ELECTRO
+
+A professional website
+
+A Progressive Web App
+
+A service booking platform
+
+A technology marketplace
+
+An electrical service marketplace
+
+A technician marketplace
+
+A warranty platform
+
+A customer management platform
+
+A support platform
+
+A future ERP connected ecosystem
+
+The long term architecture should allow NEED ELECTRO to expand from Moulvibazar to other districts and eventually operate across Bangladesh.
+
+Build the foundation correctly from the beginning.
+
+Start by creating the complete architecture and database schema, then implement the application module by module.
+
+Before finishing, test the complete customer journey, technician journey, product ordering journey, booking journey, warranty journey, and admin journey.

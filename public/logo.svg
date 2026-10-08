@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 80" fill="none">
+  <!-- Lightning Bolt Icon in Blue Badge -->
+  <g transform="translate(4, 8)">
+    <rect width="64" height="64" rx="14" fill="#087FE5" />
+    <path d="M36 14L18 36H32L28 50L46 28H32L36 14Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="1.5" stroke-linejoin="round"/>
+  </g>
+  
+  <!-- Text: NEED ELECTRO -->
+  <g transform="translate(82, 10)">
+    <!-- NEED in Deep Black / Slate -->
+    <text x="0" y="34" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="34" letter-spacing="-0.5" fill="#0F172A">
+      NEED
+    </text>
+    <!-- ELECTRO in Electric Brand Blue -->
+    <text x="96" y="34" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="34" letter-spacing="-0.5" fill="#087FE5">
+      ELECTRO
+    </text>
+    <!-- Tagline: Trusted Electrical and Technological Solutions -->
+    <text x="2" y="52" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-weight="600" font-size="10.5" letter-spacing="0.8" fill="#64748B">
+      TRUSTED ELECTRICAL &amp; TECHNOLOGICAL SOLUTIONS
+    </text>
+  </g>
+</svg>
