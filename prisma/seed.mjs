@@ -1,7 +1,13 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DIRECT_URL || process.env.DATABASE_URL
+    }
+  }
+});
 
 async function main() {
   console.log('Seeding NEED ELECTRO database...');
@@ -496,6 +502,107 @@ async function main() {
       value: 'Shop #5, MR Plaza, Kusumbag, Moulvibazar',
       description: 'Headquarters physical address.',
     },
+  });
+
+  // 12. Training Courses
+  await prisma.trainingCourse.upsert({
+    where: { slug: 'master-domestic-commercial-electrical' },
+    update: {},
+    create: {
+      title: 'Master Domestic & Commercial Electrical Engineering',
+      slug: 'master-domestic-commercial-electrical',
+      category: 'ELECTRICAL',
+      shortDescription: 'Comprehensive hands-on training on residential distribution boards, load calculation, and safety standards.',
+      fullDescription: 'From conduit routing to three-phase industrial balance, this 8-week program equips aspiring technicians with professional trade skills, multimeter diagnostics, and government safety code compliance.',
+      durationWeeks: 8,
+      totalHours: 64,
+      fee: 4500.0,
+      certificationIncluded: true,
+      syllabus: JSON.stringify(['Electrical Safety & PPE', 'Single & 3-Phase Circuit Design', 'Distribution Boards & Breakers', 'Earthing & Lightning Arresters', 'Solar IPS Interfacing']),
+      prerequisites: 'SSC or basic electrical knowledge',
+      careerOutcomes: 'Direct employment at NEED ELECTRO, licensed electrician status, contractor eligibility.',
+      instructorName: 'Engr. Rafiqul Islam, NEED ELECTRO Lab Lead'
+    }
+  });
+
+  await prisma.trainingCourse.upsert({
+    where: { slug: 'cctv-ip-camera-networking' },
+    update: {},
+    create: {
+      title: 'CCTV Surveillance & IP Networking Professional',
+      slug: 'cctv-ip-camera-networking',
+      category: 'CCTV',
+      shortDescription: 'Master analog HD, IP cameras, NVR configuration, remote mobile monitoring, and optical fiber slicing.',
+      fullDescription: 'Learn complete physical and network topology deployment for Dahua, Hikvision, and Uniview surveillance architectures with cloud P2P remote monitoring.',
+      durationWeeks: 6,
+      totalHours: 48,
+      fee: 3800.0,
+      certificationIncluded: true,
+      syllabus: JSON.stringify(['Analog vs IP Architecture', 'NVR/DVR Firmware & Storage', 'Subnetting & Port Forwarding', 'PTZ Speed Dome Setup', 'Optical Fiber Termination']),
+      prerequisites: 'Basic computer literacy',
+      careerOutcomes: 'Security technician, IT infrastructure supervisor.',
+      instructorName: 'Engr. Tariqul Islam, Security Specialist'
+    }
+  });
+
+  // 13. Regional Branches
+  await prisma.branch.upsert({
+    where: { slug: 'moulvibazar-hq' },
+    update: {},
+    create: {
+      name: 'Moulvibazar Central Headquarters & Technical Lab',
+      slug: 'moulvibazar-hq',
+      division: 'Sylhet',
+      district: 'Moulvibazar',
+      upazila: 'Moulvibazar Sadar',
+      address: 'Shop #5, 2nd Floor, MR Plaza, Kusumbag Point, Moulvibazar',
+      phone: '01733 983752',
+      email: 'moulvibazar@needelectro.com',
+      managerName: 'Kalam Ahmed',
+      isHeadquarters: true,
+      coverageAreas: 'Moulvibazar Sadar, Kusumbag, Court Road, Shamshernagar Road',
+      workingHours: 'Saturday - Thursday: 9:00 AM - 8:30 PM',
+      emergencyHotline: '01733 983752'
+    }
+  });
+
+  await prisma.branch.upsert({
+    where: { slug: 'sreemangal-hub' },
+    update: {},
+    create: {
+      name: 'Sreemangal Regional Service Hub',
+      slug: 'sreemangal-hub',
+      division: 'Sylhet',
+      district: 'Moulvibazar',
+      upazila: 'Sreemangal',
+      address: 'College Road, Near Chowmohona, Sreemangal',
+      phone: '01711 223344',
+      email: 'sreemangal@needelectro.com',
+      managerName: 'Tariqul Islam',
+      isHeadquarters: false,
+      coverageAreas: 'Sreemangal Town, Radhanagar, Kalighat, Tea Estate Hubs',
+      workingHours: 'Saturday - Thursday: 9:30 AM - 8:00 PM',
+      emergencyHotline: '01711 223344'
+    }
+  });
+
+  // 14. Seller Profile
+  await prisma.sellerProfile.upsert({
+    where: { slug: 'apex-electrical-supplies' },
+    update: {},
+    create: {
+      businessName: 'Apex Electrical Supplies & Cables',
+      slug: 'apex-electrical-supplies',
+      tradeLicenseNumber: 'TRAD/MOUL/2024/09811',
+      contactPerson: 'Haji Mustaq Ahmed',
+      phone: '01819 887766',
+      email: 'apex.supplies@gmail.com',
+      address: 'Station Road, Moulvibazar Sadar',
+      productCategories: 'BRB Cables, Schneider Switches, ABB Circuit Breakers',
+      commissionRate: 7.5,
+      status: 'VERIFIED',
+      adminNotes: 'Verified trade license and physical shop inspection passed.'
+    }
   });
 
   console.log('Database seeded successfully!');
