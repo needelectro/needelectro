@@ -11,10 +11,16 @@ export async function GET(req: NextRequest) {
     const invoice = searchParams.get('invoice')?.trim();
 
     if (!query && !serial && !invoice) {
-      return NextResponse.json(
-        { error: 'Please provide a serial number or invoice number to check warranty' },
-        { status: 400 }
-      );
+      // Admin request for all claims
+      const claims = await prisma.warrantyClaim.findMany({
+        include: {
+          device: {
+            include: { customer: { include: { user: true } } },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+      return NextResponse.json({ success: true, claims });
     }
 
     const whereClause: any = query
@@ -104,5 +110,29 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('Submit warranty claim error:', error);
     return NextResponse.json({ error: 'Failed to submit warranty claim' }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { claimId, status, adminNotes } = body;
+
+    if (!claimId || !status) {
+      return NextResponse.json({ error: 'Claim ID and status required' }, { status: 400 });
+    }
+
+    const updated = await prisma.warrantyClaim.update({
+      where: { id: claimId },
+      data: {
+        status,
+        adminNotes: adminNotes || null,
+        resolvedAt: ['RESOLVED', 'REPLACED', 'APPROVED'].includes(status) ? new Date() : null,
+      },
+    });
+
+    return NextResponse.json({ success: true, claim: updated });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to update warranty claim' }, { status: 500 });
   }
 }

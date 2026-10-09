@@ -58,3 +58,26 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to register seller application' }, { status: 500 });
   }
 }
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { sellerId, status, adminNotes } = body;
+
+    if (!sellerId || !status) {
+      return NextResponse.json({ error: 'Seller ID and status required' }, { status: 400 });
+    }
+
+    const updated = await prisma.sellerProfile.update({
+      where: { id: sellerId },
+      data: {
+        status,
+        adminNotes: adminNotes || null,
+      },
+    });
+
+    return NextResponse.json({ success: true, seller: updated });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to update merchant status' }, { status: 500 });
+  }
+}

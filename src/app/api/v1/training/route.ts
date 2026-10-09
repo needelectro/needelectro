@@ -5,6 +5,15 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const category = searchParams.get('category');
+    const getApps = searchParams.get('applications');
+
+    if (getApps === 'true') {
+      const applications = await prisma.trainingApplication.findMany({
+        include: { course: true },
+        orderBy: { createdAt: 'desc' },
+      });
+      return NextResponse.json({ success: true, applications });
+    }
 
     const where: any = { isActive: true };
     if (category && category !== 'all') {
@@ -63,5 +72,35 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to process application' }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { applicationId, status, certificateNumber, notes } = body;
+
+    if (!applicationId || !status) {
+      return NextResponse.json({ error: 'Application ID and status are required' }, { status: 400 });
+    }
+
+    const data: any = { status };
+    if (notes) data.notes = notes;
+
+    if (status === 'CERTIFIED') {
+      const dateStr = new Date().toISOString().slice(0, 4);
+      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+      data.certificateNumber = certificateNumber || `NE-CERT-${dateStr}-${randomSuffix}`;
+      data.certificateIssueDate = new Date();
+    }
+
+    const updated = await prisma.trainingApplication.update({
+      where: { id: applicationId },
+      data,
+    });
+
+    return NextResponse.json({ success: true, application: updated });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to update student application' }, { status: 500 });
   }
 }

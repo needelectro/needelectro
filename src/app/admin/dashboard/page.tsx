@@ -166,13 +166,16 @@ export default function AdminDashboard() {
             <Link href="/admin/services" className="glass-card-hover flex items-center gap-2 text-xs font-bold text-slate-800 rounded-2xl px-4 py-3 transition shadow-xs">
               <Wrench className="w-4 h-4 text-brand-500" />Manage Services
             </Link>
-            <Link href="/training" className="glass-card-hover flex items-center gap-2 text-xs font-bold text-slate-800 rounded-2xl px-4 py-3 transition shadow-xs">
-              <GraduationCap className="w-4 h-4 text-amber-500" />Academy &amp; Training
+            <Link href="/admin/warranties" className="glass-card-hover flex items-center gap-2 text-xs font-bold text-slate-800 rounded-2xl px-4 py-3 transition shadow-xs">
+              <Shield className="w-4 h-4 text-emerald-500" />Manage Warranties
             </Link>
-            <Link href="/branches" className="glass-card-hover flex items-center gap-2 text-xs font-bold text-slate-800 rounded-2xl px-4 py-3 transition shadow-xs">
+            <Link href="/admin/training" className="glass-card-hover flex items-center gap-2 text-xs font-bold text-slate-800 rounded-2xl px-4 py-3 transition shadow-xs">
+              <GraduationCap className="w-4 h-4 text-amber-500" />Academy Students &amp; Certs
+            </Link>
+            <Link href="/admin/branches" className="glass-card-hover flex items-center gap-2 text-xs font-bold text-slate-800 rounded-2xl px-4 py-3 transition shadow-xs">
               <Building2 className="w-4 h-4 text-sky-500" />Branch Network
             </Link>
-            <Link href="/become-a-seller" className="glass-card-hover flex items-center gap-2 text-xs font-bold text-slate-800 rounded-2xl px-4 py-3 transition shadow-xs">
+            <Link href="/admin/sellers" className="glass-card-hover flex items-center gap-2 text-xs font-bold text-slate-800 rounded-2xl px-4 py-3 transition shadow-xs">
               <Store className="w-4 h-4 text-emerald-500" />Merchant Partners
             </Link>
           </div>
