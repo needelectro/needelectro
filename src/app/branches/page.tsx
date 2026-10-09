@@ -51,7 +51,7 @@ export default function BranchesPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-16">
       {/* 1. HERO BANNER - GLASS DARK */}
-      <div className="glass-card-dark text-white rounded-3xl p-8 sm:p-14 relative overflow-hidden shadow-2xl border border-white/10">
+      <div className="glass-card-dark text-white rounded-3xl p-6 sm:p-10 md:p-14 relative overflow-hidden shadow-2xl border border-white/10">
         <div className="absolute -top-20 -right-20 w-96 h-96 bg-brand-500/25 blur-[120px] rounded-full pointer-events-none" />
         <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-sky-400/20 blur-[100px] rounded-full pointer-events-none" />
 
@@ -61,7 +61,7 @@ export default function BranchesPage() {
             NEED ELECTRO Nationwide Service Network &bull; Amdads Group
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
             Our Physical Branches, Diagnostic Labs &amp; Regional Hubs
           </h1>
 
@@ -69,12 +69,12 @@ export default function BranchesPage() {
             From our central headquarters at MR Plaza Kusumbag to regional hubs across Moulvibazar and Sylhet Division. Every branch operates fully equipped diagnostic testing equipment, spare parts stores, and certified electrical &amp; surveillance emergency dispatch units.
           </p>
 
-          <div className="flex flex-wrap items-center gap-3 pt-2">
-            <Link href="/booking" className="btn-primary text-xs py-2.5 px-5 flex items-center gap-2 shadow-glass-glow">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2 w-full sm:w-auto">
+            <Link href="/booking" className="btn-primary text-xs py-2.5 px-5 flex items-center justify-center gap-2 shadow-glass-glow w-full sm:w-auto">
               <Wrench className="w-3.5 h-3.5" />
               Book Certified Service Technician
             </Link>
-            <Link href="/contact" className="btn-secondary text-xs py-2.5 px-5 flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white border-white/20">
+            <Link href="/contact" className="btn-secondary text-xs py-2.5 px-5 flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white border-white/20 w-full sm:w-auto">
               <Phone className="w-3.5 h-3.5 text-emerald-400" />
               Contact 24/7 Central Hotline
             </Link>

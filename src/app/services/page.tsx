@@ -115,13 +115,13 @@ export default function ServicesPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Header Banner - Glass Dark */}
-      <div className="glass-card-dark text-white rounded-3xl p-8 sm:p-12 relative overflow-hidden shadow-2xl">
+      <div className="glass-card-dark text-white rounded-3xl p-6 sm:p-10 md:p-12 relative overflow-hidden shadow-2xl">
         <div className="absolute -top-24 -right-24 w-80 h-80 bg-brand-500/25 blur-[100px] pointer-events-none rounded-full" />
         <div className="max-w-2xl relative z-10 space-y-3">
           <span className="text-xs font-bold uppercase tracking-wider text-brand-400">
             Professional Electrical &amp; Technological Services
           </span>
-          <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+          <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
             Certified Electricians &amp; Engineers On Demand
           </h1>
           <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
@@ -139,7 +139,7 @@ export default function ServicesPage() {
       </div>
 
       {/* Filter and Search Bar - Frosted Glass Card */}
-      <div className="glass-card flex flex-col md:flex-row gap-4 items-center justify-between p-4 rounded-2xl shadow-sm">
+      <div className="glass-card flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between p-4 rounded-2xl shadow-sm">
         {/* Categories Pills */}
         <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-none">
           <button
@@ -168,10 +168,10 @@ export default function ServicesPage() {
         </div>
 
         {/* Emergency Toggle & Search */}
-        <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full md:w-auto justify-end">
           <button
             onClick={() => setEmergencyOnly(!emergencyOnly)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all border ${
+            className={`px-3 py-2 sm:py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all border ${
               emergencyOnly
                 ? 'bg-red-600 text-white border-red-600'
                 : 'bg-white text-red-600 border-red-200 hover:bg-red-50'
@@ -189,7 +189,7 @@ export default function ServicesPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && fetchServices()}
-              className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-brand-500"
+              className="w-full pl-9 pr-3 py-2 sm:py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-brand-500"
             />
           </div>
         </div>

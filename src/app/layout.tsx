@@ -51,7 +51,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className="overflow-x-hidden max-w-full">
       <head>
         <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/icons/icon.svg" />
@@ -62,7 +62,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="flex flex-col min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 text-slate-900 selection:bg-brand-500 selection:text-white font-sans relative antialiased">
+      <body className="flex flex-col min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 text-slate-900 selection:bg-brand-500 selection:text-white font-sans relative antialiased overflow-x-hidden max-w-full">
         {/* Ambient Glassmorphism Background Mesh & Light Orbs */}
         <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
           {/* Subtle tech dot matrix */}
@@ -81,7 +81,7 @@ export default function RootLayout({
         <AuthProvider>
           <CartProvider>
             <Header />
-            <main className="flex-1 pb-16 md:pb-0 relative z-0">{children}</main>
+            <main className="flex-1 pb-24 md:pb-0 relative z-0 min-w-0 w-full overflow-x-hidden">{children}</main>
             <Footer />
             <MobileNav />
             <PwaInstallPrompt />

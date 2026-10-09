@@ -81,14 +81,14 @@ export default function Header() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-xl bg-brand-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform">
-                <Zap className="w-6 h-6 fill-white" />
+            <Link href="/" className="flex items-center gap-2 sm:gap-3 group shrink-0 min-w-0">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-brand-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform shrink-0">
+                <Zap className="w-5 h-5 sm:w-6 sm:h-6 fill-white" />
               </div>
-              <div className="flex flex-col">
+              <div className="flex flex-col min-w-0">
                 <div className="flex items-center gap-1">
-                  <span className="font-extrabold text-2xl tracking-tight text-slate-950">NEED</span>
-                  <span className="font-extrabold text-2xl tracking-tight text-brand-500">ELECTRO</span>
+                  <span className="font-extrabold text-xl sm:text-2xl tracking-tight text-slate-950">NEED</span>
+                  <span className="font-extrabold text-xl sm:text-2xl tracking-tight text-brand-500">ELECTRO</span>
                 </div>
                 <span className="text-[10px] font-semibold text-slate-500 tracking-wider -mt-1 uppercase hidden sm:block">
                   Trusted Electrical &amp; Tech Solutions
@@ -122,25 +122,25 @@ export default function Header() {
             </nav>
 
             {/* Header Right Actions */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
               {/* Search Toggle */}
               <button
                 onClick={() => setSearchOpen(!searchOpen)}
-                className="p-2.5 text-slate-600 hover:text-brand-500 hover:bg-slate-100 rounded-xl transition-all"
+                className="p-2 sm:p-2.5 text-slate-600 hover:text-brand-500 hover:bg-slate-100 rounded-xl transition-all"
                 title="Search services and products"
               >
-                <Search className="w-5 h-5" />
+                <Search className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
 
               {/* Cart Button */}
               <Link
                 href="/cart"
-                className="relative p-2.5 text-slate-600 hover:text-brand-500 hover:bg-slate-100 rounded-xl transition-all"
+                className="relative p-2 sm:p-2.5 text-slate-600 hover:text-brand-500 hover:bg-slate-100 rounded-xl transition-all"
                 title="View Cart"
               >
-                <ShoppingCart className="w-5 h-5" />
+                <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
                 {itemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-brand-500 text-white text-[11px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm animate-in zoom-in">
+                  <span className="absolute -top-1 -right-1 bg-brand-500 text-white text-[10px] sm:text-[11px] font-bold w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center shadow-xs animate-in zoom-in">
                     {itemCount}
                   </span>
                 )}
@@ -152,9 +152,9 @@ export default function Header() {
                   <div className="relative">
                     <button
                       onClick={() => setAccountMenuOpen(!accountMenuOpen)}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/80 bg-white/60 backdrop-blur-md hover:bg-white/90 hover:border-brand-300 transition-all text-xs font-semibold shadow-xs"
+                      className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-xl border border-white/80 bg-white/60 backdrop-blur-md hover:bg-white/90 hover:border-brand-300 transition-all text-xs font-semibold shadow-xs"
                     >
-                      <div className="w-7 h-7 rounded-lg bg-brand-500 text-white flex items-center justify-center font-bold shadow-xs">
+                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-brand-500 text-white flex items-center justify-center font-bold shadow-xs text-xs">
                         {user.name.charAt(0)}
                       </div>
                       <span className="hidden md:inline max-w-[100px] truncate">{user.name.split(' ')[0]}</span>
@@ -228,10 +228,10 @@ export default function Header() {
                 )}
               </div>
 
-              {/* Book Service CTA Button */}
+              {/* Book Service CTA Button (Tablet & Desktop, mobile uses bottom floating navigation) */}
               <Link
                 href="/services"
-                className="btn-primary text-xs sm:text-sm py-2 px-3.5 sm:px-4"
+                className="hidden sm:inline-flex btn-primary text-xs sm:text-sm py-2 px-3.5 sm:px-4"
               >
                 <Zap className="w-4 h-4 mr-1.5 fill-white" />
                 Book Service

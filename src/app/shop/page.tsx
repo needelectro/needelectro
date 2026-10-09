@@ -82,13 +82,13 @@ export default function ShopPage() {
       )}
 
       {/* Header Banner - Glass Dark */}
-      <div className="glass-card-dark text-white rounded-3xl p-8 sm:p-12 relative overflow-hidden shadow-2xl">
+      <div className="glass-card-dark text-white rounded-3xl p-6 sm:p-10 md:p-12 relative overflow-hidden shadow-2xl">
         <div className="absolute -top-20 -right-20 w-80 h-80 bg-brand-500/25 blur-[100px] pointer-events-none rounded-full" />
         <div className="max-w-2xl relative z-10 space-y-3">
           <span className="text-xs font-bold uppercase tracking-wider text-brand-400">
             NEED ELECTRO Marketplace
           </span>
-          <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+          <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
             Genuine Technology &amp; Electrical Hardware
           </h1>
           <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">

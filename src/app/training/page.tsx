@@ -104,7 +104,7 @@ export default function TrainingPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-16">
       {/* 1. HERO BANNER - GLASS DARK */}
-      <div className="glass-card-dark text-white rounded-3xl p-8 sm:p-14 relative overflow-hidden shadow-2xl border border-white/10">
+      <div className="glass-card-dark text-white rounded-3xl p-6 sm:p-10 md:p-14 relative overflow-hidden shadow-2xl border border-white/10">
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-brand-500/30 blur-[130px] rounded-full pointer-events-none" />
         <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-sky-400/20 blur-[110px] rounded-full pointer-events-none" />
         
@@ -114,7 +114,7 @@ export default function TrainingPage() {
             NEED ELECTRO Academy &bull; Amdads Group Skills Center
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
             Professional Engineering Training &amp; Guaranteed Technician Onboarding
           </h1>
 
@@ -122,12 +122,12 @@ export default function TrainingPage() {
             Bridging technical education with real market employment. Hands-on laboratory training in Moulvibazar for electrical wiring, CCTV surveillance, laptop chip-level repair, and solar IPS installations. High-performing graduates are directly onboarded into our verified technician marketplace.
           </p>
 
-          <div className="flex flex-wrap items-center gap-3 pt-3">
-            <a href="#courses" className="btn-primary text-xs py-2.5 px-5 flex items-center gap-2 shadow-glass-glow">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-3 w-full sm:w-auto">
+            <a href="#courses" className="btn-primary text-xs py-2.5 px-5 flex items-center justify-center gap-2 shadow-glass-glow w-full sm:w-auto">
               Explore Available Courses
               <ArrowRight className="w-3.5 h-3.5" />
             </a>
-            <Link href="/verify-certificate" className="btn-secondary text-xs py-2.5 px-5 flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white border-white/20">
+            <Link href="/verify-certificate" className="btn-secondary text-xs py-2.5 px-5 flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white border-white/20 w-full sm:w-auto">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
               Verify Graduate Certificate
             </Link>

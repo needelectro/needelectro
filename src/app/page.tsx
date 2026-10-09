@@ -58,7 +58,7 @@ export default function HomePage() {
             </div>
 
             {/* Headline */}
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-slate-950 tracking-tight leading-[1.15]">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-slate-950 tracking-tight leading-[1.2] sm:leading-[1.15] break-words">
               Trusted Electrical and <br className="hidden sm:inline" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 via-brand-500 to-sky-400">
                 Technological Solutions
@@ -66,74 +66,74 @@ export default function HomePage() {
             </h1>
 
             {/* Supporting Text */}
-            <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-sm sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed px-1">
               Book professional electrical and technical services, explore genuine technology products, and manage your warranties through one unified, trusted platform.
             </p>
 
             {/* CTA Buttons with Glass Sheen */}
-            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 pt-2">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-2 w-full max-w-xs sm:max-w-none mx-auto">
               <Link
                 href="/services"
-                className="btn-primary text-sm sm:text-base py-3 px-6 shadow-lg shadow-brand-500/25"
+                className="btn-primary w-full sm:w-auto text-sm sm:text-base py-3 px-6 shadow-lg shadow-brand-500/25 justify-center"
               >
-                <Zap className="w-5 h-5 mr-2 fill-white" />
+                <Zap className="w-5 h-5 mr-2 fill-white shrink-0" />
                 Book a Service
               </Link>
               <Link
                 href="/shop"
-                className="btn-secondary text-sm sm:text-base py-3 px-6"
+                className="btn-secondary w-full sm:w-auto text-sm sm:text-base py-3 px-6 justify-center"
               >
-                <ShoppingBag className="w-5 h-5 mr-2 text-slate-700" />
+                <ShoppingBag className="w-5 h-5 mr-2 text-slate-700 shrink-0" />
                 Shop Products
               </Link>
               <Link
                 href="/become-a-technician"
-                className="btn-outline text-sm sm:text-base py-3 px-5"
+                className="btn-outline w-full sm:w-auto text-sm sm:text-base py-3 px-5 justify-center"
               >
-                <Wrench className="w-4 h-4 mr-2" />
+                <Wrench className="w-4 h-4 mr-2 shrink-0" />
                 Become a Technician
               </Link>
             </div>
 
             {/* Trust highlights under Hero with Frosted Glass Tiles */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 pt-8 max-w-4xl mx-auto">
-              <div className="glass-card-hover p-4 rounded-2xl flex items-center gap-3 text-left">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 flex items-center justify-center shrink-0 backdrop-blur-md">
-                  <CheckCircle2 className="w-5 h-5" />
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5 pt-6 sm:pt-8 max-w-4xl mx-auto">
+              <div className="glass-card-hover p-3 sm:p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 text-left">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 flex items-center justify-center shrink-0 backdrop-blur-md">
+                  <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-900">Verified Specialists</h4>
-                  <p className="text-[11px] text-slate-500">NID &amp; Skill Checked</p>
-                </div>
-              </div>
-
-              <div className="glass-card-hover p-4 rounded-2xl flex items-center gap-3 text-left">
-                <div className="w-10 h-10 rounded-xl bg-brand-500/15 border border-brand-500/30 text-brand-600 flex items-center justify-center shrink-0 backdrop-blur-md">
-                  <Clock className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-900">Rapid Response</h4>
-                  <p className="text-[11px] text-slate-500">Moulvibazar &amp; Region</p>
+                <div className="min-w-0">
+                  <h4 className="text-xs font-bold text-slate-900 truncate sm:whitespace-normal">Verified Specialists</h4>
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 truncate sm:whitespace-normal">NID &amp; Skill Checked</p>
                 </div>
               </div>
 
-              <div className="glass-card-hover p-4 rounded-2xl flex items-center gap-3 text-left">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-600 flex items-center justify-center shrink-0 backdrop-blur-md">
-                  <ShieldCheck className="w-5 h-5" />
+              <div className="glass-card-hover p-3 sm:p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 text-left">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-brand-500/15 border border-brand-500/30 text-brand-600 flex items-center justify-center shrink-0 backdrop-blur-md">
+                  <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-900">Digital Warranty</h4>
-                  <p className="text-[11px] text-slate-500">Track &amp; Claim Easily</p>
+                <div className="min-w-0">
+                  <h4 className="text-xs font-bold text-slate-900 truncate sm:whitespace-normal">Rapid Response</h4>
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 truncate sm:whitespace-normal">Moulvibazar &amp; Region</p>
                 </div>
               </div>
 
-              <div className="glass-card-hover p-4 rounded-2xl flex items-center gap-3 text-left">
-                <div className="w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-600 flex items-center justify-center shrink-0 backdrop-blur-md">
-                  <PhoneCall className="w-5 h-5" />
+              <div className="glass-card-hover p-3 sm:p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 text-left">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-600 flex items-center justify-center shrink-0 backdrop-blur-md">
+                  <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-900">Direct Branch</h4>
-                  <p className="text-[11px] text-slate-500">Shop #5, MR Plaza</p>
+                <div className="min-w-0">
+                  <h4 className="text-xs font-bold text-slate-900 truncate sm:whitespace-normal">Digital Warranty</h4>
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 truncate sm:whitespace-normal">Track &amp; Claim Easily</p>
+                </div>
+              </div>
+
+              <div className="glass-card-hover p-3 sm:p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 text-left">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-600 flex items-center justify-center shrink-0 backdrop-blur-md">
+                  <PhoneCall className="w-4 h-4 sm:w-5 sm:h-5" />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-xs font-bold text-slate-900 truncate sm:whitespace-normal">Direct Branch</h4>
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 truncate sm:whitespace-normal">Shop #5, MR Plaza</p>
                 </div>
               </div>
             </div>
@@ -687,31 +687,31 @@ export default function HomePage() {
 
       {/* 7. NEED HELP / HOTLINE CALLOUT - Frosted Gradient Sheen Banner */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        <div className="bg-gradient-to-r from-brand-600/90 via-brand-700/90 to-slate-900/90 backdrop-blur-2xl text-white rounded-3xl p-8 sm:p-12 shadow-2xl border border-white/20 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
+        <div className="bg-gradient-to-r from-brand-600/90 via-brand-700/90 to-slate-900/90 backdrop-blur-2xl text-white rounded-3xl p-6 sm:p-10 md:p-12 shadow-2xl border border-white/20 flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-80 h-80 bg-sky-400/20 blur-[100px] pointer-events-none rounded-full" />
           
-          <div className="space-y-3 text-center md:text-left relative z-10">
+          <div className="space-y-3 text-center md:text-left relative z-10 w-full">
             <span className="inline-block px-3.5 py-1 rounded-full text-[11px] font-bold bg-white/20 backdrop-blur-md border border-white/30 text-white">
               NEED HELP? WE ARE HERE 7 DAYS A WEEK
             </span>
-            <h3 className="text-2xl sm:text-3xl font-black text-white">
+            <h3 className="text-xl sm:text-3xl font-black text-white">
               Speak Directly With Our Electrical &amp; Tech Engineers
             </h3>
-            <p className="text-xs sm:text-sm text-brand-100 max-w-lg">
+            <p className="text-xs sm:text-sm text-brand-100 max-w-lg mx-auto md:mx-0">
               Have questions about wiring safety, computer repairs, or warranty claims? Call our direct hotline or visit our branch in Kusumbag.
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 relative z-10">
+          <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 relative z-10 w-full sm:w-auto">
             <a
               href="tel:01733983752"
-              className="btn-secondary text-sm py-3 px-6 text-brand-700 font-bold bg-white/95 hover:bg-white shadow-lg"
+              className="btn-secondary w-full sm:w-auto justify-center text-sm py-3 px-6 text-brand-700 font-bold bg-white/95 hover:bg-white shadow-lg"
             >
-              <PhoneCall className="w-4 h-4 mr-2 text-brand-600" />
+              <PhoneCall className="w-4 h-4 mr-2 text-brand-600 shrink-0" />
               01733 983752
             </a>
             <Link
               href="/contact"
-              className="px-5 py-3 rounded-xl border border-white/40 bg-white/10 backdrop-blur-md text-white hover:bg-white/20 text-sm font-semibold transition shadow-xs"
+              className="w-full sm:w-auto text-center px-5 py-3 rounded-xl border border-white/40 bg-white/10 backdrop-blur-md text-white hover:bg-white/20 text-sm font-semibold transition shadow-xs"
             >
               Visit Kusumbag Branch
             </Link>
