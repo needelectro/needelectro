@@ -419,3 +419,97 @@ model SystemSetting {
   description String?
   updatedAt   DateTime @updatedAt
 }
+
+// ==========================================
+// PHASE 10: TRAINING AND EMPLOYMENT
+// ==========================================
+
+model TrainingCourse {
+  id                   String                @id @default(cuid())
+  title                String
+  slug                 String                @unique
+  category             String                @default("ELECTRICAL") // ELECTRICAL, CCTV, COMPUTER, SOLAR
+  shortDescription     String
+  fullDescription      String
+  durationWeeks        Int                   @default(8)
+  totalHours           Int                   @default(64)
+  fee                  Float                 @default(0.0)
+  certificationIncluded Boolean              @default(true)
+  syllabus             String                // JSON array string of modules
+  prerequisites        String?
+  careerOutcomes       String?
+  instructorName       String                @default("Engr. Rafiqul Islam, NEED ELECTRO Lab")
+  imageUrl             String?
+  isActive             Boolean               @default(true)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+
+  applications         TrainingApplication[]
+}
+
+model TrainingApplication {
+  id                   String          @id @default(cuid())
+  courseId             String
+  course               TrainingCourse  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  fullName             String
+  email                String
+  phone                String
+  nidNumber            String?
+  education            String
+  address              String
+  experienceLevel      String          @default("BEGINNER") // BEGINNER, INTERMEDIATE, WORKING_TECHNICIAN
+  motivation           String?
+  status               String          @default("SUBMITTED") // SUBMITTED, ADMITTED, IN_TRAINING, COMPLETED, CERTIFIED, REJECTED
+  certificateNumber    String?         @unique // e.g. NE-CERT-2026-0104
+  certificateIssueDate DateTime?
+  notes                String?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+}
+
+// ==========================================
+// PHASE 11: MULTI-BRANCH EXPANSION
+// ==========================================
+
+model Branch {
+  id                   String          @id @default(cuid())
+  name                 String
+  slug                 String          @unique
+  division             String          @default("Sylhet")
+  district             String          @default("Moulvibazar")
+  upazila              String
+  address              String
+  phone                String
+  email                String
+  managerName          String
+  isHeadquarters       Boolean         @default(false)
+  coverageAreas        String          // Comma-separated coverage regions
+  workingHours         String          @default("Saturday - Thursday: 9:00 AM - 8:00 PM")
+  emergencyHotline     String?
+  isActive             Boolean         @default(true)
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+}
+
+// ==========================================
+// PHASE 12: MARKETPLACE & SELLER EXPANSION
+// ==========================================
+
+model SellerProfile {
+  id                   String          @id @default(cuid())
+  businessName         String
+  slug                 String          @unique
+  tradeLicenseNumber   String
+  contactPerson        String
+  phone                String
+  email                String          @unique
+  address              String
+  productCategories    String          // Comma-separated: Laptops, CCTV, Electrical
+  bankAccountDetails   String?
+  commissionRate       Float           @default(8.0) // 8% marketplace fee
+  status               String          @default("PENDING") // PENDING, UNDER_REVIEW, VERIFIED, REJECTED
+  adminNotes           String?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+}
+

@@ -36,3 +36,4 @@ Thumbs.db
 *.pem
 .vscode/
 .idea/
+.gemini/

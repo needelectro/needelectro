@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
         }
         customerProfileId = cp.id;
       } else {
-        // Guest user booking: create a customer account or use demo customer
+        // Guest user booking: fallback to existing customer profile if not logged in
         const guestCust = await prisma.user.findFirst({
           where: { role: 'CUSTOMER' },
           include: { customerProfile: true },

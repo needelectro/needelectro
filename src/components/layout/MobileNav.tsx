@@ -29,7 +29,7 @@ export default function MobileNav() {
   const isTechnician = user?.role === 'TECHNICIAN';
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-2 py-1 shadow-lg">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-2xl border-t border-white/70 px-2 py-1 shadow-[0_-8px_30px_rgba(15,23,42,0.06)]">
       <div className="flex items-center justify-around">
         {/* Customer or Guest Navigation */}
         {!isTechnician && (
@@ -59,7 +59,7 @@ export default function MobileNav() {
               href="/services"
               className="flex flex-col items-center -mt-5"
             >
-              <div className="w-12 h-12 rounded-full bg-brand-500 text-white flex items-center justify-center shadow-lg shadow-brand-500/30 border-4 border-white active:scale-95 transition-transform">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-brand-500 to-brand-600 text-white flex items-center justify-center shadow-lg shadow-brand-500/40 border-4 border-white/90 backdrop-blur-md active:scale-95 transition-transform">
                 <Zap className="w-6 h-6 fill-white" />
               </div>
               <span className="text-[10px] font-bold text-brand-600 mt-0.5">Book</span>

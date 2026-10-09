@@ -9,7 +9,6 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (data: { name: string; email: string; phone: string; password: string; role?: string }) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
-  quickLogin: (role: 'CUSTOMER' | 'TECHNICIAN' | 'ADMIN') => Promise<void>;
   refreshUser: () => Promise<void>;
 }
 
@@ -89,22 +88,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const quickLogin = async (role: 'CUSTOMER' | 'TECHNICIAN' | 'ADMIN') => {
-    setIsLoading(true);
-    let email = 'customer@needelectro.com';
-    let password = 'cust123';
-    if (role === 'TECHNICIAN') {
-      email = 'kalam@needelectro.com';
-      password = 'tech123';
-    } else if (role === 'ADMIN') {
-      email = 'admin@needelectro.com';
-      password = 'admin123';
-    }
-    await login(email, password);
-  };
-
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout, quickLogin, refreshUser }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

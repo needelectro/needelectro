@@ -61,12 +61,12 @@ export async function GET(req: NextRequest) {
       where: { status: { in: ['COMPLETED', 'CLOSED'] } },
       select: { totalAmount: true },
     });
-    const serviceRevenue = allCompletedBookings.reduce((sum, b) => sum + b.totalAmount, 0);
+    const serviceRevenue = (allCompletedBookings as Array<{ totalAmount: number }>).reduce((sum: number, b: { totalAmount: number }) => sum + b.totalAmount, 0);
 
     const allOrders = await prisma.order.findMany({
       select: { totalAmount: true },
     });
-    const productRevenue = allOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+    const productRevenue = (allOrders as Array<{ totalAmount: number }>).reduce((sum: number, o: { totalAmount: number }) => sum + o.totalAmount, 0);
 
     const totalRevenue = serviceRevenue + productRevenue;
 

@@ -6,19 +6,23 @@ import { verifyToken } from '@/lib/auth';
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const serial = searchParams.get('serial');
-    const invoice = searchParams.get('invoice');
+    const query = searchParams.get('query')?.trim();
+    const serial = searchParams.get('serial')?.trim();
+    const invoice = searchParams.get('invoice')?.trim();
 
-    if (!serial && !invoice) {
+    if (!query && !serial && !invoice) {
       return NextResponse.json(
         { error: 'Please provide a serial number or invoice number to check warranty' },
         { status: 400 }
       );
     }
 
-    const whereClause: any = {};
-    if (serial) whereClause.serialNumber = serial.trim();
-    if (invoice) whereClause.invoiceNumber = invoice.trim();
+    const whereClause: any = query
+      ? { OR: [{ serialNumber: query }, { invoiceNumber: query }] }
+      : {
+          ...(serial ? { serialNumber: serial } : {}),
+          ...(invoice ? { invoiceNumber: invoice } : {}),
+        };
 
     const device = await prisma.deviceRegistration.findFirst({
       where: whereClause,

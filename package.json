@@ -32,6 +32,7 @@
     "tailwindcss": "^3.4.17",
     "postcss": "^8.5.1",
     "autoprefixer": "^10.4.20",
-    "prisma": "^6.3.1"
+    "prisma": "^6.3.1",
+    "fast-check": "^3.23.2"
   }
 }

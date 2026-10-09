@@ -6,9 +6,9 @@
   --primary: #087FE5;
   --primary-hover: #0267C1;
   --dark: #0F172A;
-  --card-bg: #FFFFFF;
-  --border-color: #E2E8F0;
-  --bg-main: #F8FAFC;
+  --card-bg: rgba(255, 255, 255, 0.75);
+  --border-color: rgba(255, 255, 255, 0.6);
+  --bg-main: #F4F7FC;
 }
 
 @layer base {
@@ -18,49 +18,128 @@
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+    position: relative;
   }
 }
 
-/* Custom interactive utility classes */
+/* Glassmorphism Design System */
 @layer components {
-  .btn-primary {
-    @apply inline-flex items-center justify-center font-semibold px-5 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white shadow-sm hover:shadow-md transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+  /* Frosted Glass Cards */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.05), inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .btn-secondary {
-    @apply inline-flex items-center justify-center font-semibold px-5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 shadow-sm hover:shadow transition-all active:scale-[0.98] disabled:opacity-50;
+  .glass-card-hover {
+    @apply glass-card;
+  }
+  .glass-card-hover:hover {
+    background: rgba(255, 255, 255, 0.88);
+    border-color: rgba(8, 127, 229, 0.4);
+    box-shadow: 0 20px 40px -10px rgba(8, 127, 229, 0.16), inset 0 1px 0 0 rgba(255, 255, 255, 1);
+    transform: translateY(-2px);
   }
 
-  .btn-outline {
-    @apply inline-flex items-center justify-center font-semibold px-5 py-2.5 rounded-xl text-brand-600 border border-brand-500 hover:bg-brand-50 transition-all active:scale-[0.98];
-  }
-
-  .btn-danger {
-    @apply inline-flex items-center justify-center font-semibold px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white shadow-sm transition-all active:scale-[0.98];
+  .glass-card-dark {
+    background: rgba(15, 23, 42, 0.78);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 16px 40px 0 rgba(0, 0, 0, 0.35), inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
   }
 
   .card-premium {
-    @apply bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all duration-200;
+    @apply bg-white/75 backdrop-blur-xl rounded-2xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_16px_40px_rgba(8,127,229,0.12)] hover:border-brand-300/60 transition-all duration-300;
   }
 
+  /* Frosted Glass Buttons */
+  .btn-primary {
+    @apply inline-flex items-center justify-center font-semibold px-5 py-2.5 rounded-xl text-white bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 border border-white/25 shadow-md shadow-brand-500/25 hover:shadow-lg hover:shadow-brand-500/35 transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center font-semibold px-5 py-2.5 rounded-xl bg-white/70 hover:bg-white/95 text-slate-800 border border-white/80 backdrop-blur-md shadow-sm hover:shadow-md transition-all duration-200 active:scale-[0.98] disabled:opacity-50;
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center font-semibold px-5 py-2.5 rounded-xl text-brand-600 bg-white/40 hover:bg-brand-50/80 border border-brand-400/50 backdrop-blur-md shadow-sm hover:shadow-md transition-all duration-200 active:scale-[0.98];
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center font-semibold px-5 py-2.5 rounded-xl bg-red-600/90 hover:bg-red-600 text-white border border-white/20 backdrop-blur-md shadow-sm transition-all duration-200 active:scale-[0.98];
+  }
+
+  /* Frosted Glass Inputs */
+  .glass-input {
+    @apply bg-white/60 focus:bg-white/90 backdrop-blur-md border border-slate-200/80 focus:border-brand-500/80 focus:ring-2 focus:ring-brand-500/20 rounded-xl transition-all duration-200 text-slate-900 placeholder-slate-400;
+  }
+
+  /* Frosted Glass Badges */
   .badge-status {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider backdrop-blur-sm border;
+  }
+
+  .glass-badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-md bg-white/60 border border-white/80 shadow-sm text-slate-700;
+  }
+
+  /* Glass Panels & Modals */
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    box-shadow: 0 12px 35px 0 rgba(15, 23, 42, 0.06);
+  }
+
+  .glass-nav {
+    background: rgba(255, 255, 255, 0.76);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 4px 25px 0 rgba(15, 23, 42, 0.03);
   }
 }
 
-/* Glassmorphism accent */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+/* Ambient Floating Glow Animations */
+@keyframes ambient-float-1 {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(30px, 20px) scale(1.08);
+  }
 }
 
-/* Pulse animation for emergency banner */
+@keyframes ambient-float-2 {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(-25px, -20px) scale(0.95);
+  }
+}
+
+.animate-ambient-1 {
+  animation: ambient-float-1 14s ease-in-out infinite;
+}
+
+.animate-ambient-2 {
+  animation: ambient-float-2 18s ease-in-out infinite;
+}
+
+/* Soft pulse for emergency indicators */
 @keyframes soft-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.02); }
 }
 
 .animate-soft-pulse {
   animation: soft-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+

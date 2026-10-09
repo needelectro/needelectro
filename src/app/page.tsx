@@ -1,0 +1,723 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { 
+  Zap, 
+  ShieldCheck, 
+  Wrench, 
+  ShoppingBag, 
+  PhoneCall, 
+  Clock, 
+  MapPin, 
+  CheckCircle2, 
+  Star, 
+  ArrowRight, 
+  ChevronRight,
+  Cpu,
+  Monitor,
+  Shield,
+  Search,
+  Sparkles,
+  Award,
+  Users,
+  HardDrive
+} from 'lucide-react';
+
+export default function HomePage() {
+  const [activeTab, setActiveTab] = useState<'all' | 'electrical' | 'cctv' | 'computer'>('all');
+  const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/v1/products?featured=true')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && Array.isArray(data.products)) {
+          setFeaturedProducts(data.products.slice(0, 4));
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoadingProducts(false));
+  }, []);
+
+  return (
+    <div className="flex flex-col space-y-16 sm:space-y-24">
+      {/* 1. HERO SECTION */}
+      <section className="relative overflow-hidden pt-8 pb-16 md:pt-16 md:pb-24">
+        {/* Luminous background light sources for frosted glass refraction */}
+        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[750px] h-[380px] bg-gradient-to-tr from-brand-300/30 to-brand-500/20 blur-[120px] rounded-full pointer-events-none" />
+        <div className="absolute -top-10 right-10 w-[400px] h-[400px] bg-sky-300/20 blur-[100px] rounded-full pointer-events-none" />
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center max-w-3xl mx-auto space-y-6">
+            {/* Sister Concern Frosted Glass Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/70 backdrop-blur-xl text-brand-700 text-xs font-semibold tracking-wide border border-white/90 shadow-[0_4px_20px_rgba(8,127,229,0.08)] animate-in fade-in duration-500">
+              <ShieldCheck className="w-4 h-4 text-brand-600" />
+              <span>A Sister Concern of Amdads Group &bull; Founded 2023</span>
+            </div>
+
+            {/* Headline */}
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-slate-950 tracking-tight leading-[1.15]">
+              Trusted Electrical and <br className="hidden sm:inline" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 via-brand-500 to-sky-400">
+                Technological Solutions
+              </span>
+            </h1>
+
+            {/* Supporting Text */}
+            <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
+              Book professional electrical and technical services, explore genuine technology products, and manage your warranties through one unified, trusted platform.
+            </p>
+
+            {/* CTA Buttons with Glass Sheen */}
+            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 pt-2">
+              <Link
+                href="/services"
+                className="btn-primary text-sm sm:text-base py-3 px-6 shadow-lg shadow-brand-500/25"
+              >
+                <Zap className="w-5 h-5 mr-2 fill-white" />
+                Book a Service
+              </Link>
+              <Link
+                href="/shop"
+                className="btn-secondary text-sm sm:text-base py-3 px-6"
+              >
+                <ShoppingBag className="w-5 h-5 mr-2 text-slate-700" />
+                Shop Products
+              </Link>
+              <Link
+                href="/become-a-technician"
+                className="btn-outline text-sm sm:text-base py-3 px-5"
+              >
+                <Wrench className="w-4 h-4 mr-2" />
+                Become a Technician
+              </Link>
+            </div>
+
+            {/* Trust highlights under Hero with Frosted Glass Tiles */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 pt-8 max-w-4xl mx-auto">
+              <div className="glass-card-hover p-4 rounded-2xl flex items-center gap-3 text-left">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 flex items-center justify-center shrink-0 backdrop-blur-md">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-900">Verified Specialists</h4>
+                  <p className="text-[11px] text-slate-500">NID &amp; Skill Checked</p>
+                </div>
+              </div>
+
+              <div className="glass-card-hover p-4 rounded-2xl flex items-center gap-3 text-left">
+                <div className="w-10 h-10 rounded-xl bg-brand-500/15 border border-brand-500/30 text-brand-600 flex items-center justify-center shrink-0 backdrop-blur-md">
+                  <Clock className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-900">Rapid Response</h4>
+                  <p className="text-[11px] text-slate-500">Moulvibazar &amp; Region</p>
+                </div>
+              </div>
+
+              <div className="glass-card-hover p-4 rounded-2xl flex items-center gap-3 text-left">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-600 flex items-center justify-center shrink-0 backdrop-blur-md">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-900">Digital Warranty</h4>
+                  <p className="text-[11px] text-slate-500">Track &amp; Claim Easily</p>
+                </div>
+              </div>
+
+              <div className="glass-card-hover p-4 rounded-2xl flex items-center gap-3 text-left">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-600 flex items-center justify-center shrink-0 backdrop-blur-md">
+                  <PhoneCall className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-900">Direct Branch</h4>
+                  <p className="text-[11px] text-slate-500">Shop #5, MR Plaza</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 2. POPULAR SERVICES SECTION */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+          <div>
+            <span className="text-xs font-bold tracking-wider uppercase text-brand-600">Verified Service Marketplace</span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">Popular Electrical &amp; Tech Services</h2>
+          </div>
+          <Link href="/services" className="text-sm font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1 group">
+            Browse All Services
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Service Card 1 */}
+          <div className="card-premium overflow-hidden group flex flex-col justify-between">
+            <div>
+              <div className="relative h-44 w-full bg-slate-100 overflow-hidden">
+                <img
+                  src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&auto=format&fit=crop&q=80"
+                  alt="House Electrical Wiring"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-md text-brand-700 text-[11px] font-bold px-2.5 py-1 rounded-full shadow-xs">
+                  Electrical Services
+                </span>
+              </div>
+              <div className="p-5">
+                <h3 className="font-bold text-slate-900 text-base mb-1.5 group-hover:text-brand-600 transition-colors">
+                  Complete House Electrical Wiring
+                </h3>
+                <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
+                  Safe conduit wiring, load balancing, circuit breaker boards, and earthing test by certified master electricians.
+                </p>
+                <div className="mt-4 flex items-center justify-between text-xs">
+                  <span className="text-slate-500">Starting from</span>
+                  <span className="font-extrabold text-slate-950 text-sm">৳1,500</span>
+                </div>
+              </div>
+            </div>
+            <div className="p-5 pt-0">
+              <Link
+                href="/services/complete-house-electrical-wiring"
+                className="btn-primary w-full text-xs py-2"
+              >
+                Book Inspection
+              </Link>
+            </div>
+          </div>
+
+          {/* Service Card 2 */}
+          <div className="card-premium overflow-hidden group flex flex-col justify-between">
+            <div>
+              <div className="relative h-44 w-full bg-slate-100 overflow-hidden">
+                <img
+                  src="https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=800&auto=format&fit=crop&q=80"
+                  alt="CCTV Camera Setup"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-md text-purple-700 text-[11px] font-bold px-2.5 py-1 rounded-full shadow-xs">
+                  CCTV &amp; Security
+                </span>
+              </div>
+              <div className="p-5">
+                <h3 className="font-bold text-slate-900 text-base mb-1.5 group-hover:text-brand-600 transition-colors">
+                  CCTV Camera Complete Installation &amp; Setup
+                </h3>
+                <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
+                  Mounting, neat cable routing, DVR/NVR configuration, and live streaming setup on your smartphone.
+                </p>
+                <div className="mt-4 flex items-center justify-between text-xs">
+                  <span className="text-slate-500">Package setup</span>
+                  <span className="font-extrabold text-slate-950 text-sm">৳1,200</span>
+                </div>
+              </div>
+            </div>
+            <div className="p-5 pt-0">
+              <Link
+                href="/services/cctv-camera-installation-setup"
+                className="btn-primary w-full text-xs py-2"
+              >
+                Book CCTV Setup
+              </Link>
+            </div>
+          </div>
+
+          {/* Service Card 3 */}
+          <div className="card-premium overflow-hidden group flex flex-col justify-between">
+            <div>
+              <div className="relative h-44 w-full bg-slate-100 overflow-hidden">
+                <img
+                  src="https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=800&auto=format&fit=crop&q=80"
+                  alt="Laptop Servicing"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-md text-blue-700 text-[11px] font-bold px-2.5 py-1 rounded-full shadow-xs">
+                  Computer &amp; Laptop
+                </span>
+              </div>
+              <div className="p-5">
+                <h3 className="font-bold text-slate-900 text-base mb-1.5 group-hover:text-brand-600 transition-colors">
+                  Laptop &amp; PC Diagnostics &amp; Repair
+                </h3>
+                <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
+                  Thermal paste service, SSD/RAM upgrades, screen replacement, and genuine OS clean installations.
+                </p>
+                <div className="mt-4 flex items-center justify-between text-xs">
+                  <span className="text-slate-500">Diagnostics fee</span>
+                  <span className="font-extrabold text-slate-950 text-sm">৳600</span>
+                </div>
+              </div>
+            </div>
+            <div className="p-5 pt-0">
+              <Link
+                href="/services/laptop-desktop-hardware-servicing"
+                className="btn-primary w-full text-xs py-2"
+              >
+                Book Tech Service
+              </Link>
+            </div>
+          </div>
+
+          {/* Service Card 4 (Emergency) */}
+          <div className="card-premium overflow-hidden group flex flex-col justify-between border-amber-300/80 bg-amber-50/20">
+            <div>
+              <div className="relative h-44 w-full bg-slate-100 overflow-hidden">
+                <img
+                  src="https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?w=800&auto=format&fit=crop&q=80"
+                  alt="Emergency Electrical"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <span className="absolute top-3 left-3 bg-red-600 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
+                  <Zap className="w-3 h-3 fill-white" />
+                  24/7 Emergency
+                </span>
+              </div>
+              <div className="p-5">
+                <h3 className="font-bold text-slate-900 text-base mb-1.5 group-hover:text-brand-600 transition-colors">
+                  Emergency Electrical Troubleshooting
+                </h3>
+                <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
+                  Immediate dispatch in Moulvibazar for sparking, short circuits, main line trips, and electrical hazards.
+                </p>
+                <div className="mt-4 flex items-center justify-between text-xs">
+                  <span className="text-slate-500">Rapid Callout</span>
+                  <span className="font-extrabold text-slate-950 text-sm">৳500</span>
+                </div>
+              </div>
+            </div>
+            <div className="p-5 pt-0">
+              <Link
+                href="/services/emergency-electrical-troubleshooting"
+                className="btn-danger w-full text-xs py-2"
+              >
+                Request Emergency Help
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. FEATURED TECHNOLOGY PRODUCTS */}
+      <section className="relative py-16 overflow-hidden">
+        {/* Subtle glass ambient glow */}
+        <div className="absolute top-1/2 left-10 w-[500px] h-[350px] bg-brand-400/10 blur-[120px] rounded-full pointer-events-none" />
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+            <div>
+              <span className="text-xs font-bold tracking-wider uppercase text-brand-600">Curated &amp; Tested Hardware</span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">Featured Technology Products</h2>
+            </div>
+            <Link href="/shop" className="text-sm font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1 group">
+              Explore All Products
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+
+          {loadingProducts ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="glass-card h-80 animate-pulse rounded-2xl" />
+              ))}
+            </div>
+          ) : featuredProducts.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {featuredProducts.map((p) => {
+                const img = Array.isArray(p.images) && p.images.length > 0 
+                  ? p.images[0] 
+                  : (typeof p.images === 'string' ? p.images.split(',')[0] : 'https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=800');
+                return (
+                  <div key={p.id} className="card-premium overflow-hidden group flex flex-col justify-between">
+                    <div>
+                      <div className="relative h-48 w-full bg-white/50 backdrop-blur-md p-4 flex items-center justify-center">
+                        <img
+                          src={img}
+                          alt={p.name}
+                          className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform"
+                        />
+                        {p.brand?.name && (
+                          <span className="absolute top-3 left-3 bg-white/80 backdrop-blur-md text-brand-700 border border-white/90 text-[10px] font-bold px-2 py-0.5 rounded-lg shadow-2xs">
+                            {p.brand.name}
+                          </span>
+                        )}
+                        {p.warrantyPeriodMonths && (
+                          <span className="absolute top-3 right-3 bg-emerald-500/15 backdrop-blur-md text-emerald-700 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded-lg">
+                            {p.warrantyPeriodMonths} Mo Warranty
+                          </span>
+                        )}
+                      </div>
+                      <div className="p-4 border-t border-white/60">
+                        <h4 className="font-bold text-slate-900 text-sm line-clamp-1 group-hover:text-brand-600 transition-colors">
+                          {p.name}
+                        </h4>
+                        <p className="text-[11px] text-slate-500 mt-1 line-clamp-1">{p.shortDescription || p.category?.name || 'Verified Equipment'}</p>
+                        <div className="mt-3 flex items-baseline gap-2">
+                          <span className="text-base font-extrabold text-slate-900">৳{p.discountPrice || p.price}</span>
+                          {p.discountPrice && p.discountPrice < p.price && (
+                            <span className="text-xs text-slate-400 line-through">৳{p.price}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4 pt-0">
+                      <Link
+                        href={`/product/${p.slug}`}
+                        className="btn-secondary w-full text-xs py-2 hover:border-brand-500 hover:text-brand-600"
+                      >
+                        View Details
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="glass-card p-8 sm:p-10 rounded-3xl border border-white/80 shadow-glass relative overflow-hidden">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+                <div className="lg:col-span-2 space-y-4">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50/80 border border-brand-200/60 text-brand-700 text-xs font-bold">
+                    <ShieldCheck className="w-3.5 h-3.5 text-brand-600" />
+                    Verified Equipment &amp; Institutional Procurement
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                    Official Hardware Inventory &amp; Custom Lab Sourcing
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-2xl">
+                    NEED ELECTRO provides corporate and retail sourcing for enterprise laptops, high-definition CCTV security packages, high-speed Wi-Fi 6 networking, and Pure Sine Wave IPS backup systems. All hardware undergoes rigorous diagnostics at our Moulvibazar lab before delivery.
+                  </p>
+                  <div className="flex flex-wrap gap-4 pt-2">
+                    <Link href="/contact" className="btn-primary text-xs py-2.5 px-5 flex items-center gap-2 shadow-glass-glow">
+                      <PhoneCall className="w-3.5 h-3.5" />
+                      Inquire Hardware Procurement
+                    </Link>
+                    <Link href="/services" className="btn-secondary text-xs py-2.5 px-5 flex items-center gap-2">
+                      Explore Technical Services
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="glass-card p-4 rounded-2xl border border-white/90 shadow-2xs text-center space-y-1">
+                    <div className="w-8 h-8 rounded-xl bg-brand-500/10 text-brand-600 flex items-center justify-center mx-auto mb-1">
+                      <Cpu className="w-4 h-4" />
+                    </div>
+                    <p className="text-xs font-bold text-slate-900">Lab-Certified</p>
+                    <p className="text-[10px] text-slate-500">Every unit tested</p>
+                  </div>
+                  <div className="glass-card p-4 rounded-2xl border border-white/90 shadow-2xs text-center space-y-1">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mx-auto mb-1">
+                      <ShieldCheck className="w-4 h-4" />
+                    </div>
+                    <p className="text-xs font-bold text-slate-900">Digital Warranty</p>
+                    <p className="text-[10px] text-slate-500">12 - 24 Months QR</p>
+                  </div>
+                  <div className="glass-card p-4 rounded-2xl border border-white/90 shadow-2xs text-center space-y-1">
+                    <div className="w-8 h-8 rounded-xl bg-sky-500/10 text-sky-600 flex items-center justify-center mx-auto mb-1">
+                      <Wrench className="w-4 h-4" />
+                    </div>
+                    <p className="text-xs font-bold text-slate-900">On-Site Setup</p>
+                    <p className="text-[10px] text-slate-500">Certified technicians</p>
+                  </div>
+                  <div className="glass-card p-4 rounded-2xl border border-white/90 shadow-2xs text-center space-y-1">
+                    <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center mx-auto mb-1">
+                      <Award className="w-4 h-4" />
+                    </div>
+                    <p className="text-xs font-bold text-slate-900">Amdads Group</p>
+                    <p className="text-[10px] text-slate-500">Trusted heritage</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* 4. WHY CHOOSE NEED ELECTRO & HOW IT WORKS */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <span className="text-xs font-bold tracking-wider uppercase text-brand-600">The Digital Advantage</span>
+            <h2 className="text-3xl font-extrabold text-slate-900 mt-1 mb-6">
+              Why Homeowners &amp; Businesses Rely on NEED ELECTRO
+            </h2>
+            <div className="space-y-4">
+              <div className="glass-card-hover flex gap-4 p-5 rounded-2xl">
+                <div className="w-11 h-11 rounded-xl bg-brand-500/15 border border-brand-500/30 text-brand-600 flex items-center justify-center shrink-0 backdrop-blur-md">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-900 text-sm">Verified Technician Accountability</h4>
+                  <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                    Every electrician and technician passes NID validation, background skill assessment, and peer review before dispatch.
+                  </p>
+                </div>
+              </div>
+
+              <div className="glass-card-hover flex gap-4 p-5 rounded-2xl">
+                <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 flex items-center justify-center shrink-0 backdrop-blur-md">
+                  <Award className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-900 text-sm">Integrated Digital Warranty</h4>
+                  <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                    No lost paper receipts. Every serial-numbered product and service inspection is tracked directly in your customer account.
+                  </p>
+                </div>
+              </div>
+
+              <div className="glass-card-hover flex gap-4 p-5 rounded-2xl">
+                <div className="w-11 h-11 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-600 flex items-center justify-center shrink-0 backdrop-blur-md">
+                  <Cpu className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-900 text-sm">End-to-End Technology Ecosystem</h4>
+                  <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                    From whole-building copper wiring to smart Wi-Fi CCTV cameras, workstations, and inverters — solve every tech need under one roof.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* How It Works Step Progression - Glass Dark Panel */}
+          <div className="glass-card-dark text-white p-8 sm:p-10 rounded-3xl relative overflow-hidden space-y-6">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/20 blur-[90px] rounded-full pointer-events-none" />
+
+            <h3 className="text-xl font-bold tracking-tight text-white flex items-center gap-2 relative z-10">
+              <Zap className="w-5 h-5 text-brand-400 fill-brand-400" />
+              How NEED ELECTRO Works
+            </h3>
+            
+            <div className="space-y-6 text-xs text-slate-300 relative z-10">
+              <div className="flex gap-4 items-start">
+                <div className="w-8 h-8 rounded-full bg-brand-500/25 text-brand-400 border border-brand-400/50 font-bold flex items-center justify-center shrink-0 shadow-xs">
+                  1
+                </div>
+                <div>
+                  <h5 className="font-bold text-sm text-white">Select Service or Hardware</h5>
+                  <p className="text-slate-300 mt-0.5">Describe your requirement, upload photos if needed, and pick your preferred time slot.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4 items-start">
+                <div className="w-8 h-8 rounded-full bg-brand-500/25 text-brand-400 border border-brand-400/50 font-bold flex items-center justify-center shrink-0 shadow-xs">
+                  2
+                </div>
+                <div>
+                  <h5 className="font-bold text-sm text-white">Verified Technician Assigned</h5>
+                  <p className="text-slate-300 mt-0.5">Our smart matching system notifies the closest qualified specialist in your area.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4 items-start">
+                <div className="w-8 h-8 rounded-full bg-brand-500/25 text-brand-400 border border-brand-400/50 font-bold flex items-center justify-center shrink-0 shadow-xs">
+                  3
+                </div>
+                <div>
+                  <h5 className="font-bold text-sm text-white">Realtime Progress Tracking</h5>
+                  <p className="text-slate-300 mt-0.5">Track technician arrival (On the Way, Arrived, In Progress, Work Completed).</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4 items-start">
+                <div className="w-8 h-8 rounded-full bg-emerald-500/25 text-emerald-400 border border-emerald-400/50 font-bold flex items-center justify-center shrink-0 shadow-xs">
+                  4
+                </div>
+                <div>
+                  <h5 className="font-bold text-sm text-white">Payment &amp; Warranty Recorded</h5>
+                  <p className="text-slate-300 mt-0.5">Pay via bKash, Nagad, Card or Cash. Rate your experience and enjoy peace of mind.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 relative z-10">
+              <Link href="/services" className="btn-primary w-full text-xs py-3">
+                Experience It Now
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. VERIFIED TECHNICIANS NETWORK SHOWCASE */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center max-w-2xl mx-auto mb-10">
+          <span className="text-xs font-bold tracking-wider uppercase text-brand-600">The Human Backbone</span>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
+            Meet Our Verified Technicians
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-600 mt-2">
+            Certified specialists ready to assist your residential, commercial, or enterprise infrastructure.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Tech 1 */}
+          <div className="card-premium p-6 flex flex-col justify-between space-y-4">
+            <div className="flex items-start gap-4">
+              <img
+                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80"
+                alt="Md. Abul Kalam"
+                className="w-14 h-14 rounded-2xl object-cover border-2 border-brand-200"
+              />
+              <div className="flex-1">
+                <div className="flex items-center gap-1.5">
+                  <h4 className="font-bold text-slate-900 text-sm">Md. Abul Kalam</h4>
+                  <span className="inline-flex items-center text-[10px] bg-brand-50 text-brand-600 font-bold px-1.5 py-0.5 rounded">
+                    Verified
+                  </span>
+                </div>
+                <p className="text-xs text-brand-600 font-medium">Master Electrician &bull; 8 Yrs Exp</p>
+                <div className="flex items-center gap-1 text-amber-500 text-xs mt-1">
+                  <Star className="w-3.5 h-3.5 fill-amber-500" />
+                  <span className="font-bold text-slate-800">4.9</span>
+                  <span className="text-slate-400 text-[11px]">(48 Completed Jobs)</span>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Specialized in commercial house wiring, distribution boards, and industrial electrical troubleshooting.
+            </p>
+
+            <div className="flex flex-wrap gap-1.5">
+              <span className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded">House Wiring</span>
+              <span className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded">Distribution Board</span>
+              <span className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded">IPS Setup</span>
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+              <span className="text-slate-500">Service Area: <strong className="text-slate-800">Moulvibazar Sadar</strong></span>
+              <Link href="/services/complete-house-electrical-wiring" className="text-brand-600 font-semibold hover:underline">
+                Book Tech
+              </Link>
+            </div>
+          </div>
+
+          {/* Tech 2 */}
+          <div className="card-premium p-6 flex flex-col justify-between space-y-4">
+            <div className="flex items-start gap-4">
+              <img
+                src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80"
+                alt="Tariqul Islam"
+                className="w-14 h-14 rounded-2xl object-cover border-2 border-purple-200"
+              />
+              <div className="flex-1">
+                <div className="flex items-center gap-1.5">
+                  <h4 className="font-bold text-slate-900 text-sm">Tariqul Islam</h4>
+                  <span className="inline-flex items-center text-[10px] bg-brand-50 text-brand-600 font-bold px-1.5 py-0.5 rounded">
+                    Verified
+                  </span>
+                </div>
+                <p className="text-xs text-purple-600 font-medium">CCTV &amp; Network Specialist &bull; 5 Yrs Exp</p>
+                <div className="flex items-center gap-1 text-amber-500 text-xs mt-1">
+                  <Star className="w-3.5 h-3.5 fill-amber-500" />
+                  <span className="font-bold text-slate-800">4.85</span>
+                  <span className="text-slate-400 text-[11px]">(31 Completed Jobs)</span>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Certified Dahua &amp; Hikvision technician. Expert in DVR/NVR configuration and Wi-Fi router coverage.
+            </p>
+
+            <div className="flex flex-wrap gap-1.5">
+              <span className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded">CCTV Security</span>
+              <span className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded">Wi-Fi Setup</span>
+              <span className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded">Laptop Repair</span>
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+              <span className="text-slate-500">Service Area: <strong className="text-slate-800">Kusumbag &amp; Sreemangal</strong></span>
+              <Link href="/services/cctv-camera-installation-setup" className="text-brand-600 font-semibold hover:underline">
+                Book Tech
+              </Link>
+            </div>
+          </div>
+
+          {/* Become a Technician Frosted Card */}
+          <div className="rounded-3xl border-2 border-dashed border-brand-400/50 bg-white/60 backdrop-blur-xl p-6 flex flex-col justify-between space-y-4 text-center shadow-lg shadow-brand-500/5 hover:border-brand-500 transition-all duration-300">
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-brand-400 text-white flex items-center justify-center mx-auto shadow-md shadow-brand-500/30 border border-white/20">
+                <Wrench className="w-6 h-6" />
+              </div>
+              <h4 className="font-extrabold text-slate-900 text-base">Are You a Skilled Technician?</h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Join NEED ELECTRO network. Receive confirmed local service requests, build your profile, and receive fast payouts to your digital wallet.
+              </p>
+            </div>
+            <div>
+              <Link href="/become-a-technician" className="btn-primary w-full text-xs py-2.5">
+                Join Verified Network
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 6. SERVICE AREAS SECTION - Glass Dark Panel */}
+      <section className="glass-card-dark text-white py-14 relative overflow-hidden">
+        <div className="absolute -top-24 left-1/4 w-96 h-96 bg-brand-500/15 blur-[100px] rounded-full pointer-events-none" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="space-y-2 text-center md:text-left">
+              <span className="text-xs font-bold uppercase tracking-wider text-brand-400">Regional Coverage</span>
+              <h3 className="text-2xl font-extrabold text-white">Serving Moulvibazar &amp; Sylhet Division</h3>
+              <p className="text-xs text-slate-300 max-w-xl">
+                Rapid on-site service in Moulvibazar Sadar, Kusumbag, Sreemangal, Kamalganj, Rajnagar, and Kulaura. Technology products delivered across Bangladesh.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2.5 justify-center">
+              <span className="px-3.5 py-1.5 rounded-xl bg-white/10 backdrop-blur-md text-xs font-semibold text-white border border-white/15 shadow-xs">Moulvibazar Sadar</span>
+              <span className="px-3.5 py-1.5 rounded-xl bg-white/10 backdrop-blur-md text-xs font-semibold text-white border border-white/15 shadow-xs">Kusumbag Point</span>
+              <span className="px-3.5 py-1.5 rounded-xl bg-white/10 backdrop-blur-md text-xs font-semibold text-white border border-white/15 shadow-xs">Sreemangal</span>
+              <span className="px-3.5 py-1.5 rounded-xl bg-white/10 backdrop-blur-md text-xs font-semibold text-white border border-white/15 shadow-xs">Kamalganj</span>
+              <span className="px-3.5 py-1.5 rounded-xl bg-white/10 backdrop-blur-md text-xs font-semibold text-white border border-white/15 shadow-xs">Rajnagar</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 7. NEED HELP / HOTLINE CALLOUT - Frosted Gradient Sheen Banner */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        <div className="bg-gradient-to-r from-brand-600/90 via-brand-700/90 to-slate-900/90 backdrop-blur-2xl text-white rounded-3xl p-8 sm:p-12 shadow-2xl border border-white/20 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-sky-400/20 blur-[100px] pointer-events-none rounded-full" />
+          
+          <div className="space-y-3 text-center md:text-left relative z-10">
+            <span className="inline-block px-3.5 py-1 rounded-full text-[11px] font-bold bg-white/20 backdrop-blur-md border border-white/30 text-white">
+              NEED HELP? WE ARE HERE 7 DAYS A WEEK
+            </span>
+            <h3 className="text-2xl sm:text-3xl font-black text-white">
+              Speak Directly With Our Electrical &amp; Tech Engineers
+            </h3>
+            <p className="text-xs sm:text-sm text-brand-100 max-w-lg">
+              Have questions about wiring safety, computer repairs, or warranty claims? Call our direct hotline or visit our branch in Kusumbag.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 relative z-10">
+            <a
+              href="tel:01733983752"
+              className="btn-secondary text-sm py-3 px-6 text-brand-700 font-bold bg-white/95 hover:bg-white shadow-lg"
+            >
+              <PhoneCall className="w-4 h-4 mr-2 text-brand-600" />
+              01733 983752
+            </a>
+            <Link
+              href="/contact"
+              className="px-5 py-3 rounded-xl border border-white/40 bg-white/10 backdrop-blur-md text-white hover:bg-white/20 text-sm font-semibold transition shadow-xs"
+            >
+              Visit Kusumbag Branch
+            </Link>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}

@@ -24,7 +24,7 @@ export async function GET(
       return NextResponse.json({ error: 'Technician not found' }, { status: 404 });
     }
 
-    const totalEarned = technician.earnings.reduce((sum, e) => sum + e.technicianAmount, 0);
+    const totalEarned = (technician.earnings as Array<{ technicianAmount: number }>).reduce((sum: number, e: { technicianAmount: number }) => sum + e.technicianAmount, 0);
 
     return NextResponse.json({
       success: true,

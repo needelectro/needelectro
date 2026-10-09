@@ -158,6 +158,18 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Record financial audit log
+    await prisma.auditLog.create({
+      data: {
+        userId: session?.id || null,
+        userRole: session?.role || 'CUSTOMER',
+        action: 'ORDER_PLACED',
+        entity: 'ORDER',
+        entityId: order.id,
+        newData: JSON.stringify({ orderNumber: order.orderNumber, totalAmount: order.totalAmount, paymentMethod }),
+      },
+    });
+
     return NextResponse.json({ success: true, order });
   } catch (error) {
     console.error('Create order error:', error);

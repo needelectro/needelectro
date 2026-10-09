@@ -4,13 +4,17 @@ import { Zap, Phone, Mail, MapPin, Globe, ShieldCheck } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="bg-slate-950 text-slate-300 pt-16 pb-24 md:pb-12 border-t border-slate-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <footer className="bg-slate-950/90 backdrop-blur-2xl text-slate-300 pt-16 pb-24 md:pb-12 border-t border-white/10 relative overflow-hidden shadow-2xl">
+      {/* Background ambient lighting for frosted dark glass refraction */}
+      <div className="absolute top-0 right-1/4 w-[500px] h-[300px] bg-brand-500/10 blur-[130px] pointer-events-none rounded-full" />
+      <div className="absolute -bottom-20 left-10 w-[400px] h-[300px] bg-indigo-500/10 blur-[120px] pointer-events-none rounded-full" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
           {/* Brand Info */}
           <div className="lg:col-span-2 space-y-4">
             <Link href="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-brand-500 flex items-center justify-center text-white shadow-lg shadow-brand-500/20">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-brand-400 flex items-center justify-center text-white shadow-lg shadow-brand-500/30 border border-white/20">
                 <Zap className="w-6 h-6 fill-white" />
               </div>
               <div className="flex flex-col">
@@ -29,7 +33,7 @@ export default function Footer() {
             </p>
 
             <div className="pt-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand-950 text-brand-300 border border-brand-800/60">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/5 backdrop-blur-md text-brand-300 border border-brand-500/30 shadow-inner">
                 <ShieldCheck className="w-3.5 h-3.5 text-brand-400" />
                 A Sister Concern of Amdads Group
               </span>
@@ -71,11 +75,26 @@ export default function Footer() {
 
           {/* Products & Warranty */}
           <div className="space-y-3">
-            <h4 className="text-sm font-bold text-white uppercase tracking-wider">Platform</h4>
+            <h4 className="text-sm font-bold text-white uppercase tracking-wider">Platform &amp; Network</h4>
             <ul className="space-y-2 text-sm text-slate-400">
               <li>
                 <Link href="/shop" className="hover:text-white transition">
                   Product Marketplace
+                </Link>
+              </li>
+              <li>
+                <Link href="/training" className="text-amber-400 hover:text-amber-300 transition font-medium">
+                  Skills Academy &amp; Courses
+                </Link>
+              </li>
+              <li>
+                <Link href="/verify-certificate" className="text-emerald-400 hover:text-emerald-300 transition text-xs">
+                  Verify Graduate Certificate
+                </Link>
+              </li>
+              <li>
+                <Link href="/branches" className="hover:text-white transition">
+                  Physical Branch Network
                 </Link>
               </li>
               <li>
@@ -84,18 +103,13 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/become-a-technician" className="text-brand-400 hover:text-brand-300 transition font-medium">
-                  Become a Technician
+                <Link href="/become-a-seller" className="text-sky-400 hover:text-sky-300 transition text-xs font-medium">
+                  Become a Merchant / Seller
                 </Link>
               </li>
               <li>
                 <Link href="/warranty" className="hover:text-white transition">
-                  Check Warranty
-                </Link>
-              </li>
-              <li>
-                <Link href="/support" className="hover:text-white transition">
-                  Support &amp; Help Desk
+                  Check Digital Warranty
                 </Link>
               </li>
             </ul>

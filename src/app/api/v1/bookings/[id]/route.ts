@@ -67,7 +67,7 @@ export async function PATCH(
     }
 
     // Update status & record timeline
-    const updated = await prisma.$transaction(async (tx) => {
+    const updated = await prisma.$transaction(async (tx: any) => {
       const updateData: any = {};
       if (status) updateData.status = status;
       if (paymentStatus) updateData.paymentStatus = paymentStatus;

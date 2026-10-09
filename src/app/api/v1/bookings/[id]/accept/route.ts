@@ -40,7 +40,7 @@ export async function POST(
     }
 
     // Atomic transaction to prevent race conditions
-    const updatedBooking = await prisma.$transaction(async (tx) => {
+    const updatedBooking = await prisma.$transaction(async (tx: any) => {
       const existing = await tx.booking.findUnique({
         where: { id },
       });

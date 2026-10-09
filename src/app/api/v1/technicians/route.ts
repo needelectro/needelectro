@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
       orderBy: [{ ratingOverall: 'desc' }, { totalCompletedJobs: 'desc' }],
     });
 
-    const formatted = technicians.map((t) => ({
+    const formatted = technicians.map((t: any) => ({
       id: t.id,
       name: t.user.name,
       avatarUrl: t.user.avatarUrl || t.profilePhotoUrl,
