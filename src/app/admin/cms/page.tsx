@@ -9,11 +9,14 @@ import {
   ExternalLink,
   RefreshCw,
   X,
-  Calendar,
-  Percent,
-  CheckCircle2,
-  Eye,
-  Megaphone
+  FileText,
+  Globe,
+  Share2,
+  Shield,
+  HelpCircle,
+  Megaphone,
+  Save,
+  CheckCircle2
 } from "lucide-react";
 
 interface Banner {
@@ -21,9 +24,9 @@ interface Banner {
   title: string;
   subtitle?: string | null;
   imageUrl: string;
-  linkUrl?: string | null;
-  buttonText?: string | null;
-  position: string;
+  ctaLink?: string | null;
+  ctaText?: string | null;
+  placement: string;
   sortOrder: number;
   isActive: boolean;
 }
@@ -31,12 +34,9 @@ interface Banner {
 interface Promotion {
   id: string;
   code: string;
-  title: string;
-  description?: string | null;
-  discountType: string;
-  discountValue: number;
-  minOrderValue: number;
-  maxDiscount?: number | null;
+  discountPercent?: number | null;
+  discountAmount?: number | null;
+  minOrderAmount: number;
   usageCount: number;
   startDate: string;
   endDate: string;
@@ -46,11 +46,17 @@ interface Promotion {
 export default function CmsPage() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [settings, setSettings] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"banners" | "promotions">("banners");
+  const [activeTab, setActiveTab] = useState<
+    "banners" | "promotions" | "policies" | "about" | "seo" | "social"
+  >("banners");
+
+  // Modals & form saving
   const [isBannerModalOpen, setIsBannerModalOpen] = useState(false);
   const [isPromoModalOpen, setIsPromoModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [savedSuccess, setSavedSuccess] = useState(false);
 
   // Forms
   const [bannerForm, setBannerForm] = useState({
@@ -65,12 +71,9 @@ export default function CmsPage() {
 
   const [promoForm, setPromoForm] = useState({
     code: "",
-    title: "",
-    description: "",
     discountType: "PERCENTAGE",
     discountValue: 10,
     minOrderValue: 1000,
-    maxDiscount: 500,
     startDate: new Date().toISOString().substring(0, 10),
     endDate: new Date(Date.now() + 30 * 86400000).toISOString().substring(0, 10),
   });
@@ -83,6 +86,7 @@ export default function CmsPage() {
         const data = await res.json();
         setBanners(data.banners || []);
         setPromotions(data.promotions || []);
+        setSettings(data.settings || {});
       }
     } catch (err) {
       console.error(err);
@@ -135,6 +139,26 @@ export default function CmsPage() {
     }
   };
 
+  const handleSaveContent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const res = await fetch("/api/v1/admin/cms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "content_bulk", settings }),
+      });
+      if (res.ok) {
+        setSavedSuccess(true);
+        setTimeout(() => setSavedSuccess(false), 3000);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleDelete = async (type: "banner" | "promo", id: string) => {
     if (!confirm(`Delete this ${type}?`)) return;
     try {
@@ -149,6 +173,10 @@ export default function CmsPage() {
     }
   };
 
+  const handleSettingChange = (key: string, value: string) => {
+    setSettings((prev) => ({ ...prev, [key]: value }));
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -156,25 +184,31 @@ export default function CmsPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
             <Megaphone className="w-7 h-7 text-[#008CFF]" />
-            CMS & Marketing Campaigns
+            Full Website Content Management System (CMS)
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Manage storefront hero banners, seasonal marketing sliders, and discount coupon codes.
+            Manage public storefront hero banners, promotional coupons, legal policies, About Us, SEO meta, and social channels.
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {activeTab === "banners" ? (
+          {savedSuccess && (
+            <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
+              <CheckCircle2 className="w-4 h-4" /> Live Content Published
+            </span>
+          )}
+          {activeTab === "banners" && (
             <button
               onClick={() => setIsBannerModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#008CFF] text-white rounded-lg text-sm font-semibold hover:bg-blue-600 transition shadow-sm"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#008CFF] text-white rounded-lg text-xs font-bold hover:bg-blue-600 transition shadow-sm"
             >
               <Plus className="w-4 h-4" />
               Add Banner
             </button>
-          ) : (
+          )}
+          {activeTab === "promotions" && (
             <button
               onClick={() => setIsPromoModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#008CFF] text-white rounded-lg text-sm font-semibold hover:bg-blue-600 transition shadow-sm"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#008CFF] text-white rounded-lg text-xs font-bold hover:bg-blue-600 transition shadow-sm"
             >
               <Plus className="w-4 h-4" />
               New Coupon
@@ -183,43 +217,47 @@ export default function CmsPage() {
           <button
             onClick={fetchCmsData}
             className="p-2 border border-slate-300 rounded-lg text-slate-700 bg-white hover:bg-slate-50 shadow-sm"
+            title="Refresh"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </button>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-slate-200">
-        <button
-          onClick={() => setActiveTab("banners")}
-          className={`px-5 py-2.5 font-semibold text-sm border-b-2 transition-colors flex items-center gap-2 ${
-            activeTab === "banners"
-              ? "border-[#008CFF] text-[#008CFF]"
-              : "border-transparent text-slate-500 hover:text-slate-700"
-          }`}
-        >
-          <Image className="w-4 h-4" />
-          Storefront Banners ({banners.length})
-        </button>
-        <button
-          onClick={() => setActiveTab("promotions")}
-          className={`px-5 py-2.5 font-semibold text-sm border-b-2 transition-colors flex items-center gap-2 ${
-            activeTab === "promotions"
-              ? "border-[#008CFF] text-[#008CFF]"
-              : "border-transparent text-slate-500 hover:text-slate-700"
-          }`}
-        >
-          <Tag className="w-4 h-4" />
-          Coupon Codes & Promotions ({promotions.length})
-        </button>
+      {/* Navigation Tabs */}
+      <div className="flex border-b border-slate-200 bg-white rounded-xl p-1.5 shadow-sm overflow-x-auto gap-1">
+        {[
+          { key: "banners", label: "Hero Banners", icon: Image },
+          { key: "promotions", label: "Coupons & Discounts", icon: Tag },
+          { key: "policies", label: "Policies & Legal", icon: Shield },
+          { key: "about", label: "About Us & Story", icon: FileText },
+          { key: "seo", label: "SEO & Meta Tags", icon: Globe },
+          { key: "social", label: "Social Media & Footer", icon: Share2 },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key as any)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap ${
+                activeTab === tab.key
+                  ? "bg-[#008CFF] text-white shadow-sm"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
       </div>
 
-      {activeTab === "banners" ? (
+      {/* Tab 1: Hero Banners */}
+      {activeTab === "banners" && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {banners.length === 0 ? (
             <div className="col-span-full py-12 text-center text-slate-400 bg-white rounded-xl border border-slate-200">
-              No banners active. Click &quot;Add Banner&quot; to configure hero slides.
+              No hero banners active. Click &quot;Add Banner&quot; above to create storefront promotions.
             </div>
           ) : (
             banners.map((b) => (
@@ -240,12 +278,12 @@ export default function CmsPage() {
                     {b.subtitle && <p className="text-xs text-slate-500 mt-0.5">{b.subtitle}</p>}
                     <div className="text-xs text-[#008CFF] font-medium mt-2 flex items-center gap-1">
                       <ExternalLink className="w-3 h-3" />
-                      Link: {b.linkUrl}
+                      Link: {b.ctaLink} ({b.ctaText || "Action"})
                     </div>
                   </div>
                   <div className="flex items-center justify-between pt-3 mt-3 border-t border-slate-100">
                     <span className="text-xs font-semibold px-2 py-0.5 rounded bg-blue-50 text-[#008CFF]">
-                      {b.position}
+                      {b.placement}
                     </span>
                     <button
                       onClick={() => handleDelete("banner", b.id)}
@@ -259,17 +297,19 @@ export default function CmsPage() {
             ))
           )}
         </div>
-      ) : (
-        /* Promotions Table */
+      )}
+
+      {/* Tab 2: Promotions & Coupons */}
+      {activeTab === "promotions" && (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm text-slate-600">
               <thead className="bg-slate-50 text-xs uppercase font-semibold text-slate-500 border-b border-slate-200">
                 <tr>
                   <th className="px-4 py-3">Coupon Code</th>
-                  <th className="px-4 py-3">Campaign Title</th>
                   <th className="px-4 py-3">Discount Value</th>
-                  <th className="px-4 py-3">Min. Order</th>
+                  <th className="px-4 py-3">Min. Order (BDT)</th>
+                  <th className="px-4 py-3">Redemptions</th>
                   <th className="px-4 py-3">Validity</th>
                   <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
@@ -289,15 +329,14 @@ export default function CmsPage() {
                           {p.code}
                         </span>
                       </td>
-                      <td className="px-4 py-3.5 font-medium text-slate-900">
-                        {p.title}
-                        {p.description && <div className="text-xs text-slate-400 font-normal">{p.description}</div>}
-                      </td>
                       <td className="px-4 py-3.5 font-bold text-emerald-600">
-                        {p.discountType === "PERCENTAGE" ? `${p.discountValue}% OFF` : `৳${p.discountValue} FLAT OFF`}
+                        {p.discountPercent ? `${p.discountPercent}% OFF` : `৳${p.discountAmount} FLAT OFF`}
                       </td>
                       <td className="px-4 py-3.5 text-xs text-slate-700">
-                        ৳{p.minOrderValue.toLocaleString()}
+                        ৳{p.minOrderAmount.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3.5 text-xs text-slate-700">
+                        {p.usageCount} times used
                       </td>
                       <td className="px-4 py-3.5 text-xs text-slate-500">
                         {new Date(p.startDate).toLocaleDateString("en-GB")} to {new Date(p.endDate).toLocaleDateString("en-GB")}
@@ -317,6 +356,294 @@ export default function CmsPage() {
             </table>
           </div>
         </div>
+      )}
+
+      {/* Tab 3: Policies & Legal Texts */}
+      {activeTab === "policies" && (
+        <form onSubmit={handleSaveContent} className="space-y-6">
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <h2 className="font-bold text-slate-900 text-base flex items-center gap-2">
+              <Shield className="w-5 h-5 text-[#008CFF]" />
+              Store Policies & Legal Terms (Editable Live)
+            </h2>
+            <p className="text-xs text-slate-500">
+              Edit the text that appears on `/privacy`, `/terms`, `/returns`, and warranty service pages without modifying code.
+            </p>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
+                Privacy Policy
+              </label>
+              <textarea
+                rows={5}
+                value={settings.policy_privacy || "NEED ELECTRO values your privacy and secures all customer personal and payment details."}
+                onChange={(e) => handleSettingChange("policy_privacy", e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
+                Terms and Conditions
+              </label>
+              <textarea
+                rows={5}
+                value={settings.policy_terms || "By placing an order or booking an electrical technician on NEED ELECTRO, you agree to our service terms."}
+                onChange={(e) => handleSettingChange("policy_terms", e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
+                Return & Refund Policy
+              </label>
+              <textarea
+                rows={4}
+                value={settings.policy_returns || "Products can be returned within 7 days of delivery in original packaging for replacement or refund."}
+                onChange={(e) => handleSettingChange("policy_returns", e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
+                Warranty & Service Guarantee Policy
+              </label>
+              <textarea
+                rows={4}
+                value={settings.policy_warranty || "Official brand warranty valid for up to 12-24 months. Electrical technician service works include a 7-day workmanship guarantee."}
+                onChange={(e) => handleSettingChange("policy_warranty", e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+              />
+            </div>
+
+            <div className="flex justify-end pt-3">
+              <button
+                type="submit"
+                disabled={saving}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#008CFF] text-white rounded-lg text-xs font-bold hover:bg-blue-600 shadow-sm"
+              >
+                <Save className="w-4 h-4" />
+                {saving ? "Saving..." : "Publish Policies"}
+              </button>
+            </div>
+          </div>
+        </form>
+      )}
+
+      {/* Tab 4: About Us & Story */}
+      {activeTab === "about" && (
+        <form onSubmit={handleSaveContent} className="space-y-6">
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <h2 className="font-bold text-slate-900 text-base flex items-center gap-2">
+              <FileText className="w-5 h-5 text-[#008CFF]" />
+              About NEED ELECTRO & Company Story
+            </h2>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
+                About Us Headline
+              </label>
+              <input
+                type="text"
+                value={settings.about_headline || "Trusted Electrical and Technological Solutions in Moulvibazar & Bangladesh"}
+                onChange={(e) => handleSettingChange("about_headline", e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
+                Full Company Story & Mission
+              </label>
+              <textarea
+                rows={6}
+                value={settings.about_story || "NEED ELECTRO, a proud sister concern of AMDADS GROUP, is dedicated to delivering certified electrical installations, computer & CCTV hardware, solar technologies, and custom digital software solutions across Sylhet division and throughout Bangladesh."}
+                onChange={(e) => handleSettingChange("about_story", e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">Core Mission</label>
+                <textarea
+                  rows={3}
+                  value={settings.about_mission || "To provide households and commercial enterprises with safe, certified electrical and IT infrastructure."}
+                  onChange={(e) => handleSettingChange("about_mission", e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">Vision</label>
+                <textarea
+                  rows={3}
+                  value={settings.about_vision || "To be the leading electrical and enterprise tech provider across Bangladesh."}
+                  onChange={(e) => handleSettingChange("about_vision", e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-3">
+              <button
+                type="submit"
+                disabled={saving}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#008CFF] text-white rounded-lg text-xs font-bold hover:bg-blue-600 shadow-sm"
+              >
+                <Save className="w-4 h-4" />
+                {saving ? "Saving..." : "Save About Us Content"}
+              </button>
+            </div>
+          </div>
+        </form>
+      )}
+
+      {/* Tab 5: SEO & Meta Tags */}
+      {activeTab === "seo" && (
+        <form onSubmit={handleSaveContent} className="space-y-6">
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <h2 className="font-bold text-slate-900 text-base flex items-center gap-2">
+              <Globe className="w-5 h-5 text-emerald-600" />
+              SEO & Social Meta Tags Configuration
+            </h2>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
+                Website Meta Title
+              </label>
+              <input
+                type="text"
+                value={settings.seo_title || "NEED ELECTRO | Trusted Electrical & Technological Solutions"}
+                onChange={(e) => handleSettingChange("seo_title", e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
+                Meta Description
+              </label>
+              <textarea
+                rows={3}
+                value={settings.seo_description || "Certified electrical services, CCTV, computers, and custom software in Moulvibazar and Bangladesh. A Sister Concern of AMDADS GROUP."}
+                onChange={(e) => handleSettingChange("seo_description", e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
+                SEO Keywords (Comma Separated)
+              </label>
+              <input
+                type="text"
+                value={settings.seo_keywords || "electrician moulvibazar, cctv installation, need electro, amdads group, computer shop, erp software bangladesh"}
+                onChange={(e) => handleSettingChange("seo_keywords", e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
+                Open Graph / Social Sharing Image URL
+              </label>
+              <input
+                type="text"
+                value={settings.seo_og_image || "/logo.png"}
+                onChange={(e) => handleSettingChange("seo_og_image", e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono"
+              />
+            </div>
+
+            <div className="flex justify-end pt-3">
+              <button
+                type="submit"
+                disabled={saving}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#008CFF] text-white rounded-lg text-xs font-bold hover:bg-blue-600 shadow-sm"
+              >
+                <Save className="w-4 h-4" />
+                {saving ? "Saving..." : "Update SEO Metadata"}
+              </button>
+            </div>
+          </div>
+        </form>
+      )}
+
+      {/* Tab 6: Social Media & Footer */}
+      {activeTab === "social" && (
+        <form onSubmit={handleSaveContent} className="space-y-6">
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <h2 className="font-bold text-slate-900 text-base flex items-center gap-2">
+              <Share2 className="w-5 h-5 text-purple-600" />
+              Social Channels & Storefront Footer
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">Facebook Page URL</label>
+                <input
+                  type="text"
+                  value={settings.social_facebook || "https://facebook.com/needelectro"}
+                  onChange={(e) => handleSettingChange("social_facebook", e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">WhatsApp Hotline Link</label>
+                <input
+                  type="text"
+                  value={settings.social_whatsapp || "https://wa.me/8801733983752"}
+                  onChange={(e) => handleSettingChange("social_whatsapp", e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">YouTube Channel URL</label>
+                <input
+                  type="text"
+                  value={settings.social_youtube || "https://youtube.com/@needelectro"}
+                  onChange={(e) => handleSettingChange("social_youtube", e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">LinkedIn URL</label>
+                <input
+                  type="text"
+                  value={settings.social_linkedin || "https://linkedin.com/company/needelectro"}
+                  onChange={(e) => handleSettingChange("social_linkedin", e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">Footer Copyright Notice</label>
+              <input
+                type="text"
+                value={settings.footer_copyright || "© 2026 NEED ELECTRO. All Rights Reserved. A Sister Concern of AMDADS GROUP."}
+                onChange={(e) => handleSettingChange("footer_copyright", e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+              />
+            </div>
+
+            <div className="flex justify-end pt-3">
+              <button
+                type="submit"
+                disabled={saving}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#008CFF] text-white rounded-lg text-xs font-bold hover:bg-blue-600 shadow-sm"
+              >
+                <Save className="w-4 h-4" />
+                {saving ? "Saving..." : "Save Social & Footer Links"}
+              </button>
+            </div>
+          </div>
+        </form>
       )}
 
       {/* Add Banner Modal */}
@@ -436,18 +763,6 @@ export default function CmsPage() {
                     <option value="FIXED">Flat BDT (৳)</option>
                   </select>
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Campaign Title *</label>
-                <input
-                  type="text"
-                  required
-                  value={promoForm.title}
-                  onChange={(e) => setPromoForm({ ...promoForm, title: e.target.value })}
-                  placeholder="e.g. Moulvibazar Tech Fest Discount"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
-                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">

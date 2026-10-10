@@ -113,3 +113,124 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function PATCH(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { id, ...updates } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: 'Service ID is required' }, { status: 400 });
+    }
+
+    const currentService = await prisma.service.findUnique({ where: { id } });
+    if (!currentService) {
+      return NextResponse.json({ error: 'Service not found' }, { status: 404 });
+    }
+
+    const dataToUpdate: any = {};
+    if (updates.name !== undefined) dataToUpdate.name = updates.name;
+    if (updates.basePrice !== undefined) dataToUpdate.basePrice = Number(updates.basePrice);
+    if (updates.priceType !== undefined) dataToUpdate.priceType = updates.priceType;
+    if (updates.estimatedDuration !== undefined) dataToUpdate.estimatedDuration = updates.estimatedDuration;
+    if (updates.isEmergencyService !== undefined) dataToUpdate.isEmergencyService = Boolean(updates.isEmergencyService);
+    if (updates.shortDescription !== undefined) dataToUpdate.shortDescription = updates.shortDescription;
+    if (updates.fullDescription !== undefined) dataToUpdate.fullDescription = updates.fullDescription;
+    if (updates.isActive !== undefined) dataToUpdate.isActive = Boolean(updates.isActive);
+    if (updates.sortOrder !== undefined) dataToUpdate.sortOrder = Number(updates.sortOrder);
+    if (updates.categoryId !== undefined) dataToUpdate.categoryId = updates.categoryId;
+
+    const updated = await prisma.service.update({
+      where: { id },
+      data: dataToUpdate,
+      include: { category: true },
+    });
+
+    try {
+      await prisma.auditLog.create({
+        data: {
+          action: 'UPDATE_SERVICE',
+          entity: 'Service',
+          entityId: id,
+          previousData: JSON.stringify({ basePrice: currentService.basePrice, isActive: currentService.isActive }),
+          newData: JSON.stringify(dataToUpdate),
+        },
+      });
+    } catch (auditErr) {
+      console.warn('Audit log write error:', auditErr);
+    }
+
+    return NextResponse.json({ success: true, service: updated });
+  } catch (error: any) {
+    console.error('Update service error:', error);
+    return NextResponse.json({ error: error.message || 'Failed to update service' }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+    const permanent = searchParams.get('permanent') === 'true';
+
+    if (!id) {
+      return NextResponse.json({ error: 'Service ID is required' }, { status: 400 });
+    }
+
+    const service = await prisma.service.findUnique({
+      where: { id },
+      include: { bookings: { take: 1 } },
+    });
+
+    if (!service) {
+      return NextResponse.json({ error: 'Service not found' }, { status: 404 });
+    }
+
+    const hasBookings = service.bookings.length > 0;
+
+    // Safety rule: Never delete services with historical bookings
+    if (hasBookings || !permanent) {
+      await prisma.service.update({
+        where: { id },
+        data: { isActive: false },
+      });
+
+      await prisma.auditLog.create({
+        data: {
+          action: 'ARCHIVE_SERVICE',
+          entity: 'Service',
+          entityId: id,
+          newData: JSON.stringify({
+            status: 'ARCHIVED',
+            reason: hasBookings ? 'Historical booking records protection' : 'Archived by administrator',
+          }),
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        archived: true,
+        message: hasBookings
+          ? 'Service has historical booking records. It was safely archived instead of permanently deleted.'
+          : 'Service archived successfully.',
+      });
+    }
+
+    await prisma.service.delete({ where: { id } });
+
+    await prisma.auditLog.create({
+      data: {
+        action: 'DELETE_SERVICE_PERMANENT',
+        entity: 'Service',
+        entityId: id,
+        previousData: JSON.stringify({ name: service.name }),
+      },
+    });
+
+    return NextResponse.json({ success: true, permanent: true, message: 'Service permanently removed.' });
+  } catch (error: any) {
+    console.error('Delete service error:', error);
+    return NextResponse.json({ error: error.message || 'Failed to delete service' }, { status: 500 });
+  }
+}
+
+

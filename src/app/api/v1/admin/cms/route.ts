@@ -11,7 +11,18 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json({ success: true, banners, promotions });
+    const settings = await prisma.systemSetting.findMany();
+    const settingsMap: Record<string, string> = {};
+    settings.forEach((s: any) => {
+      settingsMap[s.key] = s.value;
+    });
+
+    return NextResponse.json({
+      success: true,
+      banners,
+      promotions,
+      settings: settingsMap,
+    });
   } catch (error: any) {
     console.error("Failed to fetch CMS content:", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -37,7 +48,7 @@ export async function POST(req: NextRequest) {
         },
       });
       return NextResponse.json({ success: true, banner });
-    } else {
+    } else if (type === "promo") {
       const promotion = await prisma.promotion.create({
         data: {
           code: data.code.toUpperCase(),
@@ -51,9 +62,33 @@ export async function POST(req: NextRequest) {
         },
       });
       return NextResponse.json({ success: true, promotion });
+    } else if (type === "content_bulk") {
+      // Bulk update CMS settings (policies, contact, SEO, footer, social links)
+      const updates = Object.entries(data.settings || {}).map(([key, val]) =>
+        prisma.systemSetting.upsert({
+          where: { key },
+          update: { value: String(val) },
+          create: { key, value: String(val) },
+        })
+      );
+      await Promise.all(updates);
+
+      try {
+        await prisma.auditLog.create({
+          data: {
+            action: "UPDATE_CMS_CONTENT",
+            entity: "SystemSetting",
+            newData: JSON.stringify(Object.keys(data.settings || {})),
+          },
+        });
+      } catch (err) {}
+
+      return NextResponse.json({ success: true, message: "CMS Content updated successfully" });
     }
+
+    return NextResponse.json({ success: false, error: "Invalid type" }, { status: 400 });
   } catch (error: any) {
-    console.error("Failed to create CMS item:", error);
+    console.error("Failed to create/update CMS item:", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
@@ -70,7 +105,7 @@ export async function DELETE(req: NextRequest) {
 
     if (type === "banner") {
       await prisma.banner.delete({ where: { id } });
-    } else {
+    } else if (type === "promo") {
       await prisma.promotion.delete({ where: { id } });
     }
 

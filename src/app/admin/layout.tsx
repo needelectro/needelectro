@@ -38,6 +38,7 @@ import {
   Building2,
   ChevronDown,
   Loader2,
+  RotateCcw,
   Sparkles,
   ShieldAlert
 } from 'lucide-react';
@@ -86,6 +87,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
   { href: '/admin/staff', label: 'Staff & Roles', icon: ShieldCheck, permission: 'staff:manage', category: 'Operations & Insights' },
   { href: '/admin/settings', label: 'Settings', icon: Settings, permission: 'settings:write', category: 'Operations & Insights' },
   { href: '/admin/audit-logs', label: 'Audit Logs', icon: History, permission: 'audit:read', category: 'Operations & Insights' },
+  { href: '/admin/recycle-bin', label: 'Recycle Bin & Recovery', icon: RotateCcw, permission: 'audit:read', category: 'Operations & Insights' },
 ];
 
 const BRANCHES = [
@@ -108,6 +110,35 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [branchDropdownOpen, setBranchDropdownOpen] = useState(false);
   const [quickActionOpen, setQuickActionOpen] = useState(false);
   const [globalSearch, setGlobalSearch] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+
+  useEffect(() => {
+    if (!globalSearch.trim() || globalSearch.length < 2) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const res = await fetch(`/api/v1/admin/search?q=${encodeURIComponent(globalSearch.trim())}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSearchResults(data.results || []);
+          setShowSearchResults(true);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [globalSearch]);
 
   useEffect(() => {
     if (isLoginPage) return;
@@ -130,6 +161,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     e.preventDefault();
     if (!globalSearch.trim()) return;
     router.push(`/admin/products?search=${encodeURIComponent(globalSearch.trim())}`);
+    setShowSearchResults(false);
   };
 
   if (isLoginPage) {
@@ -199,18 +231,57 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </button>
           </div>
 
-          {/* Center: Global Search Bar */}
-          <div className="hidden md:flex flex-1 max-w-md mx-4">
+          {/* Center: Global Search Bar with Live Overlay */}
+          <div className="hidden md:flex flex-1 max-w-md mx-4 relative">
             <form onSubmit={handleGlobalSearch} className="w-full relative">
               <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={globalSearch}
                 onChange={(e) => setGlobalSearch(e.target.value)}
-                placeholder="Global search (orders, products, SKUs, phones)..."
+                onFocus={() => { if (searchResults.length > 0) setShowSearchResults(true); }}
+                placeholder="Search across orders, SKUs, phones, jobs, customers..."
                 className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition"
               />
+              {isSearching && (
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+              )}
             </form>
+
+            {/* Live Autocomplete Overlay */}
+            {showSearchResults && (
+              <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden z-50 max-h-96 overflow-y-auto">
+                <div className="p-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-500">
+                  <span>Search Matches ({searchResults.length})</span>
+                  <button onClick={() => setShowSearchResults(false)} className="text-slate-400 hover:text-slate-700">Close</button>
+                </div>
+                {searchResults.length === 0 ? (
+                  <div className="p-6 text-center text-xs text-slate-400">No matching records found.</div>
+                ) : (
+                  <div className="divide-y divide-slate-100">
+                    {searchResults.map((item, idx) => (
+                      <Link
+                        key={idx}
+                        href={item.link}
+                        onClick={() => { setShowSearchResults(false); setGlobalSearch(''); }}
+                        className="p-3 flex items-start justify-between gap-3 hover:bg-slate-50 transition block"
+                      >
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.badgeColor || 'bg-slate-100 text-slate-700'}`}>
+                              {item.type}
+                            </span>
+                            <span className="text-xs font-bold text-slate-900">{item.title}</span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 mt-0.5">{item.subtitle}</p>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-slate-300 shrink-0 self-center" />
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Right: Branch Selector, Quick Actions, Notifications, Profile */}
