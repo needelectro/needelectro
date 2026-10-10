@@ -69,12 +69,70 @@ export default function SupportPage() {
     fetchTickets();
   }, []);
 
-  const handleOpenTicket = (t: Ticket) => {
+  const handleOpenTicket = async (t: Ticket) => {
     setSelectedTicket(t);
     setReplyText("");
     setIsInternalNote(false);
     setReplyStatus(t.status === "OPEN" ? "IN_PROGRESS" : t.status);
     setReplyPriority(t.priority || "NORMAL");
+
+    if (t.status === "OPEN") {
+      try {
+        await fetch("/api/v1/admin/support", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ticketId: t.id, markAsRead: true }),
+        });
+        setTickets((prev) =>
+          prev.map((item) => (item.id === t.id ? { ...item, status: "IN_PROGRESS" } : item))
+        );
+      } catch (err) {}
+    }
+  };
+
+  const handleMarkAllTicketsRead = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/v1/admin/support", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ markAllAsRead: true }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setTickets((prev) =>
+          prev.map((t) => (t.status === "OPEN" ? { ...t, status: "IN_PROGRESS" } : t))
+        );
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleToggleTicketRead = async (t: Ticket) => {
+    const isCurrentlyOpen = t.status === "OPEN";
+    setSaving(true);
+    try {
+      const res = await fetch("/api/v1/admin/support", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ticketId: t.id,
+          markAsRead: isCurrentlyOpen,
+          markAsUnread: !isCurrentlyOpen,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.ticket) {
+        setTickets((prev) => prev.map((item) => (item.id === t.id ? data.ticket : item)));
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleUpdateTicket = async (ticketId: string, updates: Partial<Ticket>) => {
@@ -168,6 +226,17 @@ export default function SupportPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          {tickets.filter((t) => t.status === "OPEN").length > 0 && (
+            <button
+              onClick={handleMarkAllTicketsRead}
+              disabled={saving}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-emerald-300 rounded-lg text-sm font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 transition shadow-xs"
+              title="Mark all open tickets as read"
+            >
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              Mark All as Read ({tickets.filter((t) => t.status === "OPEN").length})
+            </button>
+          )}
           <button
             onClick={fetchTickets}
             className="inline-flex items-center gap-2 px-3.5 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition shadow-sm"
@@ -303,6 +372,20 @@ export default function SupportPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3.5 text-right whitespace-nowrap">
+                      <button
+                        onClick={() => handleToggleTicketRead(t)}
+                        disabled={saving}
+                        className={`p-1.5 rounded-lg text-xs font-bold transition inline-flex items-center gap-1 border mr-2 ${
+                          t.status === "OPEN"
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                            : "border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                        }`}
+                        title={t.status === "OPEN" ? "Mark ticket as Read" : "Mark ticket as Unread (Open)"}
+                      >
+                        <CheckCircle2 className={`w-3.5 h-3.5 ${t.status === "OPEN" ? "text-emerald-600" : "text-slate-400"}`} />
+                        <span className="hidden sm:inline text-[11px]">{t.status === "OPEN" ? "Mark Read" : "Unread"}</span>
+                      </button>
+
                       <button
                         onClick={() => handleOpenTicket(t)}
                         className="px-3 py-1.5 bg-[#008CFF] text-white hover:bg-blue-600 rounded-lg text-xs font-semibold transition"

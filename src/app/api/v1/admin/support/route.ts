@@ -58,10 +58,58 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-    const { ticketId, status, priority, adminReply, isInternalNote = false, authorName } = body;
+    const { ticketId, status, priority, adminReply, isInternalNote = false, authorName, markAllAsRead, markAsRead, markAsUnread } = body;
+
+    // Handle Bulk Mark All as Read (transitions all OPEN tickets to IN_PROGRESS)
+    if (markAllAsRead) {
+      const result = await prisma.supportTicket.updateMany({
+        where: { status: "OPEN" },
+        data: { status: "IN_PROGRESS" },
+      });
+      return NextResponse.json({
+        success: true,
+        count: result.count,
+        message: `${result.count} open ticket(s) marked as read & moved to in-progress.`,
+      });
+    }
 
     if (!ticketId) {
       return NextResponse.json({ success: false, error: "ticketId is required" }, { status: 400 });
+    }
+
+    // Handle Quick Mark as Read / Unread
+    if (markAsRead) {
+      const updated = await prisma.supportTicket.update({
+        where: { id: ticketId },
+        data: { status: "IN_PROGRESS" },
+        include: {
+          user: {
+            select: { id: true, name: true, email: true, phone: true, role: true },
+          },
+        },
+      });
+      return NextResponse.json({
+        success: true,
+        ticket: { ...updated, conversation: parseTicketConversation(updated.adminReply) },
+        message: "Ticket marked as read.",
+      });
+    }
+
+    if (markAsUnread) {
+      const updated = await prisma.supportTicket.update({
+        where: { id: ticketId },
+        data: { status: "OPEN" },
+        include: {
+          user: {
+            select: { id: true, name: true, email: true, phone: true, role: true },
+          },
+        },
+      });
+      return NextResponse.json({
+        success: true,
+        ticket: { ...updated, conversation: parseTicketConversation(updated.adminReply) },
+        message: "Ticket marked as unread (OPEN).",
+      });
     }
 
     const currentTicket = await prisma.supportTicket.findUnique({

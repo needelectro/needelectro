@@ -113,6 +113,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+
+  useEffect(() => {
+    const fetchUnread = async () => {
+      try {
+        const res = await fetch('/api/v1/admin/notifications');
+        if (res.ok) {
+          const data = await res.json();
+          setUnreadNotifications(data.unreadCount || 0);
+        }
+      } catch {}
+    };
+    if (user) fetchUnread();
+  }, [user, pathname]);
 
   useEffect(() => {
     if (!globalSearch.trim() || globalSearch.length < 2) {
@@ -366,10 +380,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Link
               href="/admin/notifications"
               className="p-2 rounded-xl text-slate-600 hover:bg-slate-100 transition relative"
-              title="Notifications"
+              title={unreadNotifications > 0 ? `${unreadNotifications} Unread Notifications` : "Notifications"}
             >
               <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
+              {unreadNotifications > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-black rounded-full px-1.5 py-0.2 min-w-[18px] text-center shadow-xs">
+                  {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                </span>
+              )}
             </Link>
 
             {/* Profile & Logout */}

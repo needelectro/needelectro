@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, markAllAsRead } = body;
+    const { id, markAllAsRead, read = true } = body;
 
     if (markAllAsRead) {
       await prisma.notification.updateMany({
@@ -60,7 +60,7 @@ export async function PATCH(req: NextRequest) {
 
     const updated = await prisma.notification.update({
       where: { id },
-      data: { read: true },
+      data: { read: Boolean(read) },
     });
 
     return NextResponse.json({ success: true, notification: updated });

@@ -17,7 +17,8 @@ import {
   LifeBuoy,
   ShieldAlert,
   ExternalLink,
-  X
+  X,
+  Mail
 } from "lucide-react";
 import Link from "next/link";
 
@@ -76,22 +77,27 @@ export default function NotificationsPage() {
     fetchNotifications();
   }, [activeTab]);
 
-  const handleMarkAsRead = async (id: string) => {
+  const handleToggleRead = async (id: string, currentRead: boolean) => {
+    const nextRead = !currentRead;
     try {
       const res = await fetch("/api/v1/admin/notifications", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({ id, read: nextRead }),
       });
       if (res.ok) {
         setNotifications((prev) =>
-          prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+          prev.map((n) => (n.id === id ? { ...n, read: nextRead } : n))
         );
-        setUnreadCount((c) => Math.max(0, c - 1));
+        setUnreadCount((c) => (nextRead ? Math.max(0, c - 1) : c + 1));
       }
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const handleMarkAsRead = async (id: string) => {
+    handleToggleRead(id, false);
   };
 
   const handleMarkAllAsRead = async () => {
@@ -309,15 +315,17 @@ export default function NotificationsPage() {
                       View
                     </Link>
                   )}
-                  {!item.read && (
-                    <button
-                      onClick={() => handleMarkAsRead(item.id)}
-                      className="p-1.5 text-slate-400 hover:text-emerald-600 rounded-lg hover:bg-emerald-50 transition"
-                      title="Mark as read"
-                    >
-                      <CheckCircle2 className="w-4 h-4" />
-                    </button>
-                  )}
+                  <button
+                    onClick={() => handleToggleRead(item.id, item.read)}
+                    className={`p-1.5 rounded-lg transition ${
+                      item.read
+                        ? "text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+                        : "text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+                    }`}
+                    title={item.read ? "Mark as unread" : "Mark as read"}
+                  >
+                    {item.read ? <Mail className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
+                  </button>
                   <button
                     onClick={() => handleDelete(item.id)}
                     className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition"
