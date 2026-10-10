@@ -213,12 +213,12 @@ export default function ServicesPage() {
           {services.map((service) => (
             <div
               key={service.id}
-              className={`card-premium overflow-hidden flex flex-col justify-between group ${
+              className={`card-premium overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:-translate-y-1 ${
                 service.isEmergencyService ? 'border-amber-300 bg-amber-50/10' : ''
               }`}
             >
               <div>
-                <div className="relative h-48 w-full bg-slate-100 overflow-hidden">
+                <div className="relative aspect-square w-full bg-slate-100 overflow-hidden">
                   <img
                     src={service.imageUrl || 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800'}
                     alt={service.name}
