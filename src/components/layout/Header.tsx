@@ -206,13 +206,23 @@ export default function Header() {
                     )}
                   </div>
                 ) : (
-                  <Link
-                    href="/login"
-                    className="hidden sm:flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-slate-700 hover:text-brand-600 rounded-xl bg-white/50 hover:bg-white/90 border border-white/60 backdrop-blur-md shadow-2xs transition"
-                  >
-                    <UserIcon className="w-4 h-4" />
-                    Sign In
-                  </Link>
+                  <div className="hidden sm:flex items-center gap-2">
+                    <Link
+                      href="/customer/login"
+                      className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-brand-600 rounded-xl bg-white/60 hover:bg-white/90 border border-white/80 backdrop-blur-md shadow-2xs transition"
+                    >
+                      <UserIcon className="w-3.5 h-3.5 text-brand-500" />
+                      Sign In
+                    </Link>
+                    <Link
+                      href="/technician/login"
+                      className="hidden md:flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-amber-800 hover:text-amber-900 rounded-xl bg-amber-50/90 hover:bg-amber-100 border border-amber-200/60 backdrop-blur-md transition"
+                      title="Technician Workspace Portal"
+                    >
+                      <Wrench className="w-3.5 h-3.5 text-amber-600" />
+                      Technician
+                    </Link>
+                  </div>
                 )}
               </div>
 
@@ -335,21 +345,40 @@ export default function Header() {
             </nav>
 
             {!user && (
-              <div className="pt-2 border-t border-slate-100 flex gap-2">
-                <Link
-                  href="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex-1 text-center py-2 text-sm font-semibold border border-slate-200 rounded-xl"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/register"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex-1 text-center py-2 text-sm font-semibold bg-brand-500 text-white rounded-xl"
-                >
-                  Register
-                </Link>
+              <div className="pt-3 border-t border-slate-100 space-y-2">
+                <div className="flex gap-2">
+                  <Link
+                    href="/customer/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex-1 text-center py-2.5 text-xs font-bold border border-brand-200 text-brand-700 rounded-xl bg-brand-50/80 hover:bg-brand-100 transition"
+                  >
+                    Customer Sign In
+                  </Link>
+                  <Link
+                    href="/technician/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex-1 text-center py-2.5 text-xs font-bold border border-amber-200 text-amber-800 rounded-xl bg-amber-50/80 hover:bg-amber-100 transition"
+                  >
+                    Technician Portal
+                  </Link>
+                </div>
+                <div className="flex gap-2 text-center text-[11px] font-semibold text-slate-500">
+                  <Link
+                    href="/customer/register"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex-1 py-1 hover:text-brand-600 transition"
+                  >
+                    Register as Customer
+                  </Link>
+                  <span className="text-slate-300">|</span>
+                  <Link
+                    href="/technician/register"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex-1 py-1 hover:text-amber-600 transition"
+                  >
+                    Apply as Technician
+                  </Link>
+                </div>
               </div>
             )}
           </div>

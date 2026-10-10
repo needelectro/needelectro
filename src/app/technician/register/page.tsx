@@ -2,386 +2,405 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { 
-  Wrench, Upload, CheckCircle2, ChevronRight, Zap,
-  User, MapPin, Phone, Mail, FileText, Star, Shield
+  Wrench, ShieldCheck, CheckCircle2, User, Phone, Mail, 
+  Lock, MapPin, Eye, EyeOff, Award, ArrowRight, UserCheck, 
+  FileText, Briefcase
 } from 'lucide-react';
 import { useAuth } from '@/lib/context/AuthContext';
 
 const SKILLS_LIST = [
-  'House Wiring', 'Industrial Wiring', 'Panel Installation', 'Circuit Breakers',
-  'AC Installation', 'Fan / Light Installation', 'CCTV Installation', 'DVR/NVR Setup',
-  'Computer Repair', 'Laptop Repair', 'Network Setup', 'WiFi Configuration',
-  'IPS / Inverter Setup', 'Solar Setup', 'Smart Home', 'Emergency Response',
+  'Complete House Wiring',
+  'CCTV Installation & Security',
+  'Laptop & PC Hardware Servicing',
+  'IPS & Inverter Setup & Maintenance',
+  'AC Servicing & Installation',
+  'Circuit Breaker & DB Board Setup',
+  'Motor & Water Pump Setup',
+  'Solar Panel Installation',
+  'Smart Home & IoT Wiring',
+  'Emergency 24/7 Troubleshooting',
 ];
 
-const AREA_OPTIONS = [
-  'Moulvibazar Sadar', 'Sreemangal', 'Kamalganj', 'Rajnagar', 'Kulaura', 'Barlekha', 'Juri',
+const MOULVIBAZAR_AREAS = [
+  'Moulvibazar Sadar',
+  'Kusumbag',
+  'Sreemangal',
+  'Kamalganj',
+  'Rajnagar',
+  'Kulaura',
+  'Barlekha',
+  'Juri',
 ];
 
 export default function TechnicianRegisterPage() {
-  const { user } = useAuth();
   const router = useRouter();
+  const { register } = useAuth();
 
-  const [step, setStep] = useState<'profile' | 'skills' | 'docs' | 'done'>('profile');
+  const [form, setForm] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    experience: '3',
+    nidNumber: '',
+    area: 'Moulvibazar Sadar',
+    selectedSkills: ['Complete House Wiring'] as string[],
+    agreeTerms: true,
+  });
+
+  const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const [form, setForm] = useState({
-    bio: '',
-    nidNumber: '',
-    experience: '1',
-    phone: '',
-    address: '',
-    selectedSkills: [] as string[],
-    serviceAreas: ['Moulvibazar Sadar'] as string[],
-    hourlyRate: '',
-  });
-
   const toggleSkill = (skill: string) => {
-    setForm((p) => ({
-      ...p,
-      selectedSkills: p.selectedSkills.includes(skill)
-        ? p.selectedSkills.filter((s) => s !== skill)
-        : [...p.selectedSkills, skill],
-    }));
-  };
-
-  const toggleArea = (area: string) => {
-    setForm((p) => ({
-      ...p,
-      serviceAreas: p.serviceAreas.includes(area)
-        ? p.serviceAreas.filter((a) => a !== area)
-        : [...p.serviceAreas, area],
-    }));
-  };
-
-  const handleSubmit = async () => {
-    if (!user) { router.push('/auth/register?role=TECHNICIAN'); return; }
-    setLoading(true);
-    setError('');
-    try {
-      const res = await fetch('/api/v1/technicians', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          bio: form.bio,
-          nidNumber: form.nidNumber,
-          yearsOfExperience: parseInt(form.experience),
-          phone: form.phone,
-          address: form.address,
-          skills: form.selectedSkills,
-          serviceAreas: form.serviceAreas,
-          hourlyRate: form.hourlyRate ? parseFloat(form.hourlyRate) : undefined,
-        }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setStep('done');
-      } else {
-        setError(data.error || 'Submission failed. Please try again.');
+    setForm((prev) => {
+      const exists = prev.selectedSkills.includes(skill);
+      if (exists) {
+        if (prev.selectedSkills.length === 1) return prev; // Keep at least one
+        return { ...prev, selectedSkills: prev.selectedSkills.filter((s) => s !== skill) };
       }
-    } catch {
-      setError('Network error. Please check your connection.');
-    } finally {
-      setLoading(false);
+      return { ...prev, selectedSkills: [...prev.selectedSkills, skill] };
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (form.password.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      return;
+    }
+
+    if (form.password !== form.confirmPassword) {
+      setError('Passwords do not match. Please verify.');
+      return;
+    }
+
+    if (form.selectedSkills.length === 0) {
+      setError('Please select at least one primary electrical or technological trade skill.');
+      return;
+    }
+
+    if (!form.agreeTerms) {
+      setError('You must agree to the Technician Code of Conduct and Safety Standards.');
+      return;
+    }
+
+    setLoading(true);
+
+    const result = await register({
+      name: form.name,
+      phone: form.phone,
+      email: form.email,
+      password: form.password,
+      role: 'TECHNICIAN',
+      experience: form.experience,
+      nidNumber: form.nidNumber,
+      serviceAreas: form.area,
+      skills: form.selectedSkills,
+    });
+
+    setLoading(false);
+
+    if (result.success) {
+      router.push(result.redirectUrl || '/technician/dashboard');
+    } else {
+      setError(result.error || 'Technician registration failed. Please check your inputs and try again.');
     }
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-8">
-      {/* Header */}
-      <div className="space-y-2">
-        <nav className="flex items-center gap-2 text-xs text-slate-500">
-          <Link href="/" className="hover:text-brand-600">Home</Link>
-          <ChevronRight className="w-3.5 h-3.5" />
-          <span className="text-slate-900 font-semibold">Become a Technician</span>
-        </nav>
-        <h1 className="text-2xl sm:text-3xl font-black text-slate-950">Join as a Technician</h1>
-        <p className="text-sm text-slate-500">
-          Apply to become a verified NEED ELECTRO technician and start earning from local jobs.
-        </p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/40 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Background ambient lighting */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-amber-500/15 blur-[150px] pointer-events-none rounded-full" />
+      <div className="absolute -bottom-10 right-10 w-[450px] h-[350px] bg-brand-500/10 blur-[130px] pointer-events-none rounded-full" />
 
-      {/* Benefits Banner */}
-      <div className="bg-gradient-to-r from-brand-600 to-brand-500 rounded-3xl p-5 text-white grid grid-cols-3 gap-3 text-center text-xs">
-        {[
-          { icon: '💰', label: 'Earn per job', sub: 'Competitive rates' },
-          { icon: '📲', label: 'App-based jobs', sub: 'See & accept nearby' },
-          { icon: '🏅', label: 'Build reputation', sub: 'Verified badge' },
-        ].map((b) => (
-          <div key={b.label} className="space-y-1">
-            <span className="text-2xl">{b.icon}</span>
-            <p className="font-black">{b.label}</p>
-            <p className="text-brand-200 text-[10px]">{b.sub}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Progress */}
-      {step !== 'done' && (
-        <div className="flex items-center gap-2 text-[11px] font-bold">
-          {[
-            { key: 'profile', label: 'Basic Info' },
-            { key: 'skills', label: 'Skills & Areas' },
-            { key: 'docs', label: 'Verification' },
-          ].map((s, i) => {
-            const steps = ['profile', 'skills', 'docs'];
-            const isActive = step === s.key;
-            const isDone = steps.indexOf(step as string) > i;
-            return (
-              <React.Fragment key={s.key}>
-                <div className={`flex items-center gap-1.5 ${isActive ? 'text-brand-600' : isDone ? 'text-emerald-600' : 'text-slate-400'}`}>
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] shrink-0 ${isActive ? 'bg-brand-500 text-white' : isDone ? 'bg-emerald-500 text-white' : 'bg-slate-200'}`}>
-                    {isDone ? '✓' : i + 1}
-                  </div>
-                  <span className="hidden sm:inline">{s.label}</span>
-                </div>
-                {i < 2 && <ChevronRight className="w-3 h-3 text-slate-300 shrink-0" />}
-              </React.Fragment>
-            );
-          })}
-        </div>
-      )}
-
-      {/* DONE */}
-      {step === 'done' && (
-        <div className="text-center py-10 space-y-6">
-          <div className="w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
-            <CheckCircle2 className="w-12 h-12" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-black text-slate-950">Application Submitted!</h2>
-            <p className="text-sm text-slate-500 mt-2 max-w-md mx-auto">
-              Thank you for applying. Our team will review your application and verify your documents 
-              within <strong>2–3 business days</strong>. You&apos;ll receive a call to confirm your status.
-            </p>
-          </div>
-          <div className="bg-brand-50 border border-brand-200 rounded-2xl p-4 text-xs text-brand-800 max-w-sm mx-auto">
-            <p className="font-bold mb-1">What happens next?</p>
-            <ol className="text-left space-y-1 list-decimal list-inside">
-              <li>NEED ELECTRO team reviews your profile</li>
-              <li>Document verification call (within 3 days)</li>
-              <li>Verification badge granted upon approval</li>
-              <li>You start receiving job requests in your area</li>
-            </ol>
-          </div>
-          <Link href="/technician/dashboard" className="btn-primary text-xs py-3 px-6">
-            Go to Technician Dashboard
+      {/* Switcher Banner */}
+      <div className="max-w-2xl w-full mx-auto px-4 mb-4">
+        <div className="flex items-center justify-between p-2.5 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl text-xs text-slate-300 shadow-lg">
+          <span className="flex items-center gap-1.5 font-bold text-amber-400">
+            <Wrench className="w-4 h-4" />
+            Technician Career Application
+          </span>
+          <Link
+            href="/technician/login"
+            className="flex items-center gap-1 text-slate-300 hover:text-white font-semibold transition px-2 py-1 rounded-xl hover:bg-white/5"
+          >
+            Already registered? Technician Sign In &rarr;
           </Link>
         </div>
-      )}
+      </div>
 
-      {/* Error */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-xs text-red-700">{error}</div>
-      )}
-
-      {/* STEP 1: Profile */}
-      {step === 'profile' && (
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 sm:p-8 space-y-5">
-          <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
-            <div className="w-8 h-8 rounded-xl bg-brand-500 text-white flex items-center justify-center">
-              <User className="w-4 h-4" />
+      <div className="sm:mx-auto sm:w-full sm:max-w-2xl px-4">
+        {/* Header */}
+        <div className="text-center space-y-3">
+          <Link href="/" className="inline-block group hover:scale-105 transition-transform" title="Return to Home">
+            <div className="px-5 py-3 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl shadow-amber-500/20 inline-flex items-center justify-center">
+              <Image
+                src="/brand/needelectro-logo-white.png"
+                alt="NEED ELECTRO"
+                width={190}
+                height={95}
+                className="h-10 sm:h-12 w-auto object-contain filter drop-shadow"
+                priority
+              />
             </div>
-            <h2 className="text-base font-extrabold text-slate-900">Basic Information</h2>
+          </Link>
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[11px] font-bold mb-2">
+              <Award className="w-3.5 h-3.5 text-amber-400" />
+              Direct Technician Onboarding
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              Join NEED ELECTRO as a Technician
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-400 mt-1">
+              Receive steady job dispatches, transparent payouts, and professional Amdads Group trade accreditation
+            </p>
           </div>
+        </div>
 
-          {!user && (
-            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-xs text-amber-800 space-y-2">
-              <p className="font-bold">Create an account first</p>
-              <p>You need a NEED ELECTRO account to apply as a technician.</p>
-              <Link href="/auth/register" className="text-brand-600 font-bold hover:underline">Register Now →</Link>
+        {/* Form Card */}
+        <div className="mt-6 bg-white/10 backdrop-blur-2xl border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
+          {error && (
+            <div className="bg-red-500/15 border border-red-500/30 rounded-2xl px-4 py-3 text-xs text-red-300 font-medium animate-in fade-in">
+              {error}
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">Contact Phone *</label>
-              <input type="tel" required value={form.phone}
-                onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
-                placeholder="01XXXXXXXXX"
-                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* 1. Personal Information */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5" /> 1. Personal &amp; Contact Details
+              </h3>
+              
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-200">Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="e.g. Master Electrician Kabir Hossain"
+                  className="w-full px-4 py-3 text-sm bg-white/5 border border-white/15 rounded-2xl text-white placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-amber-500 focus:bg-white/10 transition"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-200">Mobile Phone (For Job Calls) *</label>
+                  <div className="relative">
+                    <Phone className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="tel"
+                      required
+                      value={form.phone}
+                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                      placeholder="01XXXXXXXXX"
+                      className="w-full pl-10 pr-4 py-3 text-sm bg-white/5 border border-white/15 rounded-2xl text-white placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-amber-500 focus:bg-white/10 transition"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-200">Email Address (Optional)</label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="email"
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      placeholder="tech@example.com"
+                      className="w-full pl-10 pr-4 py-3 text-sm bg-white/5 border border-white/15 rounded-2xl text-white placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-amber-500 focus:bg-white/10 transition"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">Years of Experience *</label>
-              <select value={form.experience}
-                onChange={(e) => setForm((p) => ({ ...p, experience: e.target.value }))}
-                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
-                {['1', '2', '3', '4', '5', '6', '7', '8', '9', '10+'].map((y) => (
-                  <option key={y} value={y}>{y} year{y !== '1' ? 's' : ''}</option>
-                ))}
-              </select>
+
+            {/* 2. Trade & Experience */}
+            <div className="space-y-3 pt-2 border-t border-white/10">
+              <h3 className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Briefcase className="w-3.5 h-3.5" /> 2. Trade Skills &amp; Experience
+              </h3>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-200">Select Your Trade Skills * (Tap to choose)</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {SKILLS_LIST.map((skill) => {
+                    const isSelected = form.selectedSkills.includes(skill);
+                    return (
+                      <button
+                        key={skill}
+                        type="button"
+                        onClick={() => toggleSkill(skill)}
+                        className={`p-2.5 rounded-xl border text-left text-xs font-medium flex items-center justify-between transition ${
+                          isSelected
+                            ? 'bg-amber-500/20 border-amber-500/50 text-white'
+                            : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'
+                        }`}
+                      >
+                        <span>{skill}</span>
+                        {isSelected && <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-200">Years Experience</label>
+                  <select
+                    value={form.experience}
+                    onChange={(e) => setForm({ ...form, experience: e.target.value })}
+                    className="w-full px-3 py-3 text-sm bg-slate-900 border border-white/15 rounded-2xl text-white focus:outline-hidden focus:ring-2 focus:ring-amber-500 transition"
+                  >
+                    <option value="1">1 Year</option>
+                    <option value="2">2 Years</option>
+                    <option value="3">3 Years</option>
+                    <option value="5">5+ Years (Senior)</option>
+                    <option value="8">8+ Years (Master)</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-200">Working Area</label>
+                  <select
+                    value={form.area}
+                    onChange={(e) => setForm({ ...form, area: e.target.value })}
+                    className="w-full px-3 py-3 text-sm bg-slate-900 border border-white/15 rounded-2xl text-white focus:outline-hidden focus:ring-2 focus:ring-amber-500 transition"
+                  >
+                    {MOULVIBAZAR_AREAS.map((a) => (
+                      <option key={a} value={a}>
+                        {a}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-200">NID Card Number</label>
+                  <input
+                    type="text"
+                    value={form.nidNumber}
+                    onChange={(e) => setForm({ ...form, nidNumber: e.target.value })}
+                    placeholder="National ID"
+                    className="w-full px-3 py-3 text-sm bg-white/5 border border-white/15 rounded-2xl text-white placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-amber-500 transition"
+                  />
+                </div>
+              </div>
             </div>
-          </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700">Home / Work Address *</label>
-            <input type="text" required value={form.address}
-              onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))}
-              placeholder="Your address in Moulvibazar"
-              className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none" />
-          </div>
+            {/* 3. Account Password */}
+            <div className="space-y-3 pt-2 border-t border-white/10">
+              <h3 className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5" /> 3. Set Portal Password
+              </h3>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700">NID / National ID Number *</label>
-            <input type="text" required value={form.nidNumber}
-              onChange={(e) => setForm((p) => ({ ...p, nidNumber: e.target.value }))}
-              placeholder="Your national ID number"
-              className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none" />
-          </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-200">Password (min. 6 chars) *</label>
+                  <div className="relative">
+                    <input
+                      type={showPass ? 'text' : 'password'}
+                      required
+                      value={form.password}
+                      onChange={(e) => setForm({ ...form, password: e.target.value })}
+                      placeholder="Create password"
+                      className="w-full px-4 py-3 pr-10 text-sm bg-white/5 border border-white/15 rounded-2xl text-white placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-amber-500 transition"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPass(!showPass)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition"
+                    >
+                      {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700">Professional Bio</label>
-            <textarea
-              rows={3} value={form.bio}
-              onChange={(e) => setForm((p) => ({ ...p, bio: e.target.value }))}
-              placeholder="Briefly describe your expertise, experience, and why customers should choose you..."
-              className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none resize-none" />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700">Hourly Rate (৳) — Optional</label>
-            <input type="number" value={form.hourlyRate}
-              onChange={(e) => setForm((p) => ({ ...p, hourlyRate: e.target.value }))}
-              placeholder="e.g. 300 (leave blank for quote-based)"
-              className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none" />
-          </div>
-
-          <button
-            onClick={() => setStep('skills')}
-            disabled={!form.phone || !form.address || !form.nidNumber}
-            className="btn-primary w-full py-3 text-xs"
-          >
-            Continue to Skills
-          </button>
-        </div>
-      )}
-
-      {/* STEP 2: Skills */}
-      {step === 'skills' && (
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 sm:p-8 space-y-6">
-          <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
-            <div className="w-8 h-8 rounded-xl bg-brand-500 text-white flex items-center justify-center">
-              <Wrench className="w-4 h-4" />
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-200">Confirm Password *</label>
+                  <input
+                    type={showPass ? 'text' : 'password'}
+                    required
+                    value={form.confirmPassword}
+                    onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                    placeholder="Repeat password"
+                    className="w-full px-4 py-3 text-sm bg-white/5 border border-white/15 rounded-2xl text-white placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-amber-500 transition"
+                  />
+                </div>
+              </div>
             </div>
-            <h2 className="text-base font-extrabold text-slate-900">Skills &amp; Service Areas</h2>
-          </div>
 
-          <div className="space-y-3">
-            <label className="text-xs font-bold text-slate-700">Select Your Skills (choose all that apply) *</label>
-            <div className="flex flex-wrap gap-2">
-              {SKILLS_LIST.map((skill) => (
-                <button
-                  key={skill}
-                  type="button"
-                  onClick={() => toggleSkill(skill)}
-                  className={`text-[11px] font-bold px-3 py-1.5 rounded-full border transition ${
-                    form.selectedSkills.includes(skill)
-                      ? 'bg-brand-500 text-white border-brand-500'
-                      : 'border-slate-300 text-slate-700 hover:border-brand-400 bg-white'
-                  }`}
-                >
-                  {skill}
-                </button>
-              ))}
+            {/* Terms */}
+            <div className="flex items-start gap-2.5 pt-1">
+              <input
+                type="checkbox"
+                id="techTerms"
+                checked={form.agreeTerms}
+                onChange={(e) => setForm({ ...form, agreeTerms: e.target.checked })}
+                className="mt-1 rounded-sm border-white/20 bg-white/5 text-amber-500 focus:ring-amber-500"
+              />
+              <label htmlFor="techTerms" className="text-xs text-slate-400 leading-relaxed">
+                I agree to the{' '}
+                <Link href="/policies/technician" target="_blank" className="text-amber-400 underline hover:text-amber-300">
+                  Technician Policy &amp; Code of Conduct
+                </Link>
+                , and commit to professional electrical safety standards.
+              </label>
             </div>
-            {form.selectedSkills.length > 0 && (
-              <p className="text-[10px] text-emerald-600 font-semibold">{form.selectedSkills.length} skill(s) selected</p>
-            )}
-          </div>
 
-          <div className="space-y-3">
-            <label className="text-xs font-bold text-slate-700">Service Areas (select all you can cover)</label>
-            <div className="flex flex-wrap gap-2">
-              {AREA_OPTIONS.map((area) => (
-                <button
-                  key={area}
-                  type="button"
-                  onClick={() => toggleArea(area)}
-                  className={`text-[11px] font-bold px-3 py-1.5 rounded-full border transition ${
-                    form.serviceAreas.includes(area)
-                      ? 'bg-emerald-500 text-white border-emerald-500'
-                      : 'border-slate-300 text-slate-700 hover:border-emerald-400 bg-white'
-                  }`}
-                >
-                  <MapPin className="inline w-2.5 h-2.5 mr-1" />
-                  {area}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex gap-3 pt-2">
-            <button onClick={() => setStep('profile')} className="btn-secondary text-xs py-2.5 flex-1">Back</button>
             <button
-              onClick={() => setStep('docs')}
-              disabled={form.selectedSkills.length === 0}
-              className="btn-primary text-xs py-2.5 flex-1"
-            >
-              Continue to Verification
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* STEP 3: Docs */}
-      {step === 'docs' && (
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 sm:p-8 space-y-5">
-          <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
-            <div className="w-8 h-8 rounded-xl bg-brand-500 text-white flex items-center justify-center">
-              <Shield className="w-4 h-4" />
-            </div>
-            <h2 className="text-base font-extrabold text-slate-900">Verification Documents</h2>
-          </div>
-
-          <div className="space-y-4 text-xs">
-            <div className="bg-slate-50 rounded-2xl p-4 space-y-2 border border-slate-100">
-              <p className="font-bold text-slate-800">Required Documents</p>
-              <ul className="space-y-1.5 text-slate-600">
-                {[
-                  '✅ National ID Card (NID) — Front and Back',
-                  '✅ One recent passport-sized photo',
-                  '✅ Any relevant technical certificate (optional but preferred)',
-                  '✅ Professional reference or previous work photos (optional)',
-                ].map((item) => <li key={item}>{item}</li>)}
-              </ul>
-            </div>
-
-            <div className="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center space-y-2 hover:border-brand-400 transition cursor-pointer">
-              <Upload className="w-8 h-8 text-slate-400 mx-auto" />
-              <p className="font-bold text-slate-700">Document Upload</p>
-              <p className="text-slate-400">Upload feature available after account verification via phone call.</p>
-              <p className="text-slate-500">Our team will guide you through the document submission process.</p>
-            </div>
-
-            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-amber-800 font-medium space-y-1">
-              <p className="font-bold">📞 Verification Call</p>
-              <p>After submitting this form, our team will call you within 3 business days to complete verification and collect your documents securely.</p>
-            </div>
-
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input type="checkbox" className="mt-0.5 w-4 h-4 accent-brand-500" required />
-              <span className="text-slate-600">
-                I confirm that all information I have provided is accurate and I agree to the{' '}
-                <Link href="/policies/technician" className="text-brand-600 font-bold hover:underline">Technician Terms &amp; Code of Conduct</Link>.
-              </span>
-            </label>
-          </div>
-
-          <div className="flex gap-3 pt-2">
-            <button onClick={() => setStep('skills')} className="btn-secondary text-xs py-2.5 flex-1">Back</button>
-            <button
-              onClick={handleSubmit}
+              type="submit"
               disabled={loading}
-              className="btn-primary text-xs py-2.5 flex-1"
+              className="w-full py-4 px-4 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-bold text-sm shadow-xl shadow-amber-500/25 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
-              {loading ? 'Submitting Application...' : 'Submit Application'}
+              {loading ? (
+                <span>Registering &amp; Opening Workspace...</span>
+              ) : (
+                <>
+                  <Wrench className="w-4 h-4" />
+                  Register &amp; Apply as Technician
+                </>
+              )}
             </button>
+          </form>
+
+          {/* Already registered */}
+          <div className="text-center pt-2 border-t border-white/10">
+            <p className="text-xs text-slate-400">
+              Already registered as a technician?{' '}
+              <Link href="/technician/login" className="text-amber-400 font-bold hover:text-amber-300 transition">
+                Sign In to Workspace &rarr;
+              </Link>
+            </p>
           </div>
         </div>
-      )}
+
+        {/* Perks */}
+        <div className="mt-6 grid grid-cols-3 gap-3 text-center text-[10px] text-slate-400">
+          <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
+            <ShieldCheck className="w-4 h-4 text-amber-400 mx-auto mb-1" />
+            Verified Digital ID Badge
+          </div>
+          <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
+            Fast Daily Job Dispatches
+          </div>
+          <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
+            <Award className="w-4 h-4 text-brand-400 mx-auto mb-1" />
+            Academy Certifications
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

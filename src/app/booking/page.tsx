@@ -68,7 +68,7 @@ export default function BookingPage() {
 
   const handleSubmit = async () => {
     if (!user) {
-      router.push('/auth/login?redirect=/booking');
+      router.push('/customer/login?redirect=/booking');
       return;
     }
     setLoading(true);
@@ -422,7 +422,7 @@ export default function BookingPage() {
             <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-xs text-amber-800 space-y-2">
               <p className="font-bold">⚠️ Sign In to Track Your Booking</p>
               <p>You can proceed as a guest, but creating an account lets you track your booking, technician, and service history.</p>
-              <Link href="/auth/login?redirect=/booking" className="text-brand-600 font-bold hover:underline">
+              <Link href="/customer/login?redirect=/booking" className="text-brand-600 font-bold hover:underline">
                 Sign In or Register →
               </Link>
             </div>

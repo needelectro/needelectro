@@ -35,7 +35,7 @@ export default function CustomerDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) { router.push('/auth/login?redirect=/customer/dashboard'); return; }
+    if (!user) { router.push('/customer/login?redirect=/customer/dashboard'); return; }
     loadData();
   }, [user]);
 

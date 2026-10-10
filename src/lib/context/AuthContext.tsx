@@ -6,8 +6,14 @@ import { UserSession } from '@/types';
 interface AuthContextType {
   user: UserSession | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  register: (data: { name: string; email: string; phone: string; password: string; role?: string }) => Promise<{ success: boolean; error?: string }>;
+  login: (
+    identifier: string,
+    password: string,
+    expectedRole?: string
+  ) => Promise<{ success: boolean; error?: string; redirectUrl?: string }>;
+  register: (
+    data: Record<string, any>
+  ) => Promise<{ success: boolean; error?: string; redirectUrl?: string }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -38,20 +44,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshUser();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (identifier: string, password: string, expectedRole?: string) => {
     try {
       setIsLoading(true);
       const res = await fetch('/api/v1/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ identifier, password, expectedRole }),
       });
       const data = await res.json();
       if (!res.ok) {
-        return { success: false, error: data.error || 'Failed to sign in' };
+        return { success: false, error: data.error || 'Failed to sign in', redirectUrl: data.redirectUrl };
       }
       setUser(data.user);
-      return { success: true };
+      return { success: true, redirectUrl: data.redirectUrl };
     } catch {
       return { success: false, error: 'Network error. Please try again.' };
     } finally {
@@ -59,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = async (formData: { name: string; email: string; phone: string; password: string; role?: string }) => {
+  const register = async (formData: Record<string, any>) => {
     try {
       setIsLoading(true);
       const res = await fetch('/api/v1/auth/register', {
@@ -72,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: data.error || 'Registration failed' };
       }
       setUser(data.user);
-      return { success: true };
+      return { success: true, redirectUrl: data.redirectUrl };
     } catch {
       return { success: false, error: 'Network error during registration.' };
     } finally {

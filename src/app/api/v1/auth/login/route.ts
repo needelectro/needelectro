@@ -6,17 +6,28 @@ import { UserRole, UserStatus } from '@/types';
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password } = await req.json();
+    const body = await req.json();
+    const identifier = (body.identifier || body.email || body.phone || '').trim();
+    const password = body.password;
+    const expectedRole = body.expectedRole || body.role; // Optional: 'CUSTOMER' | 'TECHNICIAN'
 
-    if (!email || !password) {
+    if (!identifier || !password) {
       return NextResponse.json(
-        { error: 'Email and password are required' },
+        { error: 'Please enter your email or phone number, and password.' },
         { status: 400 }
       );
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase().trim() },
+    const cleanLower = identifier.toLowerCase();
+
+    // Support login by either email or phone number
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: cleanLower },
+          { phone: identifier },
+        ],
+      },
       include: {
         customerProfile: true,
         technicianProfile: true,
@@ -25,7 +36,7 @@ export async function POST(req: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { error: 'Invalid email or password' },
+        { error: 'No account found with this email or phone number.' },
         { status: 401 }
       );
     }
@@ -33,16 +44,29 @@ export async function POST(req: NextRequest) {
     const isMatch = await comparePassword(password, user.passwordHash);
     if (!isMatch) {
       return NextResponse.json(
-        { error: 'Invalid email or password' },
+        { error: 'Incorrect password. Please verify and try again.' },
         { status: 401 }
       );
     }
 
     if (user.status === 'SUSPENDED') {
       return NextResponse.json(
-        { error: 'Your account is suspended. Please contact support.' },
+        { error: 'Your account has been suspended. Please contact NEED ELECTRO support at 01733-983752.' },
         { status: 403 }
       );
+    }
+
+    // Role verification if specific portal expected
+    if (expectedRole === 'TECHNICIAN') {
+      if (user.role !== 'TECHNICIAN' && user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
+        return NextResponse.json(
+          {
+            error: 'This account is registered as a Customer. Please sign in via the Customer Portal.',
+            redirectUrl: '/customer/login',
+          },
+          { status: 403 }
+        );
+      }
     }
 
     const sessionData = {
@@ -68,14 +92,23 @@ export async function POST(req: NextRequest) {
       maxAge: 7 * 24 * 60 * 60, // 7 days
     });
 
+    // Determine default destination
+    let defaultRedirect = '/customer/dashboard';
+    if (user.role === 'TECHNICIAN') {
+      defaultRedirect = '/technician/dashboard';
+    } else if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
+      defaultRedirect = '/admin/dashboard';
+    }
+
     return NextResponse.json({
       success: true,
       user: sessionData,
+      redirectUrl: defaultRedirect,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Login error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error?.message || 'Authentication error. Please try again.' },
       { status: 500 }
     );
   }

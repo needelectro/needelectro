@@ -91,8 +91,13 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/become-a-seller" className="text-sky-400 hover:text-sky-300 transition text-xs font-medium">
-                  Become a Merchant / Seller
+                <Link href="/technician/login" className="text-amber-400 hover:text-amber-300 transition text-xs font-semibold">
+                  Technician Portal &rarr;
+                </Link>
+              </li>
+              <li>
+                <Link href="/customer/login" className="text-brand-400 hover:text-brand-300 transition text-xs font-semibold">
+                  Customer Sign In &rarr;
                 </Link>
               </li>
               <li>

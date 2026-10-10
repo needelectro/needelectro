@@ -45,7 +45,7 @@ export default function AdminBranchesPage() {
   });
 
   useEffect(() => {
-    if (!user) { router.push('/auth/login'); return; }
+    if (!user) { router.push('/login'); return; }
     if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
       router.push('/customer/dashboard');
       return;

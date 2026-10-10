@@ -40,7 +40,7 @@ export default function TechnicianDashboard() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user) { router.push('/auth/login?redirect=/technician/dashboard'); return; }
+    if (!user) { router.push('/technician/login?redirect=/technician/dashboard'); return; }
     if (user.role !== 'TECHNICIAN' && user.role !== 'ADMIN') {
       router.push('/customer/dashboard');
       return;

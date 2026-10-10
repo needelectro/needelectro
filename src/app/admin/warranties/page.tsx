@@ -28,7 +28,7 @@ export default function AdminWarrantiesPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user) { router.push('/auth/login'); return; }
+    if (!user) { router.push('/login'); return; }
     if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
       router.push('/customer/dashboard');
       return;
