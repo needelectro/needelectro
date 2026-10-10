@@ -13,18 +13,27 @@ async function main() {
   console.log('Seeding NEED ELECTRO database...');
 
   // Passwords
-  const adminPassword = await bcrypt.hash('admin123', 10);
+  const adminRawPassword = process.env.ADMIN_PASSWORD || 'admin123';
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@needelectro.com';
+  const adminPhone = process.env.ADMIN_PHONE || '01733983752';
+  const adminName = process.env.ADMIN_NAME || 'Super Admin';
+
+  const adminPassword = await bcrypt.hash(adminRawPassword, 10);
   const techPassword = await bcrypt.hash('tech123', 10);
   const custPassword = await bcrypt.hash('cust123', 10);
 
   // 1. Create Users
   const adminUser = await prisma.user.upsert({
-    where: { email: 'admin@needelectro.com' },
-    update: {},
+    where: { email: adminEmail },
+    update: {
+      passwordHash: adminPassword,
+      phone: adminPhone,
+      name: adminName,
+    },
     create: {
-      name: 'Super Admin',
-      email: 'admin@needelectro.com',
-      phone: '01733983752',
+      name: adminName,
+      email: adminEmail,
+      phone: adminPhone,
       passwordHash: adminPassword,
       role: 'SUPER_ADMIN',
       status: 'ACTIVE',

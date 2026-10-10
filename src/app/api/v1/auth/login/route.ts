@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import prisma from '@/lib/db';
-import { comparePassword, signToken } from '@/lib/auth';
+import { comparePassword, hashPassword, signToken } from '@/lib/auth';
 import { UserRole, UserStatus } from '@/types';
 
 export async function POST(req: NextRequest) {
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     const cleanLower = identifier.toLowerCase();
 
     // Support login by either email or phone number
-    const user = await prisma.user.findFirst({
+    let user = await prisma.user.findFirst({
       where: {
         OR: [
           { email: cleanLower },
@@ -34,6 +34,40 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    const envAdminEmail = (process.env.ADMIN_EMAIL || 'admin@needelectro.com').toLowerCase();
+    const envAdminPhone = process.env.ADMIN_PHONE || '01733983752';
+    const envAdminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+    const envAdminName = process.env.ADMIN_NAME || 'Super Admin';
+
+    // Auto-create or self-heal admin from .env if not yet in database
+    if (!user && (cleanLower === envAdminEmail || identifier === envAdminPhone)) {
+      if (password === envAdminPassword) {
+        const passwordHash = await hashPassword(envAdminPassword);
+        user = await prisma.user.upsert({
+          where: { email: envAdminEmail },
+          update: {
+            name: envAdminName,
+            phone: envAdminPhone,
+            passwordHash,
+            role: 'SUPER_ADMIN',
+            status: 'ACTIVE',
+          },
+          create: {
+            name: envAdminName,
+            email: envAdminEmail,
+            phone: envAdminPhone,
+            passwordHash,
+            role: 'SUPER_ADMIN',
+            status: 'ACTIVE',
+          },
+          include: {
+            customerProfile: true,
+            technicianProfile: true,
+          },
+        });
+      }
+    }
+
     if (!user) {
       return NextResponse.json(
         { error: 'No account found with this email or phone number.' },
@@ -41,7 +75,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const isMatch = await comparePassword(password, user.passwordHash);
+    let isMatch = await comparePassword(password, user.passwordHash);
+    // If password in .env was updated and differs from DB hash, auto-sync and allow login
+    if (!isMatch && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') && password === envAdminPassword) {
+      isMatch = true;
+      const newHash = await hashPassword(envAdminPassword);
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { passwordHash: newHash },
+      });
+    }
+
     if (!isMatch) {
       return NextResponse.json(
         { error: 'Incorrect password. Please verify and try again.' },
