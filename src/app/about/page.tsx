@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Metadata } from 'next';
 import { 
   Zap, MapPin, Phone, Mail, Globe, Clock, ArrowRight,
@@ -74,6 +75,18 @@ export default function AboutPage() {
       <section className="glass-card-dark text-white rounded-3xl py-16 px-6 sm:px-12 relative overflow-hidden shadow-2xl text-center">
         <div className="absolute -top-24 -right-24 w-80 h-80 bg-brand-500/25 blur-[120px] pointer-events-none rounded-full" />
         <div className="max-w-3xl mx-auto space-y-6 relative z-10">
+          <div className="flex justify-center">
+            <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl shadow-brand-500/25">
+              <Image
+                src="/brand/needelectro-icon.png"
+                alt="NEED ELECTRO Logo"
+                width={64}
+                height={64}
+                className="w-16 h-16 object-contain filter drop-shadow"
+                priority
+              />
+            </div>
+          </div>
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-1.5 text-xs font-bold text-brand-300 uppercase tracking-wider shadow-sm">
             <Zap className="w-3.5 h-3.5 text-brand-400" />
             Sister Concern of Amdads Group

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { 
   Zap, 
   ShieldCheck, 
@@ -52,9 +53,16 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-3xl mx-auto space-y-6">
             {/* Sister Concern Frosted Glass Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/70 backdrop-blur-xl text-brand-700 text-xs font-semibold tracking-wide border border-white/90 shadow-[0_4px_20px_rgba(8,127,229,0.08)] animate-in fade-in duration-500">
-              <ShieldCheck className="w-4 h-4 text-brand-600" />
-              <span>A Sister Concern of Amdads Group &bull; Founded 2023</span>
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 backdrop-blur-xl text-slate-800 text-xs font-semibold tracking-wide border border-white/90 shadow-[0_4px_20px_rgba(8,127,229,0.08)] animate-in fade-in duration-500">
+              <Image
+                src="/brand/needelectro-icon.png"
+                alt="NEED ELECTRO"
+                width={18}
+                height={18}
+                className="w-4.5 h-4.5 object-contain"
+                priority
+              />
+              <span className="text-slate-600 font-medium">A Sister Concern of Amdads Group &bull; Founded 2023</span>
             </div>
 
             {/* Headline */}

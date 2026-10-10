@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import BrandLogo from '@/components/common/BrandLogo';
 import { Zap, Phone, Mail, MapPin, Globe, ShieldCheck } from 'lucide-react';
 
 export default function Footer() {
@@ -13,20 +14,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
           {/* Brand Info */}
           <div className="lg:col-span-2 space-y-4">
-            <Link href="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-brand-400 flex items-center justify-center text-white shadow-lg shadow-brand-500/30 border border-white/20">
-                <Zap className="w-6 h-6 fill-white" />
-              </div>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-1">
-                  <span className="font-black text-2xl tracking-tight text-white">NEED</span>
-                  <span className="font-black text-2xl tracking-tight text-brand-400">ELECTRO</span>
-                </div>
-                <span className="text-[10px] font-semibold text-slate-400 tracking-wider uppercase">
-                  Trusted Electrical &amp; Technological Solutions
-                </span>
-              </div>
-            </Link>
+            <BrandLogo theme="dark" size="md" />
 
             <p className="text-sm text-slate-400 leading-relaxed max-w-sm">
               A comprehensive electrical and technological service ecosystem connecting residential and commercial clients with verified technicians, genuine technology products, and warranty protection.

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/context/AuthContext';
 import { 
@@ -57,10 +58,16 @@ export default function MobileNav() {
             {/* Quick Emergency / Book Center Action */}
             <Link
               href="/services"
-              className="flex flex-col items-center -mt-5"
+              className="flex flex-col items-center -mt-5 group"
             >
-              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-brand-500 to-brand-600 text-white flex items-center justify-center shadow-lg shadow-brand-500/40 border-4 border-white/90 backdrop-blur-md active:scale-95 transition-transform">
-                <Zap className="w-6 h-6 fill-white" />
+              <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-brand-600 via-brand-500 to-sky-400 text-white flex items-center justify-center shadow-lg shadow-brand-500/40 border-4 border-white/95 backdrop-blur-md active:scale-95 group-hover:scale-105 transition-transform p-1.5">
+                <Image
+                  src="/brand/needelectro-icon.png"
+                  alt="Book Service"
+                  width={36}
+                  height={36}
+                  className="w-full h-full object-contain filter drop-shadow-sm"
+                />
               </div>
               <span className="text-[10px] font-bold text-brand-600 mt-0.5">Book</span>
             </Link>

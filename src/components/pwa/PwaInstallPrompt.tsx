@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Download, X, WifiOff, Zap } from 'lucide-react';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -78,8 +79,14 @@ export default function PwaInstallPrompt() {
         <div className="fixed bottom-16 md:bottom-6 left-4 right-4 md:left-6 md:right-auto md:max-w-md z-50 bg-slate-950 text-white p-4 rounded-2xl shadow-2xl border border-slate-800 animate-in slide-in-from-bottom duration-300">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-brand-500 flex items-center justify-center shrink-0 shadow-md">
-                <Zap className="w-6 h-6 fill-white" />
+              <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-1.5 flex items-center justify-center shrink-0 shadow-md">
+                <Image
+                  src="/icons/icon-192.png"
+                  alt="NEED ELECTRO App"
+                  width={40}
+                  height={40}
+                  className="w-full h-full object-contain rounded-xl"
+                />
               </div>
               <div>
                 <h4 className="font-bold text-sm text-white">Install NEED ELECTRO App</h4>

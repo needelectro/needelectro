@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/context/AuthContext';
 import { useCart } from '@/lib/context/CartContext';
+import BrandLogo from '@/components/common/BrandLogo';
 import { 
   Search, 
   ShoppingCart, 
@@ -81,20 +82,7 @@ export default function Header() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2 sm:gap-3 group shrink-0 min-w-0">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-brand-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform shrink-0">
-                <Zap className="w-5 h-5 sm:w-6 sm:h-6 fill-white" />
-              </div>
-              <div className="flex flex-col min-w-0">
-                <div className="flex items-center gap-1">
-                  <span className="font-extrabold text-xl sm:text-2xl tracking-tight text-slate-950">NEED</span>
-                  <span className="font-extrabold text-xl sm:text-2xl tracking-tight text-brand-500">ELECTRO</span>
-                </div>
-                <span className="text-[10px] font-semibold text-slate-500 tracking-wider -mt-1 uppercase hidden sm:block">
-                  Trusted Electrical &amp; Tech Solutions
-                </span>
-              </div>
-            </Link>
+            <BrandLogo priority size="md" />
 
             {/* Desktop Navigation Links */}
             <nav className="hidden lg:flex items-center space-x-6 font-medium text-sm text-slate-700">

@@ -22,6 +22,17 @@ export const metadata: Metadata = {
     'ips inverter setup',
   ],
   manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.png', type: 'image/png' },
+      { url: '/brand/needelectro-icon.png', sizes: '256x256', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -33,6 +44,14 @@ export const metadata: Metadata = {
       'Digital platform connecting residential & commercial clients with certified technicians and verified technology products.',
     url: 'https://www.needelectro.com',
     siteName: 'NEED ELECTRO',
+    images: [
+      {
+        url: '/brand/needelectro-logo.png',
+        width: 1132,
+        height: 570,
+        alt: 'NEED ELECTRO Brand Logo',
+      },
+    ],
     locale: 'en_US',
     type: 'website',
   },
@@ -53,8 +72,10 @@ export default function RootLayout({
   return (
     <html lang="en" className="overflow-x-hidden max-w-full">
       <head>
-        <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/icons/icon.svg" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon.png" type="image/png" />
+        <link rel="icon" href="/brand/needelectro-icon.png" type="image/png" sizes="256x256" />
+        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

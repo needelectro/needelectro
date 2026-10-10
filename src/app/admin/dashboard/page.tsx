@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/lib/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import {
@@ -128,6 +129,20 @@ export default function AdminDashboard() {
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Sidebar */}
         <aside className="lg:w-60 space-y-4 shrink-0">
+          <Link href="/" className="flex items-center gap-2.5 px-3 py-2 rounded-2xl bg-white/70 backdrop-blur-md border border-white/80 shadow-xs group hover:bg-white transition" title="Return to Website">
+            <Image
+              src="/brand/needelectro-icon.png"
+              alt="NEED ELECTRO"
+              width={32}
+              height={32}
+              className="w-8 h-8 object-contain group-hover:scale-105 transition-transform"
+            />
+            <div className="flex flex-col">
+              <span className="font-extrabold text-sm tracking-tight text-slate-900 leading-none">NEED <span className="text-brand-500">ELECTRO</span></span>
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Admin Console</span>
+            </div>
+          </Link>
+
           <div className="glass-card-dark rounded-3xl p-5 text-white space-y-2.5 relative overflow-hidden shadow-xl border border-white/10">
             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/15 blur-2xl rounded-full pointer-events-none" />
             <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-600 to-brand-400 flex items-center justify-center font-black text-lg text-white shadow-md shadow-brand-500/30 border border-white/20">

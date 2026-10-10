@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Zap, Mail, ArrowRight, ArrowLeft, CheckCircle2, Phone } from 'lucide-react';
+import Image from 'next/image';
+import { Mail, ArrowRight, ArrowLeft, CheckCircle2, Phone } from 'lucide-react';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -23,12 +24,23 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-brand-950 to-slate-900 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md space-y-8">
         {/* Logo */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-brand-500 shadow-lg shadow-brand-500/30 mb-2">
-            <Zap className="w-8 h-8 text-white" />
+        <div className="text-center space-y-3 flex flex-col items-center">
+          <Link href="/" className="inline-block group hover:scale-105 transition-transform" title="Back to Home">
+            <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-2 shadow-xl shadow-brand-500/25 flex items-center justify-center">
+              <Image
+                src="/brand/needelectro-icon.png"
+                alt="NEED ELECTRO Logo"
+                width={56}
+                height={56}
+                className="w-full h-full object-contain filter drop-shadow"
+                priority
+              />
+            </div>
+          </Link>
+          <div>
+            <h1 className="text-2xl font-black text-white">Reset Password</h1>
+            <p className="text-sm text-slate-400">Recover your NEED ELECTRO account</p>
           </div>
-          <h1 className="text-2xl font-black text-white">Reset Password</h1>
-          <p className="text-sm text-slate-400">Recover your NEED ELECTRO account</p>
         </div>
 
         {/* Card */}

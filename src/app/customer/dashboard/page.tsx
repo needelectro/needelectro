@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/lib/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import {
@@ -86,6 +87,20 @@ export default function CustomerDashboard() {
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Sidebar */}
         <aside className="lg:w-64 space-y-4 shrink-0">
+          <Link href="/" className="flex items-center gap-2.5 px-3 py-2 rounded-2xl bg-white/70 backdrop-blur-md border border-white/80 shadow-xs group hover:bg-white transition" title="Return to Website">
+            <Image
+              src="/brand/needelectro-icon.png"
+              alt="NEED ELECTRO"
+              width={32}
+              height={32}
+              className="w-8 h-8 object-contain group-hover:scale-105 transition-transform"
+            />
+            <div className="flex flex-col">
+              <span className="font-extrabold text-sm tracking-tight text-slate-900 leading-none">NEED <span className="text-brand-500">ELECTRO</span></span>
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Customer Portal</span>
+            </div>
+          </Link>
+
           {/* Profile Card - Frosted Glass Gradient */}
           <div className="bg-gradient-to-br from-brand-600/95 to-brand-700/95 backdrop-blur-2xl rounded-3xl p-5 text-white space-y-3 border border-white/20 shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-sky-400/20 blur-2xl rounded-full pointer-events-none" />
