@@ -27,6 +27,8 @@ import {
   LifeBuoy,
   BarChart3,
   ShieldCheck,
+  GraduationCap,
+  Store,
   Settings,
   History,
   Menu,
@@ -62,6 +64,8 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
   { href: '/admin/inventory', label: 'Inventory & Stock', icon: Boxes, permission: 'inventory:read', category: 'Catalog & Store' },
   { href: '/admin/orders', label: 'Orders', icon: ShoppingBag, permission: 'orders:read', category: 'Catalog & Store' },
   { href: '/admin/customers', label: 'Customers', icon: Users, permission: 'customers:read', category: 'Catalog & Store' },
+  { href: '/admin/sellers', label: 'Merchant Sellers', icon: Store, permission: 'products:read', category: 'Catalog & Store' },
+  { href: '/admin/warranties', label: 'Warranties & Claims', icon: ShieldCheck, permission: 'orders:read', category: 'Catalog & Store' },
   { href: '/admin/payments', label: 'Payments', icon: CreditCard, permission: 'finance:read', category: 'Catalog & Store' },
   { href: '/admin/emi', label: 'EMI Management', icon: CalendarCheck, permission: 'finance:emi', category: 'Catalog & Store' },
 
@@ -69,6 +73,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
   { href: '/admin/services', label: 'Electrical Services', icon: Zap, permission: 'services:read', category: 'Workforce Marketplace' },
   { href: '/admin/technicians', label: 'Technicians', icon: Wrench, permission: 'technicians:read', category: 'Workforce Marketplace' },
   { href: '/admin/jobs', label: 'Job Management', icon: Briefcase, permission: 'jobs:read', category: 'Workforce Marketplace' },
+  { href: '/admin/training', label: 'Training Academy', icon: GraduationCap, permission: 'technicians:read', category: 'Workforce Marketplace' },
 
   // Digital Solutions & ERP
   { href: '/admin/digital-solutions', label: 'Digital Solutions', icon: Code2, permission: 'leads:read', category: 'Enterprise Leads' },

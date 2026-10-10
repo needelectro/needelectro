@@ -97,6 +97,13 @@ export default function CmsPage() {
 
   useEffect(() => {
     fetchCmsData();
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get("tab");
+      if (tab && ["banners", "promotions", "policies", "about", "seo", "social"].includes(tab)) {
+        setActiveTab(tab as any);
+      }
+    }
   }, []);
 
   const handleCreateBanner = async (e: React.FormEvent) => {
