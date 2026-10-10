@@ -6,6 +6,26 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/context/AuthContext';
 import { isStaffOrAdmin, hasPermission, AdminPermission } from '@/lib/permissions';
+import { prefetchFastData } from '@/lib/fastFetch';
+
+const ROUTE_PREFETCH_MAP: Record<string, string> = {
+  '/admin/dashboard': '/api/v1/admin/stats',
+  '/admin/products': '/api/v1/products',
+  '/admin/categories': '/api/v1/admin/categories',
+  '/admin/orders': '/api/v1/orders',
+  '/admin/customers': '/api/v1/admin/customers',
+  '/admin/services': '/api/v1/services',
+  '/admin/technicians': '/api/v1/admin/technicians',
+  '/admin/jobs': '/api/v1/admin/jobs',
+  '/admin/digital-solutions': '/api/v1/admin/leads?type=digital',
+  '/admin/erp-leads': '/api/v1/admin/leads?type=erp',
+  '/admin/reviews': '/api/v1/admin/reviews',
+  '/admin/cms': '/api/v1/admin/cms',
+  '/admin/notifications': '/api/v1/admin/notifications',
+  '/admin/support': '/api/v1/admin/support',
+  '/admin/recycle-bin': '/api/v1/admin/recycle-bin',
+  '/admin/audit-logs': '/api/v1/admin/audit-logs',
+};
 import {
   LayoutDashboard,
   Package,
@@ -130,7 +150,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         }
       } catch {}
     };
-    if (user) fetchUnread();
+    if (user) {
+      fetchUnread();
+      prefetchFastData([
+        '/api/v1/admin/stats',
+        '/api/v1/products',
+        '/api/v1/services',
+        '/api/v1/orders',
+        '/api/v1/admin/categories',
+        '/api/v1/admin/support',
+        '/api/v1/admin/notifications',
+      ]);
+    }
   }, [user, pathname]);
 
   useEffect(() => {
@@ -446,6 +477,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         key={href}
                         href={href}
                         title={sidebarCollapsed ? label : undefined}
+                        onMouseEnter={() => {
+                          if (ROUTE_PREFETCH_MAP[href]) {
+                            prefetchFastData([ROUTE_PREFETCH_MAP[href]]);
+                          }
+                        }}
                         className={`group flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
                           isActive
                             ? 'bg-brand-500 text-white shadow-xs shadow-brand-500/20'
@@ -505,6 +541,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       key={href}
                       href={href}
                       onClick={() => setMobileMenuOpen(false)}
+                      onTouchStart={() => {
+                        if (ROUTE_PREFETCH_MAP[href]) {
+                          prefetchFastData([ROUTE_PREFETCH_MAP[href]]);
+                        }
+                      }}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${
                         isActive ? 'bg-brand-500 text-white shadow-xs' : 'text-slate-700 hover:bg-slate-100'
                       }`}

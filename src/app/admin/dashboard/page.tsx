@@ -11,6 +11,7 @@ import {
   CheckCircle2, Clock, DollarSign, Star, RefreshCw, Eye,
   GraduationCap, Building2, Store, MessageSquare, Send, X, Lock, Phone, Mail
 } from 'lucide-react';
+import { fastFetch, invalidateFastCache } from '@/lib/fastFetch';
 
 type AdminTab = 'overview' | 'bookings' | 'orders' | 'technicians' | 'customers' | 'support';
 
@@ -61,23 +62,23 @@ export default function AdminDashboard() {
     loadData();
   }, [user]);
 
-  const loadData = async () => {
-    setLoading(true);
+  const loadData = async (forceRefresh = false) => {
+    if (!stats) setLoading(true);
     try {
-      const [sRes, bRes, oRes, tRes, cRes, suRes] = await Promise.all([
-        fetch('/api/v1/admin/stats'),
-        fetch('/api/v1/bookings?limit=50'),
-        fetch('/api/v1/orders?limit=50'),
-        fetch('/api/v1/technicians?limit=50'),
-        fetch('/api/v1/auth/users?limit=50'),
-        fetch('/api/v1/admin/support'),
+      const [sData, bData, oData, tData, cData, suData] = await Promise.all([
+        fastFetch('/api/v1/admin/stats', { forceRefresh }),
+        fastFetch('/api/v1/bookings?limit=50', { forceRefresh }),
+        fastFetch('/api/v1/orders?limit=50', { forceRefresh }),
+        fastFetch('/api/v1/technicians?limit=50', { forceRefresh }),
+        fastFetch('/api/v1/auth/users?limit=50', { forceRefresh }),
+        fastFetch('/api/v1/admin/support', { forceRefresh }),
       ]);
-      if (sRes.ok) { const d = await sRes.json(); setStats(d.stats || d); }
-      if (bRes.ok) { const d = await bRes.json(); setBookings(d.bookings || []); }
-      if (oRes.ok) { const d = await oRes.json(); setOrders(d.orders || []); }
-      if (tRes.ok) { const d = await tRes.json(); setTechnicians(d.technicians || []); }
-      if (cRes.ok) { const d = await cRes.json(); setCustomers(d.users || []); }
-      if (suRes.ok) { const d = await suRes.json(); setTickets(d.tickets || []); }
+      if (sData) setStats(sData.stats || sData);
+      if (bData) setBookings(bData.bookings || []);
+      if (oData) setOrders(oData.orders || []);
+      if (tData) setTechnicians(tData.technicians || []);
+      if (cData) setCustomers(cData.users || []);
+      if (suData) setTickets(suData.tickets || []);
     } catch { /* ignore */ }
     finally { setLoading(false); }
   };
@@ -294,7 +295,7 @@ export default function AdminDashboard() {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h1 className="text-xl font-black text-slate-950">Admin Dashboard</h1>
-                <button onClick={loadData} className="btn-secondary text-xs py-2 gap-1.5">
+                <button onClick={() => loadData(true)} className="btn-secondary text-xs py-2 gap-1.5">
                   <RefreshCw className="w-3.5 h-3.5" />Refresh
                 </button>
               </div>

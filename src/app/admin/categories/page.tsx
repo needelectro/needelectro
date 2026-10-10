@@ -6,6 +6,7 @@ import {
   Layers, Plus, RefreshCw, X, Tag, Sparkles, FolderPlus,
   Edit2, Trash2, Search, CheckCircle2, AlertTriangle, AlertCircle
 } from 'lucide-react';
+import { fastFetch, invalidateFastCache } from '@/lib/fastFetch';
 
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -37,12 +38,11 @@ export default function AdminCategoriesPage() {
     loadData();
   }, []);
 
-  const loadData = async () => {
-    setLoading(true);
+  const loadData = async (forceRefresh = false) => {
+    if (categories.length === 0 && brands.length === 0) setLoading(true);
     try {
-      const res = await fetch('/api/v1/admin/categories');
-      if (res.ok) {
-        const data = await res.json();
+      const data = await fastFetch('/api/v1/admin/categories', { forceRefresh });
+      if (data) {
         setCategories(data.categories || []);
         setBrands(data.brands || []);
         setServiceCategories(data.serviceCategories || []);
@@ -92,7 +92,9 @@ export default function AdminCategoriesPage() {
         if (res.ok && data.success) {
           setNotification({ type: 'success', message: `${form.name} updated successfully.` });
           setShowModal(false);
-          await loadData();
+          invalidateFastCache('/api/v1/admin/categories');
+          invalidateFastCache('/api/v1/products');
+          await loadData(true);
         } else {
           setNotification({ type: 'error', message: data.error || 'Failed to update category.' });
         }
@@ -111,7 +113,9 @@ export default function AdminCategoriesPage() {
         if (res.ok && data.success) {
           setNotification({ type: 'success', message: `${form.name} created successfully.` });
           setShowModal(false);
-          await loadData();
+          invalidateFastCache('/api/v1/admin/categories');
+          invalidateFastCache('/api/v1/products');
+          await loadData(true);
         } else {
           setNotification({ type: 'error', message: data.error || 'Failed to create category.' });
         }
@@ -136,7 +140,9 @@ export default function AdminCategoriesPage() {
       if (res.ok && data.success) {
         setNotification({ type: 'success', message: `${item.name} deleted successfully.` });
         setDeleteModal({ isOpen: false, item: null });
-        await loadData();
+        invalidateFastCache('/api/v1/admin/categories');
+        invalidateFastCache('/api/v1/products');
+        await loadData(true);
       } else {
         setNotification({ type: 'error', message: data.error || 'Cannot delete item.' });
       }
@@ -186,7 +192,7 @@ export default function AdminCategoriesPage() {
             <Plus className="w-3.5 h-3.5" /> Add {activeTab === 'BRAND' ? 'Brand' : 'Category'}
           </button>
           <button
-            onClick={loadData}
+            onClick={() => loadData(true)}
             className="p-2.5 rounded-2xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition"
             title="Refresh Data"
           >

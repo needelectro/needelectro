@@ -9,6 +9,7 @@ import {
   Edit2, Trash2, CheckCircle2, AlertTriangle, Eye, DollarSign, Layers,
   Archive, RotateCcw, CheckSquare, Square, Download, X, Star, Image as ImageIcon
 } from 'lucide-react';
+import { fastFetch, invalidateFastCache } from '@/lib/fastFetch';
 
 interface Product {
   id: string;
@@ -67,12 +68,11 @@ export default function AdminProductsPage() {
     isActive: true,
   });
 
-  const loadProducts = async () => {
-    setLoading(true);
+  const loadProducts = async (forceRefresh = false) => {
+    if (products.length === 0) setLoading(true);
     try {
-      const res = await fetch('/api/v1/products');
-      if (res.ok) {
-        const data = await res.json();
+      const data = await fastFetch('/api/v1/products', { forceRefresh });
+      if (data) {
         setProducts(data.products || []);
         setCategories(data.categories || []);
         setBrands(data.brands || []);
@@ -157,7 +157,8 @@ export default function AdminProductsPage() {
         if (res.ok) {
           setMessage('Product updated successfully!');
           setEditingProduct(null);
-          loadProducts();
+          invalidateFastCache('/api/v1/products');
+          loadProducts(true);
         } else {
           setMessage('Failed to update product.');
         }
@@ -171,7 +172,8 @@ export default function AdminProductsPage() {
         if (res.ok) {
           setMessage('Product added successfully!');
           setShowAddModal(false);
-          loadProducts();
+          invalidateFastCache('/api/v1/products');
+          loadProducts(true);
         } else {
           setMessage('Failed to create product.');
         }
@@ -194,7 +196,8 @@ export default function AdminProductsPage() {
       const data = await res.json();
       if (res.ok) {
         alert(data.message || 'Operation successful.');
-        loadProducts();
+        invalidateFastCache('/api/v1/products');
+        loadProducts(true);
       } else {
         alert(data.error || 'Failed to remove product.');
       }
@@ -222,7 +225,8 @@ export default function AdminProductsPage() {
         )
       );
       setSelectedIds([]);
-      loadProducts();
+      invalidateFastCache('/api/v1/products');
+      loadProducts(true);
     } catch {
       alert('Bulk operation failed');
     } finally {
@@ -299,7 +303,7 @@ export default function AdminProductsPage() {
             Add New Product
           </button>
           <button
-            onClick={loadProducts}
+            onClick={() => loadProducts(true)}
             className="p-2 border border-slate-300 rounded-lg text-slate-700 bg-white hover:bg-slate-50 shadow-sm"
             title="Refresh"
           >

@@ -8,6 +8,7 @@ import {
   Wrench, Plus, Search, RefreshCw, Edit2, Trash2,
   CheckCircle2, AlertTriangle, Eye, Zap, Clock, Archive, X
 } from 'lucide-react';
+import { fastFetch, invalidateFastCache } from '@/lib/fastFetch';
 
 interface Service {
   id: string;
@@ -52,12 +53,11 @@ export default function AdminServicesPage() {
     isActive: true,
   });
 
-  const loadServices = async () => {
-    setLoading(true);
+  const loadServices = async (forceRefresh = false) => {
+    if (services.length === 0) setLoading(true);
     try {
-      const res = await fetch('/api/v1/services');
-      if (res.ok) {
-        const data = await res.json();
+      const data = await fastFetch('/api/v1/services', { forceRefresh });
+      if (data) {
         setServices(data.services || []);
         setCategories(data.categories || []);
         if (data.categories?.length > 0 && !form.categorySlug) {
@@ -126,7 +126,8 @@ export default function AdminServicesPage() {
         if (res.ok) {
           setMessage('Service updated successfully!');
           setEditingService(null);
-          loadServices();
+          invalidateFastCache('/api/v1/services');
+          loadServices(true);
         } else {
           setMessage('Failed to update service.');
         }
@@ -139,7 +140,8 @@ export default function AdminServicesPage() {
         if (res.ok) {
           setMessage('Service added successfully!');
           setShowAddModal(false);
-          loadServices();
+          invalidateFastCache('/api/v1/services');
+          loadServices(true);
         } else {
           setMessage('Failed to create service.');
         }
@@ -162,7 +164,8 @@ export default function AdminServicesPage() {
       const data = await res.json();
       if (res.ok) {
         alert(data.message || 'Operation successful.');
-        loadServices();
+        invalidateFastCache('/api/v1/services');
+        loadServices(true);
       } else {
         alert(data.error || 'Failed to remove service.');
       }
@@ -206,7 +209,7 @@ export default function AdminServicesPage() {
             Add New Service
           </button>
           <button
-            onClick={loadServices}
+            onClick={() => loadServices(true)}
             className="p-2 border border-slate-300 rounded-lg text-slate-700 bg-white hover:bg-slate-50 shadow-sm"
             title="Refresh"
           >

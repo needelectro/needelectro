@@ -8,6 +8,7 @@ import {
   Eye, CheckCircle2, Clock, AlertTriangle, Truck,
   FileText, X, ArrowUpDown, ChevronDown
 } from 'lucide-react';
+import { fastFetch, invalidateFastCache } from '@/lib/fastFetch';
 
 const STATUS_OPTIONS = [
   'PLACED',
@@ -46,12 +47,11 @@ export default function AdminOrdersPage() {
     loadOrders();
   }, []);
 
-  const loadOrders = async () => {
-    setLoading(true);
+  const loadOrders = async (forceRefresh = false) => {
+    if (orders.length === 0) setLoading(true);
     try {
-      const res = await fetch('/api/v1/orders');
-      if (res.ok) {
-        const data = await res.json();
+      const data = await fastFetch('/api/v1/orders', { forceRefresh });
+      if (data) {
         setOrders(data.orders || []);
       }
     } catch (e) {
@@ -70,7 +70,8 @@ export default function AdminOrdersPage() {
         body: JSON.stringify({ status: newStatus }),
       });
       if (res.ok) {
-        await loadOrders();
+        invalidateFastCache('/api/v1/orders');
+        await loadOrders(true);
         if (selectedOrder?.id === orderId) {
           setSelectedOrder((prev: any) => ({ ...prev, status: newStatus }));
         }
@@ -115,7 +116,7 @@ export default function AdminOrdersPage() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={loadOrders}
+            onClick={() => loadOrders(true)}
             className="p-2.5 rounded-2xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition"
             title="Refresh Orders"
           >
