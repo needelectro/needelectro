@@ -13,7 +13,8 @@ import {
   Send,
   X,
   User,
-  ShieldAlert
+  ShieldAlert,
+  Lock
 } from "lucide-react";
 
 interface Ticket {
@@ -26,6 +27,7 @@ interface Ticket {
   status: string;
   priority: string;
   adminReply?: string | null;
+  conversation?: any[];
   createdAt: string;
   user?: {
     name: string;
@@ -43,6 +45,9 @@ export default function SupportPage() {
   const [priorityFilter, setPriorityFilter] = useState("ALL");
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [replyText, setReplyText] = useState("");
+  const [isInternalNote, setIsInternalNote] = useState(false);
+  const [replyStatus, setReplyStatus] = useState("RESOLVED");
+  const [replyPriority, setReplyPriority] = useState("NORMAL");
   const [saving, setSaving] = useState(false);
 
   const fetchTickets = async () => {
@@ -64,6 +69,14 @@ export default function SupportPage() {
     fetchTickets();
   }, []);
 
+  const handleOpenTicket = (t: Ticket) => {
+    setSelectedTicket(t);
+    setReplyText("");
+    setIsInternalNote(false);
+    setReplyStatus(t.status === "OPEN" ? "IN_PROGRESS" : t.status);
+    setReplyPriority(t.priority || "NORMAL");
+  };
+
   const handleUpdateTicket = async (ticketId: string, updates: Partial<Ticket>) => {
     setSaving(true);
     try {
@@ -73,8 +86,9 @@ export default function SupportPage() {
         body: JSON.stringify({ ticketId, ...updates }),
       });
       if (res.ok) {
-        if (selectedTicket) {
-          setSelectedTicket((prev) => prev ? { ...prev, ...updates } : null);
+        const data = await res.json();
+        if (selectedTicket && data.ticket) {
+          setSelectedTicket(data.ticket);
         }
         fetchTickets();
       }
@@ -95,11 +109,17 @@ export default function SupportPage() {
         body: JSON.stringify({
           ticketId: selectedTicket.id,
           adminReply: replyText,
-          status: "RESOLVED",
+          status: replyStatus,
+          priority: replyPriority,
+          isInternalNote,
+          authorName: "NEED ELECTRO Support Team",
         }),
       });
       if (res.ok) {
-        setSelectedTicket((prev) => prev ? { ...prev, adminReply: replyText, status: "RESOLVED" } : null);
+        const data = await res.json();
+        if (data.ticket) {
+          setSelectedTicket(data.ticket);
+        }
         setReplyText("");
         fetchTickets();
       }
@@ -284,7 +304,7 @@ export default function SupportPage() {
                     </td>
                     <td className="px-4 py-3.5 text-right whitespace-nowrap">
                       <button
-                        onClick={() => setSelectedTicket(t)}
+                        onClick={() => handleOpenTicket(t)}
                         className="px-3 py-1.5 bg-[#008CFF] text-white hover:bg-blue-600 rounded-lg text-xs font-semibold transition"
                       >
                         Respond & Solve
@@ -301,65 +321,183 @@ export default function SupportPage() {
       {/* Ticket Details / Response Modal */}
       {selectedTicket && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/70">
               <div>
-                <h2 className="text-lg font-bold text-slate-900">
-                  Ticket #{selectedTicket.ticketNumber}
-                </h2>
-                <p className="text-xs text-slate-500">From: {selectedTicket.user?.name} ({selectedTicket.user?.email})</p>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-xs font-bold bg-white px-2 py-0.5 rounded border border-slate-200 text-slate-700">
+                    #{selectedTicket.ticketNumber}
+                  </span>
+                  <h2 className="text-base font-bold text-slate-900">
+                    {selectedTicket.subject}
+                  </h2>
+                </div>
+                <p className="text-xs text-slate-500 mt-1">
+                  From: <strong>{selectedTicket.user?.name || "Customer"}</strong> ({selectedTicket.user?.email || "No email"}) {selectedTicket.user?.phone ? `• ${selectedTicket.user.phone}` : ""}
+                </p>
               </div>
               <button
                 onClick={() => setSelectedTicket(null)}
-                className="text-slate-400 hover:text-slate-600"
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="p-6 space-y-4 overflow-y-auto flex-1">
-              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="font-bold text-slate-700 uppercase">Category: {selectedTicket.category}</span>
-                  <span>{getPriorityBadge(selectedTicket.priority)}</span>
+              {/* Category, Priority & Status Control */}
+              <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-500 font-medium">Category:</span>
+                  <span className="font-bold text-slate-800 uppercase">{selectedTicket.category}</span>
+                  <span className="text-slate-300">|</span>
+                  <span className="text-slate-500 font-medium">Priority:</span>
+                  <select
+                    value={replyPriority}
+                    onChange={(e) => setReplyPriority(e.target.value)}
+                    className="font-bold text-slate-800 bg-white border border-slate-200 rounded px-2 py-0.5"
+                  >
+                    <option value="NORMAL">Normal</option>
+                    <option value="HIGH">High</option>
+                    <option value="URGENT">Urgent</option>
+                  </select>
                 </div>
-                <h3 className="font-bold text-slate-900 text-sm">{selectedTicket.subject}</h3>
-                <p className="text-xs text-slate-600 whitespace-pre-wrap">{selectedTicket.message}</p>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-500 font-medium">Next Status:</span>
+                  <select
+                    value={replyStatus}
+                    onChange={(e) => setReplyStatus(e.target.value)}
+                    className="font-bold text-[#002B5B] bg-white border border-slate-200 rounded px-2 py-0.5"
+                  >
+                    <option value="OPEN">Open</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="WAITING_CUSTOMER">Waiting Customer</option>
+                    <option value="RESOLVED">Resolved</option>
+                    <option value="CLOSED">Closed</option>
+                  </select>
+                </div>
               </div>
 
-              {selectedTicket.adminReply && (
-                <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 space-y-1 text-xs">
-                  <span className="font-bold text-emerald-800">Previous Admin Resolution:</span>
-                  <p className="text-emerald-900">{selectedTicket.adminReply}</p>
+              {/* Initial Customer Request */}
+              <div className="p-4 bg-slate-100 rounded-xl border border-slate-200 space-y-1">
+                <div className="flex justify-between items-center text-xs text-slate-500 font-semibold uppercase">
+                  <span>Initial Customer Inbound Message</span>
+                  <span>{new Date(selectedTicket.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                </div>
+                <p className="text-xs text-slate-800 whitespace-pre-wrap leading-relaxed pt-1">{selectedTicket.message}</p>
+              </div>
+
+              {/* Threaded History */}
+              {selectedTicket.conversation && selectedTicket.conversation.length > 0 && (
+                <div className="space-y-3 pt-1">
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Response & Activity History ({selectedTicket.conversation.length})
+                  </div>
+
+                  {selectedTicket.conversation.map((msg: any, idx: number) => {
+                    const isNote = msg.sender === "INTERNAL_NOTE";
+                    return (
+                      <div
+                        key={msg.id || idx}
+                        className={`p-3.5 rounded-xl border space-y-1 ${
+                          isNote
+                            ? "bg-amber-50/80 border-amber-200 text-amber-950"
+                            : "bg-blue-50/60 border-blue-200 text-slate-900"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2">
+                            {isNote ? (
+                              <span className="inline-flex items-center gap-1 font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded text-[10px]">
+                                <Lock className="w-3 h-3" /> INTERNAL STAFF NOTE
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded text-[10px]">
+                                <MessageSquare className="w-3 h-3" /> OFFICIAL STAFF REPLY
+                              </span>
+                            )}
+                            <span className="font-semibold">{msg.senderName || "Staff Member"}</span>
+                          </div>
+                          <span className="text-[11px] opacity-70">
+                            {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" })}
+                          </span>
+                        </div>
+                        <p className="text-xs whitespace-pre-wrap leading-relaxed">
+                          {msg.message}
+                        </p>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
-                  Send Official Resolution / Reply
-                </label>
+              {/* Response Composer */}
+              <div className="space-y-2 pt-1">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-slate-700 uppercase">
+                    Compose Resolution / Message
+                  </label>
+
+                  <div className="flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-bold">
+                    <button
+                      type="button"
+                      onClick={() => setIsInternalNote(false)}
+                      className={`px-3 py-1 rounded-md transition ${
+                        !isInternalNote
+                          ? "bg-[#008CFF] text-white shadow-sm"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      Customer Reply
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsInternalNote(true)}
+                      className={`px-3 py-1 rounded-md transition flex items-center gap-1 ${
+                        isInternalNote
+                          ? "bg-amber-600 text-white shadow-sm"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      <Lock className="w-3 h-3" />
+                      Internal Note
+                    </button>
+                  </div>
+                </div>
+
                 <textarea
                   rows={4}
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
-                  placeholder="Provide resolution details or action taken..."
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                  placeholder={
+                    isInternalNote
+                      ? "Write private internal note (visible only to administrators and service staff)..."
+                      : "Write official response to customer (triggers instant notification to user)..."
+                  }
+                  className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 transition ${
+                    isInternalNote
+                      ? "border-amber-300 focus:ring-amber-500 bg-amber-50/20"
+                      : "border-slate-300 focus:ring-[#008CFF] bg-white"
+                  }`}
                 />
               </div>
 
-              <div className="flex items-center justify-between pt-2">
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={() => handleUpdateTicket(selectedTicket.id, { status: "IN_PROGRESS" })}
-                    className="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-xs font-semibold"
+                    disabled={saving}
+                    className="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-xs font-semibold hover:bg-amber-100 transition"
                   >
                     Mark In-Progress
                   </button>
                   <button
                     type="button"
                     onClick={() => handleUpdateTicket(selectedTicket.id, { status: "CLOSED" })}
-                    className="px-3 py-1.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold"
+                    disabled={saving}
+                    className="px-3 py-1.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold hover:bg-slate-200 transition"
                   >
                     Close Ticket
                   </button>
@@ -368,18 +506,20 @@ export default function SupportPage() {
                   type="button"
                   onClick={handleSendReply}
                   disabled={saving || !replyText.trim()}
-                  className="px-4 py-2 bg-[#008CFF] text-white rounded-lg text-xs font-bold hover:bg-blue-600 disabled:opacity-50 flex items-center gap-1.5"
+                  className={`px-4 py-2 rounded-xl text-xs font-bold text-white shadow-sm transition disabled:opacity-50 flex items-center gap-1.5 ${
+                    isInternalNote ? "bg-amber-600 hover:bg-amber-700" : "bg-[#008CFF] hover:bg-blue-600"
+                  }`}
                 >
-                  <Send className="w-3.5 h-3.5" />
-                  Send & Resolve
+                  <Send className={`w-3.5 h-3.5 ${saving ? "animate-spin" : ""}`} />
+                  {saving ? "Saving..." : isInternalNote ? "Add Internal Note" : "Send Official Reply"}
                 </button>
               </div>
             </div>
 
-            <div className="flex justify-end px-6 py-4 bg-slate-50 border-t border-slate-100">
+            <div className="flex justify-end px-6 py-3 bg-slate-50 border-t border-slate-100">
               <button
                 onClick={() => setSelectedTicket(null)}
-                className="px-4 py-2 bg-slate-800 text-white rounded-lg text-sm font-medium hover:bg-slate-700"
+                className="px-4 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-800"
               >
                 Close
               </button>
