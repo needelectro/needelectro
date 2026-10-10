@@ -38,7 +38,17 @@ export function middleware(request: NextRequest) {
   const user = token ? decodeJwtPayload(token) : null;
   const isAdmin = user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN');
 
-  // 1. If logged in as ADMIN:
+  // 1. If on /admin/login:
+  if (pathname === '/admin/login') {
+    // If already logged in as admin, redirect to admin dashboard
+    if (isAdmin) {
+      return NextResponse.redirect(new URL('/admin/dashboard', request.url));
+    }
+    // Allow non-authenticated users to view admin login
+    return NextResponse.next();
+  }
+
+  // 2. If logged in as ADMIN:
   // Admin is strictly restricted to /admin routes.
   // If admin tries to visit any public/customer route, redirect them back to /admin/dashboard
   if (isAdmin) {
@@ -49,10 +59,12 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2. If NOT an admin, prevent access to /admin routes
+  // 3. If NOT an admin, prevent access to /admin routes and send to /admin/login
   if (pathname.startsWith('/admin')) {
-    const loginUrl = new URL('/customer/login', request.url);
-    loginUrl.searchParams.set('redirect', pathname);
+    const loginUrl = new URL('/admin/login', request.url);
+    if (pathname !== '/admin') {
+      loginUrl.searchParams.set('redirect', pathname);
+    }
     return NextResponse.redirect(loginUrl);
   }
 

@@ -69,6 +69,18 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    if (expectedRole === 'ADMIN') {
+      if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
+        return NextResponse.json(
+          {
+            error: 'Access denied. Administrator privileges required.',
+            redirectUrl: '/admin/login',
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     const sessionData = {
       id: user.id,
       name: user.name,

@@ -33,20 +33,29 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
 
+  // If on /admin/login, bypass the admin console shell and guard
+  const isLoginPage = pathname === '/admin/login';
+
   useEffect(() => {
+    if (isLoginPage) return;
+
     if (!isLoading) {
       if (!user) {
-        router.replace('/customer/login?redirect=' + encodeURIComponent(pathname || '/admin/dashboard'));
+        router.replace('/admin/login?redirect=' + encodeURIComponent(pathname || '/admin/dashboard'));
       } else if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
-        router.replace('/customer/dashboard');
+        router.replace('/admin/login?error=unauthorized');
       }
     }
-  }, [user, isLoading, pathname, router]);
+  }, [user, isLoading, pathname, router, isLoginPage]);
 
   const handleLogout = async () => {
     await logout();
-    router.replace('/customer/login');
+    router.replace('/admin/login');
   };
+
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
 
   if (isLoading) {
     return (
@@ -61,7 +70,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return (
       <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center gap-3">
         <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
-        <p className="text-xs text-slate-400 font-medium">Redirecting to login...</p>
+        <p className="text-xs text-slate-400 font-medium">Redirecting to admin login...</p>
       </div>
     );
   }

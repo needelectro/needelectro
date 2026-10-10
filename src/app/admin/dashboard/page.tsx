@@ -44,9 +44,9 @@ export default function AdminDashboard() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user) { router.push('/login'); return; }
+    if (!user) { router.push('/admin/login'); return; }
     if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
-      router.push('/customer/dashboard');
+      router.push('/admin/login?error=unauthorized');
       return;
     }
     loadData();
