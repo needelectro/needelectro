@@ -21,8 +21,9 @@ export default function MobileNav() {
   const pathname = usePathname();
   const { user } = useAuth();
 
-  // Hide on certain admin views if needed, otherwise show for mobile
-  if (pathname?.startsWith('/admin')) {
+  // Hide on admin views and for admin users
+  const isAdmin = user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN');
+  if (pathname?.startsWith('/admin') || isAdmin) {
     return null;
   }
 

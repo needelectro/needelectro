@@ -1,9 +1,21 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useAuth } from '@/lib/context/AuthContext';
 import BrandLogo from '@/components/common/BrandLogo';
 import { Zap, Phone, Mail, MapPin, Globe, ShieldCheck } from 'lucide-react';
 
 export default function Footer() {
+  const pathname = usePathname();
+  const { user } = useAuth();
+
+  // Isolate Admin: Do not render the public footer for admin users or on /admin routes
+  const isAdmin = user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN');
+  if (pathname?.startsWith('/admin') || isAdmin) {
+    return null;
+  }
   return (
     <footer className="bg-slate-950/90 backdrop-blur-2xl text-slate-300 pt-16 pb-24 md:pb-12 border-t border-white/10 relative overflow-hidden shadow-2xl">
       {/* Background ambient lighting for frosted dark glass refraction */}

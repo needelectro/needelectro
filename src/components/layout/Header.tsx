@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/context/AuthContext';
 import { useCart } from '@/lib/context/CartContext';
 import BrandLogo from '@/components/common/BrandLogo';
@@ -26,10 +27,17 @@ import {
 export default function Header() {
   const { user, logout } = useAuth();
   const { itemCount } = useCart();
+  const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+
+  // Isolate Admin: Do not render the public header for admin users or on /admin routes
+  const isAdmin = user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN');
+  if (pathname?.startsWith('/admin') || isAdmin) {
+    return null;
+  }
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();

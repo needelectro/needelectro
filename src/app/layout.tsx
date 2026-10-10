@@ -6,6 +6,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import MobileNav from '@/components/layout/MobileNav';
 import PwaInstallPrompt from '@/components/pwa/PwaInstallPrompt';
+import AdminGuard from '@/components/common/AdminGuard';
 
 export const metadata: Metadata = {
   title: 'NEED ELECTRO | Trusted Electrical & Technological Solutions',
@@ -101,11 +102,13 @@ export default function RootLayout({
 
         <AuthProvider>
           <CartProvider>
-            <Header />
-            <main className="flex-1 pb-24 md:pb-0 relative z-0 min-w-0 w-full overflow-x-hidden">{children}</main>
-            <Footer />
-            <MobileNav />
-            <PwaInstallPrompt />
+            <AdminGuard>
+              <Header />
+              <main className="flex-1 pb-24 md:pb-0 relative z-0 min-w-0 w-full overflow-x-hidden">{children}</main>
+              <Footer />
+              <MobileNav />
+              <PwaInstallPrompt />
+            </AdminGuard>
           </CartProvider>
         </AuthProvider>
       </body>

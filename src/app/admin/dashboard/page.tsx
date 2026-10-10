@@ -129,7 +129,7 @@ export default function AdminDashboard() {
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Sidebar */}
         <aside className="lg:w-60 space-y-4 shrink-0">
-          <Link href="/" className="flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-white/70 backdrop-blur-md border border-white/80 shadow-xs group hover:bg-white transition" title="Return to Website">
+          <Link href="/admin/dashboard" className="flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-white/70 backdrop-blur-md border border-white/80 shadow-xs group hover:bg-white transition" title="Admin Dashboard">
             <Image
               src="/logo.png"
               alt="NEED ELECTRO"
