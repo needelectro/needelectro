@@ -125,77 +125,33 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex flex-col lg:flex-row gap-8">
-        {/* Sidebar */}
-        <aside className="lg:w-60 space-y-4 shrink-0">
-          <Link href="/admin/dashboard" className="flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-white/70 backdrop-blur-md border border-white/80 shadow-xs group hover:bg-white transition" title="Admin Dashboard">
-            <Image
-              src="/logo.png"
-              alt="NEED ELECTRO"
-              width={140}
-              height={70}
-              className="h-8 w-auto object-contain group-hover:scale-105 transition-transform"
-            />
-            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded-md">Admin</span>
-          </Link>
+    <div className="space-y-6">
+      {/* Top Tab Bar */}
+      <div className="flex border-b border-slate-200 bg-white rounded-xl p-1.5 shadow-sm overflow-x-auto gap-1">
+        {NAV.map(({ key, label, icon: Icon, badge }) => (
+          <button
+            key={key}
+            onClick={() => setActiveTab(key as AdminTab)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap ${
+              activeTab === key
+                ? 'bg-[#008CFF] text-white shadow-sm'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <Icon className="w-3.5 h-3.5" />
+            <span>{label}</span>
+            {badge != null && badge > 0 && (
+              <span className={`text-[10px] font-black rounded-full px-1.5 py-0.5 ${activeTab === key ? 'bg-white text-[#008CFF]' : 'bg-red-500 text-white'}`}>
+                {badge}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
 
-          <div className="glass-card-dark rounded-3xl p-5 text-white space-y-2.5 relative overflow-hidden shadow-xl border border-white/10">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/15 blur-2xl rounded-full pointer-events-none" />
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-600 to-brand-400 flex items-center justify-center font-black text-lg text-white shadow-md shadow-brand-500/30 border border-white/20">
-              {user.name.charAt(0)}
-            </div>
-            <p className="font-black text-sm">{user.name}</p>
-            <span className="inline-block text-[10px] font-black bg-brand-500/20 text-brand-300 border border-brand-500/30 px-2.5 py-0.5 rounded-full uppercase backdrop-blur-sm">
-              {user.role}
-            </span>
-          </div>
-
-          <nav className="glass-card rounded-3xl shadow-sm overflow-hidden">
-            {NAV.map(({ key, label, icon: Icon, badge }) => (
-              <button
-                key={key}
-                onClick={() => setActiveTab(key as AdminTab)}
-                className={`w-full flex items-center justify-between px-4 py-3 text-xs font-bold transition border-b border-white/60 last:border-0 ${
-                  activeTab === key ? 'text-brand-600 bg-white/80' : 'text-slate-700 hover:bg-white/60'
-                }`}
-              >
-                <span className="flex items-center gap-2.5"><Icon className="w-4 h-4" />{label}</span>
-                {badge != null && badge > 0 && (
-                  <span className="bg-red-500 text-white text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center shadow-xs">{badge}</span>
-                )}
-              </button>
-            ))}
-            <button onClick={handleLogout} className="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-bold text-red-600 hover:bg-red-50/80 transition">
-              <LogOut className="w-4 h-4" />Sign Out
-            </button>
-          </nav>
-
-          <div className="space-y-2">
-            <Link href="/admin/products" className="glass-card-hover flex items-center gap-2 text-xs font-bold text-slate-800 rounded-2xl px-4 py-3 transition shadow-xs">
-              <ShoppingBag className="w-4 h-4 text-brand-500" />Manage Products
-            </Link>
-            <Link href="/admin/services" className="glass-card-hover flex items-center gap-2 text-xs font-bold text-slate-800 rounded-2xl px-4 py-3 transition shadow-xs">
-              <Wrench className="w-4 h-4 text-brand-500" />Manage Services
-            </Link>
-            <Link href="/admin/warranties" className="glass-card-hover flex items-center gap-2 text-xs font-bold text-slate-800 rounded-2xl px-4 py-3 transition shadow-xs">
-              <Shield className="w-4 h-4 text-emerald-500" />Manage Warranties
-            </Link>
-            <Link href="/admin/training" className="glass-card-hover flex items-center gap-2 text-xs font-bold text-slate-800 rounded-2xl px-4 py-3 transition shadow-xs">
-              <GraduationCap className="w-4 h-4 text-amber-500" />Academy Students &amp; Certs
-            </Link>
-            <Link href="/admin/branches" className="glass-card-hover flex items-center gap-2 text-xs font-bold text-slate-800 rounded-2xl px-4 py-3 transition shadow-xs">
-              <Building2 className="w-4 h-4 text-sky-500" />Branch Network
-            </Link>
-            <Link href="/admin/sellers" className="glass-card-hover flex items-center gap-2 text-xs font-bold text-slate-800 rounded-2xl px-4 py-3 transition shadow-xs">
-              <Store className="w-4 h-4 text-emerald-500" />Merchant Partners
-            </Link>
-          </div>
-        </aside>
-
-        {/* Main */}
-        <main className="flex-1 space-y-6 min-w-0">
-          {loading && (
+      {/* Main Content */}
+      <main className="space-y-6 min-w-0">
+        {loading && (
             <div className="flex items-center justify-center h-40">
               <div className="w-8 h-8 border-4 border-brand-200 border-t-brand-500 rounded-full animate-spin" />
             </div>
@@ -407,7 +363,6 @@ export default function AdminDashboard() {
             </div>
           )}
         </main>
-      </div>
     </div>
   );
 }
