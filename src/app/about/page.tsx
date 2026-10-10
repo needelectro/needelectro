@@ -76,13 +76,13 @@ export default function AboutPage() {
         <div className="absolute -top-24 -right-24 w-80 h-80 bg-brand-500/25 blur-[120px] pointer-events-none rounded-full" />
         <div className="max-w-3xl mx-auto space-y-6 relative z-10">
           <div className="flex justify-center">
-            <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl shadow-brand-500/25">
+            <div className="p-4 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl shadow-brand-500/25">
               <Image
-                src="/brand/needelectro-icon.png"
+                src="/brand/needelectro-logo-white.png"
                 alt="NEED ELECTRO Logo"
-                width={64}
-                height={64}
-                className="w-16 h-16 object-contain filter drop-shadow"
+                width={220}
+                height={110}
+                className="h-12 sm:h-14 w-auto object-contain filter drop-shadow"
                 priority
               />
             </div>

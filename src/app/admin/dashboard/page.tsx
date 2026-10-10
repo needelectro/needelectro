@@ -129,18 +129,15 @@ export default function AdminDashboard() {
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Sidebar */}
         <aside className="lg:w-60 space-y-4 shrink-0">
-          <Link href="/" className="flex items-center gap-2.5 px-3 py-2 rounded-2xl bg-white/70 backdrop-blur-md border border-white/80 shadow-xs group hover:bg-white transition" title="Return to Website">
+          <Link href="/" className="flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-white/70 backdrop-blur-md border border-white/80 shadow-xs group hover:bg-white transition" title="Return to Website">
             <Image
-              src="/brand/needelectro-icon.png"
+              src="/logo.png"
               alt="NEED ELECTRO"
-              width={32}
-              height={32}
-              className="w-8 h-8 object-contain group-hover:scale-105 transition-transform"
+              width={140}
+              height={70}
+              className="h-8 w-auto object-contain group-hover:scale-105 transition-transform"
             />
-            <div className="flex flex-col">
-              <span className="font-extrabold text-sm tracking-tight text-slate-900 leading-none">NEED <span className="text-brand-500">ELECTRO</span></span>
-              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Admin Console</span>
-            </div>
+            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded-md">Admin</span>
           </Link>
 
           <div className="glass-card-dark rounded-3xl p-5 text-white space-y-2.5 relative overflow-hidden shadow-xl border border-white/10">

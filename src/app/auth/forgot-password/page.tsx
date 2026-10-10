@@ -26,13 +26,13 @@ export default function ForgotPasswordPage() {
         {/* Logo */}
         <div className="text-center space-y-3 flex flex-col items-center">
           <Link href="/" className="inline-block group hover:scale-105 transition-transform" title="Back to Home">
-            <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-2 shadow-xl shadow-brand-500/25 flex items-center justify-center">
+            <div className="px-5 py-3 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl shadow-brand-500/25 flex items-center justify-center">
               <Image
-                src="/brand/needelectro-icon.png"
+                src="/brand/needelectro-logo-white.png"
                 alt="NEED ELECTRO Logo"
-                width={56}
-                height={56}
-                className="w-full h-full object-contain filter drop-shadow"
+                width={180}
+                height={90}
+                className="h-10 sm:h-12 w-auto object-contain filter drop-shadow"
                 priority
               />
             </div>
