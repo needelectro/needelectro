@@ -197,9 +197,9 @@ export default function ServicesPage() {
 
       {/* Services Grid */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="card-premium h-80 animate-pulse bg-slate-100 rounded-2xl" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
+            <div key={i} className="card-premium h-64 animate-pulse bg-slate-100 rounded-2xl" />
           ))}
         </div>
       ) : services.length === 0 ? (
@@ -209,7 +209,7 @@ export default function ServicesPage() {
           <p className="text-xs text-slate-500 mt-1">Try switching category or clearing the search query.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
           {services.map((service) => (
             <div
               key={service.id}
@@ -224,39 +224,39 @@ export default function ServicesPage() {
                     alt={service.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-md text-slate-800 text-[10px] font-bold px-2.5 py-1 rounded-full shadow-xs">
+                  <span className="absolute top-2 left-2 bg-white/90 backdrop-blur-md text-slate-800 text-[9px] font-bold px-2 py-0.5 rounded-full shadow-xs">
                     {service.category?.name || 'Service'}
                   </span>
                   {service.isEmergencyService && (
-                    <span className="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
-                      <Zap className="w-3 h-3 fill-white" />
+                    <span className="absolute top-2 right-2 bg-red-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-xs flex items-center gap-1">
+                      <Zap className="w-2.5 h-2.5 fill-white" />
                       Rapid 24/7
                     </span>
                   )}
                 </div>
 
-                <div className="p-5 space-y-2.5">
-                  <h3 className="font-bold text-slate-900 text-base leading-snug group-hover:text-brand-600 transition-colors">
+                <div className="p-3 space-y-1.5">
+                  <h3 className="font-bold text-slate-900 text-xs sm:text-sm leading-tight line-clamp-1 group-hover:text-brand-600 transition-colors">
                     {service.name}
                   </h3>
-                  <p className="text-xs text-slate-600 leading-relaxed line-clamp-3">
+                  <p className="text-[11px] text-slate-500 leading-snug line-clamp-2">
                     {service.shortDescription}
                   </p>
 
-                  <div className="pt-2 flex items-center justify-between text-xs border-t border-slate-100">
+                  <div className="pt-1.5 flex items-center justify-between text-[11px] border-t border-slate-100">
                     <div className="flex items-center gap-1 text-slate-500">
-                      <Clock className="w-3.5 h-3.5" />
-                      <span>{service.estimatedDuration}</span>
+                      <Clock className="w-3 h-3" />
+                      <span className="text-[10px]">{service.estimatedDuration}</span>
                     </div>
                     <div>
-                      <span className="text-[11px] text-slate-500">
+                      <span className="text-[10px] text-slate-500">
                         {service.priceType === 'INSPECTION_BASED'
-                          ? 'Inspection: '
+                          ? 'Insp: '
                           : service.priceType === 'STARTING_FROM'
-                          ? 'Starts at: '
+                          ? 'From: '
                           : 'Fixed: '}
                       </span>
-                      <strong className="text-sm font-extrabold text-slate-900">
+                      <strong className="text-xs sm:text-sm font-extrabold text-slate-900">
                         ৳{service.basePrice.toLocaleString()}
                       </strong>
                     </div>
@@ -264,20 +264,20 @@ export default function ServicesPage() {
                 </div>
               </div>
 
-              <div className="p-5 pt-0 grid grid-cols-2 gap-2">
+              <div className="p-3 pt-0 grid grid-cols-2 gap-1.5">
                 <Link
                   href={`/services/${service.slug}`}
-                  className="btn-secondary text-xs py-2 text-center"
+                  className="btn-secondary text-[10px] py-1.5 px-1 text-center rounded-lg"
                 >
-                  View Details
+                  Details
                 </Link>
                 <button
                   onClick={() => handleOpenBooking(service)}
-                  className={`text-xs py-2 ${
+                  className={`text-[10px] py-1.5 px-1 rounded-lg ${
                     service.isEmergencyService ? 'btn-danger' : 'btn-primary'
                   }`}
                 >
-                  Book Service
+                  Book
                 </button>
               </div>
             </div>

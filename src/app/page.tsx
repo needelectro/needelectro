@@ -162,7 +162,7 @@ export default function HomePage() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 max-w-4xl">
           {/* Service Card 1 */}
           <div className="card-premium overflow-hidden group flex flex-col justify-between transition-all duration-300 hover:-translate-y-1">
             <div>
@@ -172,27 +172,27 @@ export default function HomePage() {
                   alt="House Electrical Wiring"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-                <span className="absolute top-3 left-3 bg-white/95 backdrop-blur-md text-brand-700 text-[11px] font-bold px-2.5 py-1 rounded-full shadow-xs">
-                  Electrical Services
+                <span className="absolute top-2 left-2 bg-white/95 backdrop-blur-md text-brand-700 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
+                  Electrical
                 </span>
               </div>
-              <div className="p-4 sm:p-5">
-                <h3 className="font-bold text-slate-900 text-sm sm:text-base mb-1.5 group-hover:text-brand-600 transition-colors leading-snug">
+              <div className="p-3">
+                <h3 className="font-bold text-slate-900 text-xs sm:text-sm mb-1 group-hover:text-brand-600 transition-colors leading-tight line-clamp-1">
                   Complete House Electrical Wiring
                 </h3>
-                <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
-                  Safe conduit wiring, load balancing, circuit breaker boards, and earthing test by certified master electricians.
+                <p className="text-[11px] text-slate-500 leading-snug line-clamp-2">
+                  Conduit wiring, load balancing, circuit breaker boards &amp; earthing tests.
                 </p>
-                <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                  <span className="text-slate-500">Starting from</span>
-                  <span className="font-extrabold text-slate-950 text-sm">৳1,500</span>
+                <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                  <span className="text-slate-400">Starting</span>
+                  <span className="font-extrabold text-slate-950 text-xs sm:text-sm">৳1,500</span>
                 </div>
               </div>
             </div>
-            <div className="p-4 sm:p-5 pt-0">
+            <div className="p-3 pt-0">
               <Link
                 href="/services/complete-house-electrical-wiring"
-                className="btn-primary w-full text-xs py-2.5 rounded-xl shadow-xs"
+                className="btn-primary w-full text-[11px] py-1.5 rounded-lg shadow-xs text-center"
               >
                 Book Inspection
               </Link>
@@ -208,27 +208,27 @@ export default function HomePage() {
                   alt="CCTV Camera Setup"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-                <span className="absolute top-3 left-3 bg-white/95 backdrop-blur-md text-purple-700 text-[11px] font-bold px-2.5 py-1 rounded-full shadow-xs">
-                  CCTV &amp; Security
+                <span className="absolute top-2 left-2 bg-white/95 backdrop-blur-md text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
+                  CCTV
                 </span>
               </div>
-              <div className="p-4 sm:p-5">
-                <h3 className="font-bold text-slate-900 text-sm sm:text-base mb-1.5 group-hover:text-brand-600 transition-colors leading-snug">
-                  CCTV Camera Complete Installation &amp; Setup
+              <div className="p-3">
+                <h3 className="font-bold text-slate-900 text-xs sm:text-sm mb-1 group-hover:text-brand-600 transition-colors leading-tight line-clamp-1">
+                  CCTV Installation &amp; Setup
                 </h3>
-                <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
-                  Mounting, neat cable routing, DVR/NVR configuration, and live streaming setup on your smartphone.
+                <p className="text-[11px] text-slate-500 leading-snug line-clamp-2">
+                  Mounting, neat cable routing, DVR/NVR configuration &amp; mobile setup.
                 </p>
-                <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                  <span className="text-slate-500">Package setup</span>
-                  <span className="font-extrabold text-slate-950 text-sm">৳1,200</span>
+                <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                  <span className="text-slate-400">Package</span>
+                  <span className="font-extrabold text-slate-950 text-xs sm:text-sm">৳1,200</span>
                 </div>
               </div>
             </div>
-            <div className="p-4 sm:p-5 pt-0">
+            <div className="p-3 pt-0">
               <Link
                 href="/services/cctv-camera-installation-setup"
-                className="btn-primary w-full text-xs py-2.5 rounded-xl shadow-xs"
+                className="btn-primary w-full text-[11px] py-1.5 rounded-lg shadow-xs text-center"
               >
                 Book CCTV Setup
               </Link>
@@ -244,27 +244,27 @@ export default function HomePage() {
                   alt="Laptop Servicing"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-                <span className="absolute top-3 left-3 bg-white/95 backdrop-blur-md text-blue-700 text-[11px] font-bold px-2.5 py-1 rounded-full shadow-xs">
-                  Computer &amp; Laptop
+                <span className="absolute top-2 left-2 bg-white/95 backdrop-blur-md text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
+                  Laptop / PC
                 </span>
               </div>
-              <div className="p-4 sm:p-5">
-                <h3 className="font-bold text-slate-900 text-sm sm:text-base mb-1.5 group-hover:text-brand-600 transition-colors leading-snug">
+              <div className="p-3">
+                <h3 className="font-bold text-slate-900 text-xs sm:text-sm mb-1 group-hover:text-brand-600 transition-colors leading-tight line-clamp-1">
                   Laptop &amp; PC Diagnostics &amp; Repair
                 </h3>
-                <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
-                  Thermal paste service, SSD/RAM upgrades, screen replacement, and genuine OS clean installations.
+                <p className="text-[11px] text-slate-500 leading-snug line-clamp-2">
+                  Thermal paste service, SSD/RAM upgrades, screen fix &amp; OS setup.
                 </p>
-                <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                  <span className="text-slate-500">Diagnostics fee</span>
-                  <span className="font-extrabold text-slate-950 text-sm">৳600</span>
+                <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                  <span className="text-slate-400">Diagnostics</span>
+                  <span className="font-extrabold text-slate-950 text-xs sm:text-sm">৳600</span>
                 </div>
               </div>
             </div>
-            <div className="p-4 sm:p-5 pt-0">
+            <div className="p-3 pt-0">
               <Link
                 href="/services/laptop-desktop-hardware-servicing"
-                className="btn-primary w-full text-xs py-2.5 rounded-xl shadow-xs"
+                className="btn-primary w-full text-[11px] py-1.5 rounded-lg shadow-xs text-center"
               >
                 Book Tech Service
               </Link>
@@ -280,30 +280,30 @@ export default function HomePage() {
                   alt="Emergency Electrical"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-                <span className="absolute top-3 left-3 bg-red-600 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
-                  <Zap className="w-3 h-3 fill-white" />
-                  24/7 Emergency
+                <span className="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs flex items-center gap-1">
+                  <Zap className="w-2.5 h-2.5 fill-white" />
+                  24/7 Rapid
                 </span>
               </div>
-              <div className="p-4 sm:p-5">
-                <h3 className="font-bold text-slate-900 text-sm sm:text-base mb-1.5 group-hover:text-brand-600 transition-colors leading-snug">
-                  Emergency Electrical Troubleshooting
+              <div className="p-3">
+                <h3 className="font-bold text-slate-900 text-xs sm:text-sm mb-1 group-hover:text-brand-600 transition-colors leading-tight line-clamp-1">
+                  Emergency Troubleshooting
                 </h3>
-                <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
-                  Immediate dispatch in Moulvibazar for sparking, short circuits, main line trips, and electrical hazards.
+                <p className="text-[11px] text-slate-500 leading-snug line-clamp-2">
+                  Immediate dispatch for sparking, short circuits &amp; electrical hazards.
                 </p>
-                <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                  <span className="text-slate-500">Rapid Callout</span>
-                  <span className="font-extrabold text-slate-950 text-sm">৳500</span>
+                <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                  <span className="text-slate-400">Rapid Callout</span>
+                  <span className="font-extrabold text-slate-950 text-xs sm:text-sm">৳500</span>
                 </div>
               </div>
             </div>
-            <div className="p-4 sm:p-5 pt-0">
+            <div className="p-3 pt-0">
               <Link
                 href="/services/emergency-electrical-troubleshooting"
-                className="btn-danger w-full text-xs py-2.5 rounded-xl shadow-xs"
+                className="btn-danger w-full text-[11px] py-1.5 rounded-lg shadow-xs text-center"
               >
-                Request Emergency Help
+                Emergency Help
               </Link>
             </div>
           </div>
