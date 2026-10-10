@@ -37,6 +37,7 @@ model CustomerProfile {
   orders             Order[]
   registeredDevices  DeviceRegistration[]
   reviews            Review[]
+  emiAccounts        EmiAccount[]
   createdAt          DateTime             @default(now())
 }
 
@@ -96,6 +97,7 @@ model TechnicianProfile {
   earnings              TechnicianEarnings[]
   walletTransactions    WalletTransaction[]
   reviewsReceived       Review[]
+  payoutRequests        PayoutRequest[]
 }
 
 model ServiceCategory {
@@ -230,6 +232,8 @@ model Product {
   deviceRegistrations  DeviceRegistration[]
   serials              ProductSerial[]
   reviews              Review[]
+  emiAccounts          EmiAccount[]
+  stockMovements       StockMovement[]
 }
 
 model ProductSerial {
@@ -513,4 +517,140 @@ model SellerProfile {
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt
 }
+
+// ==========================================
+// ENTERPRISE MODULES: LEADS, EMI, INVENTORY, CMS
+// ==========================================
+
+model DigitalSolutionLead {
+  id                String    @id @default(cuid())
+  leadNumber        String    @unique // DSL202610001
+  businessName      String
+  contactPerson     String
+  email             String
+  phone             String
+  serviceType       String    // WEB_DEV, APP_DEV, ACCOUNTING_SOFTWARE, CUSTOM_ERP, CONSULTING
+  projectScope      String
+  estimatedBudget   Float?
+  preferredTimeline String?
+  source            String    @default("WEBSITE")
+  status            String    @default("NEW") // NEW, CONTACTED, QUALIFIED, PROPOSAL_SENT, NEGOTIATION, WON, LOST
+  assignedTo        String?
+  notes             String?
+  quotationAmount   Float?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model ErpLead {
+  id               String    @id @default(cuid())
+  leadNumber       String    @unique // ERP202610001
+  businessName     String
+  contactPerson    String
+  email            String
+  phone            String
+  industry         String    // RETAIL, ELECTRONICS, COMPUTER_SHOP, SUPER_SHOP, PHARMACY, HARDWARE, SME
+  branchCount      Int       @default(1)
+  userCount        Int       @default(3)
+  requiredFeatures String    // JSON or comma-separated
+  status           String    @default("NEW") // NEW, DEMO_SCHEDULED, DEMO_COMPLETED, TRIAL, CONVERTED, CLOSED
+  demoDate         DateTime?
+  salesNotes       String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model EmiAccount {
+  id             String           @id @default(cuid())
+  accountNumber  String           @unique // EMI2026100001
+  customerId     String
+  customer       CustomerProfile  @relation(fields: [customerId], references: [id])
+  productId      String
+  product        Product          @relation(fields: [productId], references: [id])
+  serialNumber   String?
+  totalPrice     Float
+  downPayment    Float
+  financedAmount Float
+  tenureMonths   Int              @default(6) // 3, 6, 9, 12
+  monthlyPayment Float
+  status         String           @default("ACTIVE") // ACTIVE, COMPLETED, DEFAULTED, CANCELLED
+  startDate      DateTime         @default(now())
+  installments   EmiInstallment[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+model EmiInstallment {
+  id            String     @id @default(cuid())
+  emiAccountId  String
+  emiAccount    EmiAccount @relation(fields: [emiAccountId], references: [id], onDelete: Cascade)
+  installmentNo Int
+  dueDate       DateTime
+  amount        Float
+  paidAmount    Float      @default(0.0)
+  paidDate      DateTime?
+  status        String     @default("PENDING") // PENDING, PAID, OVERDUE, WAIVED
+  transactionId String?
+  paymentMethod String?
+  notes         String?
+}
+
+model StockMovement {
+  id            String   @id @default(cuid())
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  changeQty     Int      // +10 or -2
+  previousStock Int
+  newStock      Int
+  reason        String   // PURCHASE, SALE, RETURN, DAMAGE, ADJUSTMENT
+  referenceType String?  // ORDER, RETURN, PURCHASE_ORDER, AUDIT
+  referenceId   String?
+  actorId       String?
+  actorName     String?
+  notes         String?
+  createdAt     DateTime @default(now())
+}
+
+model PayoutRequest {
+  id             String            @id @default(cuid())
+  technicianId   String
+  technician     TechnicianProfile @relation(fields: [technicianId], references: [id])
+  amount         Float
+  paymentMethod  String            // BKASH, NAGAD, BANK_TRANSFER
+  accountDetails String
+  status         String            @default("PENDING") // PENDING, APPROVED, REJECTED, PAID
+  adminNotes     String?
+  paidAt         DateTime?
+  trxId          String?
+  approvedBy     String?
+  createdAt      DateTime          @default(now())
+}
+
+model Banner {
+  id        String   @id @default(cuid())
+  title     String
+  subtitle  String?
+  imageUrl  String
+  ctaText   String?
+  ctaLink   String?
+  placement String   @default("HOMEPAGE_HERO")
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model Promotion {
+  id              String   @id @default(cuid())
+  code            String   @unique
+  discountPercent Float?
+  discountAmount  Float?
+  minOrderAmount  Float    @default(0.0)
+  startDate       DateTime @default(now())
+  endDate         DateTime
+  usageLimit      Int?
+  usageCount      Int      @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+}
+
 
