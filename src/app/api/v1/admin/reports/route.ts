@@ -36,15 +36,19 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const technicians = await prisma.technicianProfile.findMany({
-      select: {
-        id: true,
-        fullName: true,
-        rating: true,
-        totalJobsCompleted: true,
-        walletBalance: true,
+    const rawTechnicians = await prisma.technicianProfile.findMany({
+      include: {
+        user: { select: { name: true } },
       },
     });
+
+    const technicians = rawTechnicians.map((t: any) => ({
+      id: t.id,
+      fullName: t.user?.name || "Technician",
+      rating: t.ratingOverall || 5.0,
+      totalJobsCompleted: t.totalCompletedJobs || 0,
+      walletBalance: t.walletBalance || 0,
+    }));
 
     const totalProductRevenue = orders
       .filter((o: any) => o.paymentStatus === "PAID")

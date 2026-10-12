@@ -142,6 +142,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useEffect(() => {
+    if (!user) return;
     const fetchUnread = async () => {
       try {
         const res = await fetch('/api/v1/admin/notifications');
@@ -151,19 +152,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         }
       } catch {}
     };
-    if (user) {
-      fetchUnread();
+
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 60000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  // Idle background prefetch once per session
+  useEffect(() => {
+    if (!user) return;
+    const timer = setTimeout(() => {
       prefetchFastData([
-        '/api/v1/admin/stats',
         '/api/v1/products',
         '/api/v1/services',
         '/api/v1/orders',
         '/api/v1/admin/categories',
-        '/api/v1/admin/support',
-        '/api/v1/admin/notifications',
       ]);
-    }
-  }, [user, pathname]);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [user?.id]);
 
   useEffect(() => {
     if (!globalSearch.trim() || globalSearch.length < 2) {

@@ -40,11 +40,10 @@ export async function PATCH(
 
     const updateData: any = { status };
     if (status === 'DELIVERED') {
-      updateData.deliveryStatus = 'DELIVERED';
       updateData.paymentStatus = 'PAID';
-    } else if (status === 'SHIPPED') {
-      updateData.deliveryStatus = 'IN_TRANSIT';
-      if (trackingNumber) updateData.trackingNumber = trackingNumber;
+    }
+    if (trackingNumber) {
+      updateData.notes = order.notes ? `${order.notes} | Tracking: ${trackingNumber}` : `Tracking: ${trackingNumber}`;
     }
 
     const updated = await prisma.order.update({

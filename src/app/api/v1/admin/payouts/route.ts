@@ -40,7 +40,9 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { payoutId, status, trxId, adminNotes } = body;
+    const { payoutId, status: rawStatus, trxId: rawTrx, transactionRef, adminNotes } = body;
+    const status = rawStatus === 'APPROVED' ? 'PAID' : rawStatus;
+    const trxId = rawTrx || transactionRef || '';
 
     const result = await prisma.$transaction(async (tx: any) => {
       const payout = await tx.payoutRequest.findUnique({
@@ -93,3 +95,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error?.message || 'Failed to update payout' }, { status: 500 });
   }
 }
+
+export const PATCH = POST;

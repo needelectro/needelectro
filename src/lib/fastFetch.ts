@@ -28,13 +28,16 @@ function setStorageCache<T>(key: string, entry: CacheEntry<T>) {
   } catch {}
 }
 
+// Active in-flight promises to deduplicate simultaneous identical requests
+const inFlightRequests = new Map<string, Promise<any>>();
+
 /**
  * Perform an ultra-fast fetch with stale-while-revalidate cache semantics.
  * Returns cached data immediately if available within TTL, while refreshing in background.
  */
 export async function fastFetch<T = any>(
   url: string,
-  options?: RequestInit & { forceRefresh?: boolean; ttlMs?: number }
+  options?: RequestInit & { forceRefresh?: boolean; ttlMs?: number; timeoutMs?: number }
 ): Promise<T> {
   const ttl = options?.ttlMs ?? 60000; // 1 minute default TTL
   const cacheKey = url;
@@ -53,20 +56,45 @@ export async function fastFetch<T = any>(
       memoryCache.set(cacheKey, storage);
       return storage.data;
     }
+
+    // 3. Check in-flight identical request deduplication
+    const pending = inFlightRequests.get(cacheKey);
+    if (pending) {
+      return pending;
+    }
   }
 
-  // 3. Network fetch
-  const res = await fetch(url, options);
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status}: Failed to fetch ${url}`);
-  }
-  const data = await res.json();
+  // 4. Network fetch with deduplication and timeout safeguard
+  const fetchPromise = (async () => {
+    try {
+      const controller = new AbortController();
+      const timeoutMs = options?.timeoutMs ?? 10000;
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-  const newEntry: CacheEntry<T> = { data, timestamp: now };
-  memoryCache.set(cacheKey, newEntry);
-  setStorageCache(cacheKey, newEntry);
+      const res = await fetch(url, {
+        credentials: 'same-origin',
+        signal: controller.signal,
+        ...options,
+      });
+      clearTimeout(timeoutId);
 
-  return data;
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: Failed to fetch ${url}`);
+      }
+      const data = await res.json();
+
+      const newEntry: CacheEntry<T> = { data, timestamp: Date.now() };
+      memoryCache.set(cacheKey, newEntry);
+      setStorageCache(cacheKey, newEntry);
+
+      return data;
+    } finally {
+      inFlightRequests.delete(cacheKey);
+    }
+  })();
+
+  inFlightRequests.set(cacheKey, fetchPromise);
+  return fetchPromise;
 }
 
 /**

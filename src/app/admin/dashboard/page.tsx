@@ -31,8 +31,26 @@ const STATUS_COLORS: Record<string, string> = {
   RESOLVED: 'bg-emerald-100 text-emerald-700',
 };
 
+const DEFAULT_STATS = {
+  totalCustomers: 0,
+  totalTechnicians: 0,
+  verifiedTechnicians: 0,
+  activeTechnicians: 0,
+  pendingTechnicians: 0,
+  activeJobs: 0,
+  completedJobs: 0,
+  totalBookings: 0,
+  totalOrders: 0,
+  lowStockProducts: 0,
+  warrantyClaims: 0,
+  disputes: 0,
+  serviceRevenue: 0,
+  productRevenue: 0,
+  totalRevenue: 0,
+};
+
 export default function AdminDashboard() {
-  const { user, logout } = useAuth();
+  const { user, isLoading: authLoading, logout } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [stats, setStats] = useState<any>(null);
@@ -42,6 +60,7 @@ export default function AdminDashboard() {
   const [customers, setCustomers] = useState<any[]>([]);
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   // Support Ticket Response System State
@@ -54,43 +73,67 @@ export default function AdminDashboard() {
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user) { router.push('/admin/login'); return; }
+    if (authLoading) return;
+    if (!user) {
+      router.push('/admin/login');
+      return;
+    }
     if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
       router.push('/admin/login?error=unauthorized');
       return;
     }
     loadData();
-  }, [user]);
+  }, [user, authLoading]);
 
   const loadData = async (forceRefresh = false) => {
+    setIsRefreshing(true);
     if (!stats) setLoading(true);
-    try {
-      // 1. Fast-track primary stats to render overview instantly
-      const sData = await fastFetch('/api/v1/admin/stats', { forceRefresh, ttlMs: 30000 });
-      if (sData) {
-        setStats(sData.stats || sData);
-        if (sData.recentBookings && bookings.length === 0) setBookings(sData.recentBookings);
-        if (sData.recentOrders && orders.length === 0) setOrders(sData.recentOrders);
-      }
-      setLoading(false);
 
-      // 2. Fetch other detailed tab records in the background without blocking the UI
-      Promise.allSettled([
-        fastFetch('/api/v1/bookings?limit=50', { forceRefresh, ttlMs: 30000 }),
-        fastFetch('/api/v1/orders?limit=50', { forceRefresh, ttlMs: 30000 }),
-        fastFetch('/api/v1/technicians?limit=50', { forceRefresh, ttlMs: 30000 }),
-        fastFetch('/api/v1/auth/users?limit=50', { forceRefresh, ttlMs: 30000 }),
-        fastFetch('/api/v1/admin/support', { forceRefresh, ttlMs: 30000 }),
-      ]).then(([bRes, oRes, tRes, cRes, suRes]) => {
-        if (bRes.status === 'fulfilled' && bRes.value?.bookings) setBookings(bRes.value.bookings);
-        if (oRes.status === 'fulfilled' && oRes.value?.orders) setOrders(oRes.value.orders);
-        if (tRes.status === 'fulfilled' && tRes.value?.technicians) setTechnicians(tRes.value.technicians);
-        if (cRes.status === 'fulfilled' && cRes.value?.users) setCustomers(cRes.value.users);
-        if (suRes.status === 'fulfilled' && suRes.value?.tickets) setTickets(suRes.value.tickets);
-      });
+    try {
+      // Parallel fast-fetch all dashboard collections with 8s individual timeout safeguards
+      const [sRes, bRes, oRes, tRes, cRes, suRes] = await Promise.allSettled([
+        fastFetch('/api/v1/admin/stats', { forceRefresh, ttlMs: 30000, timeoutMs: 8000 }),
+        fastFetch('/api/v1/bookings?limit=50', { forceRefresh, ttlMs: 30000, timeoutMs: 8000 }),
+        fastFetch('/api/v1/orders?limit=50', { forceRefresh, ttlMs: 30000, timeoutMs: 8000 }),
+        fastFetch('/api/v1/admin/technicians', { forceRefresh, ttlMs: 30000, timeoutMs: 8000 }),
+        fastFetch('/api/v1/auth/users?limit=50', { forceRefresh, ttlMs: 30000, timeoutMs: 8000 }),
+        fastFetch('/api/v1/admin/support', { forceRefresh, ttlMs: 30000, timeoutMs: 8000 }),
+      ]);
+
+      if (sRes.status === 'fulfilled' && sRes.value) {
+        const sData = sRes.value;
+        setStats(sData.stats || sData);
+        if (sData.recentBookings && Array.isArray(sData.recentBookings)) {
+          setBookings((prev) => (prev.length === 0 ? sData.recentBookings : prev));
+        }
+        if (sData.recentOrders && Array.isArray(sData.recentOrders)) {
+          setOrders((prev) => (prev.length === 0 ? sData.recentOrders : prev));
+        }
+      } else {
+        setStats((prev: any) => prev || DEFAULT_STATS);
+      }
+
+      if (bRes.status === 'fulfilled' && bRes.value?.bookings) {
+        setBookings(Array.isArray(bRes.value.bookings) ? bRes.value.bookings : []);
+      }
+      if (oRes.status === 'fulfilled' && oRes.value?.orders) {
+        setOrders(Array.isArray(oRes.value.orders) ? oRes.value.orders : []);
+      }
+      if (tRes.status === 'fulfilled' && tRes.value?.technicians) {
+        setTechnicians(Array.isArray(tRes.value.technicians) ? tRes.value.technicians : []);
+      }
+      if (cRes.status === 'fulfilled' && cRes.value?.users) {
+        setCustomers(Array.isArray(cRes.value.users) ? cRes.value.users : []);
+      }
+      if (suRes.status === 'fulfilled' && suRes.value?.tickets) {
+        setTickets(Array.isArray(suRes.value.tickets) ? suRes.value.tickets : []);
+      }
     } catch (err) {
       console.error('Dashboard loadData error:', err);
+      setStats((prev: any) => prev || DEFAULT_STATS);
+    } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -226,9 +269,16 @@ export default function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'VERIFIED' }),
       });
-      if (res.ok) await loadData();
-    } catch { /* ignore */ }
-    finally { setActionLoading(null); }
+      if (res.ok) {
+        setTechnicians((prev) =>
+          prev.map((t) => (t.id === techId ? { ...t, verificationStatus: 'VERIFIED', isVerified: true } : t))
+        );
+      }
+    } catch {
+      /* ignore */
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   const updateOrderStatus = async (orderId: string, status: string) => {
@@ -239,19 +289,35 @@ export default function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       });
-      if (res.ok) await loadData();
-    } catch { /* ignore */ }
-    finally { setActionLoading(null); }
+      if (res.ok) {
+        setOrders((prev) =>
+          prev.map((o) => (o.id === orderId ? { ...o, status } : o))
+        );
+      }
+    } catch {
+      /* ignore */
+    } finally {
+      setActionLoading(null);
+    }
   };
 
-  const handleLogout = async () => { await logout(); router.push('/'); };
+  const handleLogout = async () => {
+    await logout();
+    router.push('/');
+  };
 
   if (!user) return null;
 
-  const pendingBookings = bookings.filter((b) => b.status === 'PENDING' || b.status === 'AVAILABLE');
-  const pendingOrders = orders.filter((o) => ['PLACED', 'PAYMENT_CONFIRMED', 'PROCESSING'].includes(o.status));
-  const pendingTechs = technicians.filter((t) => t.verificationStatus === 'UNDER_REVIEW' || t.verificationStatus === 'PENDING');
-  const openTickets = tickets.filter((t) => t.status === 'OPEN');
+  const pendingBookings = (Array.isArray(bookings) ? bookings : []).filter(
+    (b) => b.status === 'PENDING' || b.status === 'AVAILABLE' || b.status === 'RECEIVED'
+  );
+  const pendingOrders = (Array.isArray(orders) ? orders : []).filter((o) =>
+    ['PLACED', 'PAYMENT_CONFIRMED', 'PROCESSING'].includes(o.status)
+  );
+  const pendingTechs = (Array.isArray(technicians) ? technicians : []).filter(
+    (t) => t.verificationStatus === 'UNDER_REVIEW' || t.verificationStatus === 'PENDING'
+  );
+  const openTickets = (Array.isArray(tickets) ? tickets : []).filter((t) => t.status === 'OPEN');
 
   interface NavItem {
     key: AdminTab;
@@ -286,7 +352,11 @@ export default function AdminDashboard() {
             <Icon className="w-3.5 h-3.5" />
             <span>{label}</span>
             {badge != null && badge > 0 && (
-              <span className={`text-[10px] font-black rounded-full px-1.5 py-0.5 ${activeTab === key ? 'bg-white text-[#008CFF]' : 'bg-red-500 text-white'}`}>
+              <span
+                className={`text-[10px] font-black rounded-full px-1.5 py-0.5 ${
+                  activeTab === key ? 'bg-white text-[#008CFF]' : 'bg-red-500 text-white'
+                }`}
+              >
                 {badge}
               </span>
             )}
@@ -296,79 +366,161 @@ export default function AdminDashboard() {
 
       {/* Main Content */}
       <main className="space-y-6 min-w-0">
-        {loading && (
-            <div className="flex items-center justify-center h-40">
-              <div className="w-8 h-8 border-4 border-brand-200 border-t-brand-500 rounded-full animate-spin" />
-            </div>
-          )}
-
-          {!loading && activeTab === 'overview' && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
+        {activeTab === 'overview' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
                 <h1 className="text-xl font-black text-slate-950">Admin Dashboard</h1>
-                <button onClick={() => { invalidateFastCache(); loadData(true); }} className="btn-secondary text-xs py-2 gap-1.5">
-                  <RefreshCw className="w-3.5 h-3.5" />Refresh
-                </button>
+                <p className="text-xs text-slate-500">Live operational metrics and service performance</p>
               </div>
-
-              {/* Alert Counts */}
-              {(pendingBookings.length + pendingOrders.length + pendingTechs.length + openTickets.length) > 0 && (
-                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-wrap gap-3 items-center text-xs">
-                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                  <span className="font-bold text-amber-800">Requires Attention:</span>
-                  {pendingBookings.length > 0 && <span className="bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full">{pendingBookings.length} pending bookings</span>}
-                  {pendingOrders.length > 0 && <span className="bg-orange-100 text-orange-800 font-bold px-2 py-0.5 rounded-full">{pendingOrders.length} new orders</span>}
-                  {pendingTechs.length > 0 && <span className="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full">{pendingTechs.length} technician reviews</span>}
-                  {openTickets.length > 0 && <span className="bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded-full">{openTickets.length} open tickets</span>}
-                </div>
-              )}
-
-              {/* Stats Grid */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {[
-                  { label: 'Total Bookings', value: stats?.totalBookings ?? bookings.length, icon: Wrench, color: 'text-brand-600 bg-brand-50' },
-                  { label: 'Total Orders', value: stats?.totalOrders ?? orders.length, icon: Package, color: 'text-purple-600 bg-purple-50' },
-                  { label: 'Active Technicians', value: stats?.activeTechnicians ?? stats?.verifiedTechnicians ?? technicians.filter((t) => t.verificationStatus === 'VERIFIED').length, icon: Users, color: 'text-emerald-600 bg-emerald-50' },
-                  { label: 'Total Revenue', value: `৳${(stats?.totalRevenue ?? 0).toLocaleString()}`, icon: DollarSign, color: 'text-amber-600 bg-amber-50' },
-                ].map(({ label, value, icon: Icon, color }) => (
-                  <div key={label} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm space-y-2">
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${color}`}>
-                      <Icon className="w-4 h-4" />
-                    </div>
-                    <p className="text-xl font-black text-slate-900">{value}</p>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{label}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Recent Bookings */}
-              <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-50">
-                  <h3 className="font-black text-slate-900 text-sm">Recent Bookings</h3>
-                  <button onClick={() => setActiveTab('bookings')} className="text-[11px] text-brand-600 font-bold hover:underline">View All</button>
-                </div>
-                {((bookings.length > 0 ? bookings : (stats?.recentBookings || []))).slice(0, 5).map((b: any) => (
-                  <div key={b.id} className="flex items-center justify-between px-5 py-3.5 border-b border-slate-50 last:border-0 gap-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-slate-900 line-clamp-1">{b.service?.name || 'Service Booking'}</p>
-                      <p className="text-[10px] text-slate-400">
-                        {b.customer?.user?.name || b.customer?.name || 'Customer'} · {b.address?.area || b.location?.area || 'Moulvibazar'} · {new Date(b.createdAt).toLocaleDateString('en-BD')}
-                      </p>
-                    </div>
-                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLORS[b.status] || 'bg-slate-100 text-slate-600'}`}>
-                      {b.status?.replace(/_/g, ' ')}
-                    </span>
-                  </div>
-                ))}
-                {bookings.length === 0 && (!stats?.recentBookings || stats.recentBookings.length === 0) && (
-                  <div className="p-8 text-center text-xs text-slate-500">No bookings yet.</div>
-                )}
-              </div>
+              <button
+                onClick={() => {
+                  invalidateFastCache();
+                  loadData(true);
+                }}
+                disabled={isRefreshing}
+                className="btn-secondary text-xs py-2 gap-1.5"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-brand-600' : ''}`} />
+                {isRefreshing ? 'Syncing...' : 'Refresh'}
+              </button>
             </div>
-          )}
 
-          {/* BOOKINGS TAB */}
-          {!loading && activeTab === 'bookings' && (
+            {loading && !stats ? (
+              <div className="space-y-4 animate-pulse">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm h-28 flex flex-col justify-between"
+                    >
+                      <div className="w-8 h-8 rounded-xl bg-slate-100" />
+                      <div className="h-6 w-20 bg-slate-100 rounded" />
+                      <div className="h-3 w-28 bg-slate-100 rounded" />
+                    </div>
+                  ))}
+                </div>
+                <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-8 text-center text-xs text-slate-400">
+                  Syncing live console records...
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Alert Counts */}
+                {pendingBookings.length + pendingOrders.length + pendingTechs.length + openTickets.length > 0 && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-wrap gap-3 items-center text-xs">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span className="font-bold text-amber-800">Requires Attention:</span>
+                    {pendingBookings.length > 0 && (
+                      <span className="bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full">
+                        {pendingBookings.length} pending bookings
+                      </span>
+                    )}
+                    {pendingOrders.length > 0 && (
+                      <span className="bg-orange-100 text-orange-800 font-bold px-2 py-0.5 rounded-full">
+                        {pendingOrders.length} new orders
+                      </span>
+                    )}
+                    {pendingTechs.length > 0 && (
+                      <span className="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full">
+                        {pendingTechs.length} technician reviews
+                      </span>
+                    )}
+                    {openTickets.length > 0 && (
+                      <span className="bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded-full">
+                        {openTickets.length} open tickets
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  {[
+                    {
+                      label: 'Total Bookings',
+                      value: stats?.totalBookings ?? bookings.length,
+                      icon: Wrench,
+                      color: 'text-brand-600 bg-brand-50',
+                    },
+                    {
+                      label: 'Total Orders',
+                      value: stats?.totalOrders ?? orders.length,
+                      icon: Package,
+                      color: 'text-purple-600 bg-purple-50',
+                    },
+                    {
+                      label: 'Active Technicians',
+                      value:
+                        stats?.activeTechnicians ??
+                        stats?.verifiedTechnicians ??
+                        technicians.filter((t) => t.verificationStatus === 'VERIFIED').length,
+                      icon: Users,
+                      color: 'text-emerald-600 bg-emerald-50',
+                    },
+                    {
+                      label: 'Total Revenue',
+                      value: `৳${(stats?.totalRevenue ?? 0).toLocaleString()}`,
+                      icon: DollarSign,
+                      color: 'text-amber-600 bg-amber-50',
+                    },
+                  ].map(({ label, value, icon: Icon, color }) => (
+                    <div key={label} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm space-y-2">
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${color}`}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <p className="text-xl font-black text-slate-900">{value}</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{label}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Recent Bookings */}
+                <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                  <div className="flex items-center justify-between px-5 py-4 border-b border-slate-50">
+                    <h3 className="font-black text-slate-900 text-sm">Recent Bookings</h3>
+                    <button
+                      onClick={() => setActiveTab('bookings')}
+                      className="text-[11px] text-brand-600 font-bold hover:underline"
+                    >
+                      View All
+                    </button>
+                  </div>
+                  {(bookings.length > 0 ? bookings : stats?.recentBookings || []).slice(0, 5).map((b: any) => (
+                    <div
+                      key={b.id}
+                      className="flex items-center justify-between px-5 py-3.5 border-b border-slate-50 last:border-0 gap-3"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold text-slate-900 line-clamp-1">
+                          {b.service?.name || 'Service Booking'}
+                        </p>
+                        <p className="text-[10px] text-slate-400">
+                          {b.customer?.user?.name || b.customer?.name || 'Customer'} ·{' '}
+                          {b.address?.area || b.location?.area || 'Moulvibazar'} ·{' '}
+                          {b.createdAt ? new Date(b.createdAt).toLocaleDateString('en-BD') : 'Recent'}
+                        </p>
+                      </div>
+                      <span
+                        className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 ${
+                          STATUS_COLORS[b.status] || 'bg-slate-100 text-slate-600'
+                        }`}
+                      >
+                        {b.status?.replace(/_/g, ' ')}
+                      </span>
+                    </div>
+                  ))}
+                  {bookings.length === 0 && (!stats?.recentBookings || stats.recentBookings.length === 0) && (
+                    <div className="p-8 text-center text-xs text-slate-500">No bookings yet.</div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* BOOKINGS TAB */}
+        {activeTab === 'bookings' && (
             <div className="space-y-4">
               <h2 className="text-lg font-black text-slate-900">All Bookings</h2>
               <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
@@ -392,7 +544,7 @@ export default function AdminDashboard() {
           )}
 
           {/* ORDERS TAB */}
-          {!loading && activeTab === 'orders' && (
+          {activeTab === 'orders' && (
             <div className="space-y-4">
               <h2 className="text-lg font-black text-slate-900">All Orders</h2>
               <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
@@ -425,7 +577,7 @@ export default function AdminDashboard() {
           )}
 
           {/* TECHNICIANS TAB */}
-          {!loading && activeTab === 'technicians' && (
+          {activeTab === 'technicians' && (
             <div className="space-y-4">
               <h2 className="text-lg font-black text-slate-900">Technician Management</h2>
               {pendingTechs.length > 0 && (
@@ -466,13 +618,13 @@ export default function AdminDashboard() {
           )}
 
           {/* CUSTOMERS TAB */}
-          {!loading && activeTab === 'customers' && (
+          {activeTab === 'customers' && (
             <div className="space-y-4">
               <h2 className="text-lg font-black text-slate-900">Customer Management</h2>
               <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
                 {customers.length === 0 ? (
                   <div className="p-10 text-center text-xs text-slate-500">No customers yet.</div>
-                ) : customers.filter((c) => c.role === 'CUSTOMER').map((c) => (
+                ) : customers.filter((c) => c.role === 'CUSTOMER' || !c.role).map((c) => (
                   <div key={c.id} className="flex items-center gap-3 px-5 py-3.5 border-b border-slate-50 last:border-0">
                     <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-xs font-black shrink-0">
                       {c.name?.[0] || 'C'}
@@ -481,7 +633,7 @@ export default function AdminDashboard() {
                       <p className="text-xs font-bold text-slate-900">{c.name}</p>
                       <p className="text-[10px] text-slate-500">{c.email} · {c.phone}</p>
                     </div>
-                    <p className="text-[10px] text-slate-400 shrink-0">{new Date(c.createdAt).toLocaleDateString('en-BD')}</p>
+                    <p className="text-[10px] text-slate-400 shrink-0">{c.createdAt ? new Date(c.createdAt).toLocaleDateString('en-BD') : 'Recent'}</p>
                   </div>
                 ))}
               </div>
@@ -489,7 +641,7 @@ export default function AdminDashboard() {
           )}
 
           {/* SUPPORT TAB */}
-          {!loading && activeTab === 'support' && (
+          {activeTab === 'support' && (
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>

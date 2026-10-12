@@ -11,12 +11,27 @@ export async function GET(req: NextRequest) {
           },
         },
         product: { select: { id: true, name: true, sku: true } },
-        technician: { select: { id: true, fullName: true, phone: true } },
+        technician: {
+          include: {
+            user: { select: { name: true, phone: true } },
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json({ success: true, reviews });
+    const formattedReviews = reviews.map((r: any) => ({
+      ...r,
+      technician: r.technician
+        ? {
+            id: r.technician.id,
+            fullName: r.technician.user?.name || "Technician",
+            phone: r.technician.user?.phone || "N/A",
+          }
+        : null,
+    }));
+
+    return NextResponse.json({ success: true, reviews: formattedReviews });
   } catch (error: any) {
     console.error("Failed to fetch reviews:", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
