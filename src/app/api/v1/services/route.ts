@@ -43,11 +43,13 @@ export async function GET(req: NextRequest) {
       }),
     ]);
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       success: true,
       services,
       categories,
     });
+    res.headers.set('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=600');
+    return res;
   } catch (error) {
     console.error('Fetch services error:', error);
     return NextResponse.json(

@@ -33,7 +33,7 @@ export default function RefundPolicyPage() {
           },
           {
             title: '2. Damaged or Dead-on-Arrival (DOA) Hardware',
-            content: `• If an item (such as a laptop, monitor, CCTV camera, router, or inverter) is received broken or dead on arrival, please report it via our Support Portal or hotline (01733 983752) within 48 hours.\n• We will arrange a free technician pickup or direct exchange at our Moulvibazar shop (Shop #5, MR Plaza, Kusumbag).`,
+            content: `• If an item (such as a laptop, monitor, CCTV camera, router, or inverter) is received broken or dead on arrival, please report it via our Support Portal or hotline (01733 983752) within 48 hours.\n• We will arrange a free courier exchange or direct inspection at our Moulvibazar operations hub.`,
           },
           {
             title: '3. Electrical & Technical Service Refunds',
@@ -41,7 +41,7 @@ export default function RefundPolicyPage() {
           },
           {
             title: '4. Refund Processing Time',
-            content: `• bKash / Nagad / Mobile Banking refunds are processed within 24 to 72 business hours upon approval.\n• Bank card and online gateway refunds take 5 to 7 working days depending on issuing bank settlement schedules.\n• Cash refunds are available immediately in person at our Moulvibazar head branch.`,
+            content: `• bKash / Nagad / Mobile Banking refunds are processed within 24 to 72 business hours upon approval.\n• Bank card and online gateway refunds take 5 to 7 working days depending on issuing bank settlement schedules.\n• Cash refunds are processed securely via verified mobile wallet or bank transfer upon product inspection.`,
           },
           {
             title: '5. Warranty Claims vs. Refunds',

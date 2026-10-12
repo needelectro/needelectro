@@ -98,27 +98,33 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Resolve customer profile
-    let customerProfileId = session?.customerProfileId;
+    if (!session) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Please sign in or create a customer account to book a service.',
+          requiresAuth: true,
+          redirectUrl: '/customer/login',
+        },
+        { status: 401 }
+      );
+    }
+
+    // Resolve customer profile for authenticated user
+    let customerProfileId = session.customerProfileId;
     if (!customerProfileId) {
-      if (session) {
-        let cp = await prisma.customerProfile.findUnique({ where: { userId: session.id } });
-        if (!cp) {
-          cp = await prisma.customerProfile.create({ data: { userId: session.id } });
-        }
-        customerProfileId = cp.id;
-      } else {
-        // Guest user booking: fallback to existing customer profile if not logged in
-        const guestCust = await prisma.user.findFirst({
-          where: { role: 'CUSTOMER' },
-          include: { customerProfile: true },
-        });
-        customerProfileId = guestCust?.customerProfile?.id;
+      let cp = await prisma.customerProfile.findUnique({ where: { userId: session.id } });
+      if (!cp) {
+        cp = await prisma.customerProfile.create({ data: { userId: session.id } });
       }
+      customerProfileId = cp.id;
     }
 
     if (!customerProfileId) {
-      return NextResponse.json({ error: 'Customer profile required' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: 'Customer profile required. Please sign in again.' },
+        { status: 400 }
+      );
     }
 
     // Handle Address

@@ -103,6 +103,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
   { href: '/admin/reviews', label: 'Reviews', icon: Star, permission: 'reviews:read', category: 'Content & Engagement' },
   { href: '/admin/promotions', label: 'Promotions', icon: Tag, permission: 'products:write', category: 'Content & Engagement' },
   { href: '/admin/cms', label: 'Content CMS', icon: FileText, permission: 'cms:read', category: 'Content & Engagement' },
+  { href: '/admin/seo', label: 'SEO Management', icon: Search, permission: 'settings:write', category: 'Content & Engagement' },
 
   // Operations & Intelligence
   { href: '/admin/notifications', label: 'Notifications', icon: Bell, permission: 'notifications:read', category: 'Operations & Insights' },
@@ -116,7 +117,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
 ];
 
 const BRANCHES = [
-  'Moulvibazar Head Office (Kusumbag)',
+  'Moulvibazar Headquarters',
   'Sreemangal Regional Branch',
   'Sylhet Central Hub',
   'Dhaka Enterprise Center',

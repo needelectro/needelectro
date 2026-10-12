@@ -65,22 +65,33 @@ export default function AdminDashboard() {
   const loadData = async (forceRefresh = false) => {
     if (!stats) setLoading(true);
     try {
-      const [sData, bData, oData, tData, cData, suData] = await Promise.all([
-        fastFetch('/api/v1/admin/stats', { forceRefresh }),
-        fastFetch('/api/v1/bookings?limit=50', { forceRefresh }),
-        fastFetch('/api/v1/orders?limit=50', { forceRefresh }),
-        fastFetch('/api/v1/technicians?limit=50', { forceRefresh }),
-        fastFetch('/api/v1/auth/users?limit=50', { forceRefresh }),
-        fastFetch('/api/v1/admin/support', { forceRefresh }),
-      ]);
-      if (sData) setStats(sData.stats || sData);
-      if (bData) setBookings(bData.bookings || []);
-      if (oData) setOrders(oData.orders || []);
-      if (tData) setTechnicians(tData.technicians || []);
-      if (cData) setCustomers(cData.users || []);
-      if (suData) setTickets(suData.tickets || []);
-    } catch { /* ignore */ }
-    finally { setLoading(false); }
+      // 1. Fast-track primary stats to render overview instantly
+      const sData = await fastFetch('/api/v1/admin/stats', { forceRefresh, ttlMs: 30000 });
+      if (sData) {
+        setStats(sData.stats || sData);
+        if (sData.recentBookings && bookings.length === 0) setBookings(sData.recentBookings);
+        if (sData.recentOrders && orders.length === 0) setOrders(sData.recentOrders);
+      }
+      setLoading(false);
+
+      // 2. Fetch other detailed tab records in the background without blocking the UI
+      Promise.allSettled([
+        fastFetch('/api/v1/bookings?limit=50', { forceRefresh, ttlMs: 30000 }),
+        fastFetch('/api/v1/orders?limit=50', { forceRefresh, ttlMs: 30000 }),
+        fastFetch('/api/v1/technicians?limit=50', { forceRefresh, ttlMs: 30000 }),
+        fastFetch('/api/v1/auth/users?limit=50', { forceRefresh, ttlMs: 30000 }),
+        fastFetch('/api/v1/admin/support', { forceRefresh, ttlMs: 30000 }),
+      ]).then(([bRes, oRes, tRes, cRes, suRes]) => {
+        if (bRes.status === 'fulfilled' && bRes.value?.bookings) setBookings(bRes.value.bookings);
+        if (oRes.status === 'fulfilled' && oRes.value?.orders) setOrders(oRes.value.orders);
+        if (tRes.status === 'fulfilled' && tRes.value?.technicians) setTechnicians(tRes.value.technicians);
+        if (cRes.status === 'fulfilled' && cRes.value?.users) setCustomers(cRes.value.users);
+        if (suRes.status === 'fulfilled' && suRes.value?.tickets) setTickets(suRes.value.tickets);
+      });
+    } catch (err) {
+      console.error('Dashboard loadData error:', err);
+      setLoading(false);
+    }
   };
 
   const handleOpenTicketModal = async (t: any) => {
@@ -295,7 +306,7 @@ export default function AdminDashboard() {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h1 className="text-xl font-black text-slate-950">Admin Dashboard</h1>
-                <button onClick={() => loadData(true)} className="btn-secondary text-xs py-2 gap-1.5">
+                <button onClick={() => { invalidateFastCache(); loadData(true); }} className="btn-secondary text-xs py-2 gap-1.5">
                   <RefreshCw className="w-3.5 h-3.5" />Refresh
                 </button>
               </div>
@@ -317,7 +328,7 @@ export default function AdminDashboard() {
                 {[
                   { label: 'Total Bookings', value: stats?.totalBookings ?? bookings.length, icon: Wrench, color: 'text-brand-600 bg-brand-50' },
                   { label: 'Total Orders', value: stats?.totalOrders ?? orders.length, icon: Package, color: 'text-purple-600 bg-purple-50' },
-                  { label: 'Active Technicians', value: stats?.activeTechnicians ?? technicians.filter((t) => t.verificationStatus === 'VERIFIED').length, icon: Users, color: 'text-emerald-600 bg-emerald-50' },
+                  { label: 'Active Technicians', value: stats?.activeTechnicians ?? stats?.verifiedTechnicians ?? technicians.filter((t) => t.verificationStatus === 'VERIFIED').length, icon: Users, color: 'text-emerald-600 bg-emerald-50' },
                   { label: 'Total Revenue', value: `৳${(stats?.totalRevenue ?? 0).toLocaleString()}`, icon: DollarSign, color: 'text-amber-600 bg-amber-50' },
                 ].map(({ label, value, icon: Icon, color }) => (
                   <div key={label} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm space-y-2">
@@ -336,18 +347,22 @@ export default function AdminDashboard() {
                   <h3 className="font-black text-slate-900 text-sm">Recent Bookings</h3>
                   <button onClick={() => setActiveTab('bookings')} className="text-[11px] text-brand-600 font-bold hover:underline">View All</button>
                 </div>
-                {bookings.slice(0, 5).map((b) => (
+                {((bookings.length > 0 ? bookings : (stats?.recentBookings || []))).slice(0, 5).map((b: any) => (
                   <div key={b.id} className="flex items-center justify-between px-5 py-3.5 border-b border-slate-50 last:border-0 gap-3">
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-bold text-slate-900 line-clamp-1">{b.service?.name || 'Service Booking'}</p>
-                      <p className="text-[10px] text-slate-400">{b.customer?.name} · {b.location?.area} · {new Date(b.createdAt).toLocaleDateString('en-BD')}</p>
+                      <p className="text-[10px] text-slate-400">
+                        {b.customer?.user?.name || b.customer?.name || 'Customer'} · {b.address?.area || b.location?.area || 'Moulvibazar'} · {new Date(b.createdAt).toLocaleDateString('en-BD')}
+                      </p>
                     </div>
                     <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLORS[b.status] || 'bg-slate-100 text-slate-600'}`}>
                       {b.status?.replace(/_/g, ' ')}
                     </span>
                   </div>
                 ))}
-                {bookings.length === 0 && <div className="p-8 text-center text-xs text-slate-500">No bookings yet.</div>}
+                {bookings.length === 0 && (!stats?.recentBookings || stats.recentBookings.length === 0) && (
+                  <div className="p-8 text-center text-xs text-slate-500">No bookings yet.</div>
+                )}
               </div>
             </div>
           )}
@@ -363,7 +378,9 @@ export default function AdminDashboard() {
                   <div key={b.id} className="flex items-center gap-3 px-5 py-3.5 border-b border-slate-50 last:border-0">
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-bold text-slate-900 line-clamp-1">{b.service?.name || 'Service Booking'}</p>
-                      <p className="text-[10px] text-slate-500">{b.customer?.name} · {b.location?.area} · {b.preferredDate}</p>
+                      <p className="text-[10px] text-slate-500">
+                        {b.customer?.user?.name || b.customer?.name || 'Customer'} · {b.address?.area || b.location?.area || 'Moulvibazar'} · {b.preferredDate}
+                      </p>
                     </div>
                     <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLORS[b.status] || 'bg-slate-100 text-slate-600'}`}>
                       {b.status?.replace(/_/g, ' ')}
@@ -386,7 +403,7 @@ export default function AdminDashboard() {
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-mono font-black text-brand-600">{o.orderNumber}</p>
                       <p className="text-[10px] text-slate-500">
-                        {o.customer?.name} · ৳{o.totalAmount?.toLocaleString()} · {new Date(o.createdAt).toLocaleDateString('en-BD')}
+                        {o.customer?.user?.name || o.customer?.name || 'Customer'} · ৳{(o.totalAmount || 0).toLocaleString()} · {new Date(o.createdAt).toLocaleDateString('en-BD')}
                       </p>
                     </div>
                     <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLORS[o.status] || 'bg-slate-100 text-slate-600'}`}>
@@ -422,12 +439,12 @@ export default function AdminDashboard() {
                 ) : technicians.map((t) => (
                   <div key={t.id} className="flex items-center gap-3 px-5 py-4 border-b border-slate-50 last:border-0">
                     <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-sm font-black shrink-0">
-                      {t.user?.name?.[0] || 'T'}
+                      {(t.name || t.user?.name)?.[0] || 'T'}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-black text-slate-900">{t.user?.name}</p>
+                      <p className="text-xs font-black text-slate-900">{t.name || t.user?.name}</p>
                       <p className="text-[10px] text-slate-500">
-                        ⭐ {(t.rating || 0).toFixed(1)} · {t.totalJobsCompleted || 0} jobs · {t.skills?.slice(0, 2).join(', ')}
+                        ⭐ {(t.ratingOverall ?? t.rating ?? 5.0).toFixed(1)} · {t.totalCompletedJobs ?? t.totalJobsCompleted ?? 0} jobs · {t.skills?.slice(0, 2).join(', ')}
                       </p>
                     </div>
                     <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLORS[t.verificationStatus] || 'bg-slate-100 text-slate-600'}`}>

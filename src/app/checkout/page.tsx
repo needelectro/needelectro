@@ -10,7 +10,10 @@ import {
   Zap,
   MapPin,
   CreditCard,
-  ShieldCheck
+  ShieldCheck,
+  ArrowRight,
+  AlertCircle,
+  Lock
 } from 'lucide-react';
 import { useCart } from '@/lib/context/CartContext';
 import { useAuth } from '@/lib/context/AuthContext';
@@ -49,6 +52,10 @@ export default function CheckoutPage() {
   };
 
   const handlePlaceOrder = async () => {
+    if (!user) {
+      router.push('/customer/login?redirect=/checkout');
+      return;
+    }
     setSubmitting(true);
     try {
       const res = await fetch('/api/v1/orders', {
@@ -175,10 +182,48 @@ export default function CheckoutPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left: Multi-Step Form */}
           <div className="lg:col-span-2 space-y-6">
-            {/* STEP 1: Delivery Address */}
-            {step === 'address' && (
-              <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 sm:p-8 space-y-5">
-                <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
+            {!user ? (
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50/60 border border-amber-200/90 rounded-3xl p-6 sm:p-8 shadow-xs text-center space-y-5">
+                <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto shadow-xs">
+                  <ShieldCheck className="w-7 h-7" />
+                </div>
+
+                <div className="space-y-2">
+                  <h2 className="text-xl sm:text-2xl font-black text-slate-900">
+                    Customer Sign In Required to Checkout
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
+                    To place an order, activate your <strong>official digital warranty</strong>, and receive real-time courier tracking updates, please sign in or register your customer account.
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-white border border-amber-200/80 max-w-sm mx-auto text-xs text-slate-700 flex items-center justify-between shadow-xs">
+                  <span className="font-semibold text-slate-600">Reserved in Cart:</span>
+                  <span className="font-black text-brand-600">{items.length} items (৳{total.toLocaleString()})</span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2 max-w-md mx-auto">
+                  <Link
+                    href="/customer/login?redirect=/checkout"
+                    className="btn-primary w-full sm:w-auto py-3 px-6 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-brand-500/25"
+                  >
+                    <span>Sign In as Customer</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                  <Link
+                    href="/customer/register?redirect=/checkout"
+                    className="btn-secondary w-full sm:w-auto py-3 px-6 text-xs sm:text-sm font-bold flex items-center justify-center bg-white border-slate-200"
+                  >
+                    <span>Create Free Account</span>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* STEP 1: Delivery Address */}
+                {step === 'address' && (
+                  <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 sm:p-8 space-y-5">
+                    <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
                   <div className="w-8 h-8 rounded-xl bg-brand-500 text-white flex items-center justify-center">
                     <MapPin className="w-4 h-4" />
                   </div>
@@ -387,7 +432,9 @@ export default function CheckoutPage() {
                 </div>
               </div>
             )}
-          </div>
+          </>
+        )}
+      </div>
 
           {/* Right: Static Order Summary */}
           <div className="lg:col-span-1">

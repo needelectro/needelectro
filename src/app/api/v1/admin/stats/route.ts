@@ -20,12 +20,15 @@ export async function GET(req: NextRequest) {
       pendingTechnicians,
       activeJobs,
       completedJobs,
+      totalBookings,
       totalOrders,
       lowStockProducts,
       warrantyClaims,
       disputes,
       recentBookings,
       recentOrders,
+      bookingAgg,
+      orderAgg,
     ] = await Promise.all([
       prisma.user.count({ where: { role: 'CUSTOMER' } }),
       prisma.technicianProfile.count(),
@@ -33,6 +36,7 @@ export async function GET(req: NextRequest) {
       prisma.technicianProfile.count({ where: { verificationStatus: 'PENDING' } }),
       prisma.booking.count({ where: { status: { in: ['ASSIGNED', 'ON_THE_WAY', 'ARRIVED', 'IN_PROGRESS'] } } }),
       prisma.booking.count({ where: { status: 'COMPLETED' } }),
+      prisma.booking.count(),
       prisma.order.count(),
       prisma.product.count({ where: { stock: { lte: 3 } } }),
       prisma.warrantyClaim.count({ where: { status: 'SUBMITTED' } }),
@@ -54,20 +58,17 @@ export async function GET(req: NextRequest) {
           items: true,
         },
       }),
+      prisma.booking.aggregate({
+        where: { status: { in: ['COMPLETED', 'CLOSED'] } },
+        _sum: { totalAmount: true },
+      }),
+      prisma.order.aggregate({
+        _sum: { totalAmount: true },
+      }),
     ]);
 
-    // Financial revenue calculations
-    const allCompletedBookings = await prisma.booking.findMany({
-      where: { status: { in: ['COMPLETED', 'CLOSED'] } },
-      select: { totalAmount: true },
-    });
-    const serviceRevenue = (allCompletedBookings as Array<{ totalAmount: number }>).reduce((sum: number, b: { totalAmount: number }) => sum + b.totalAmount, 0);
-
-    const allOrders = await prisma.order.findMany({
-      select: { totalAmount: true },
-    });
-    const productRevenue = (allOrders as Array<{ totalAmount: number }>).reduce((sum: number, o: { totalAmount: number }) => sum + o.totalAmount, 0);
-
+    const serviceRevenue = bookingAgg._sum.totalAmount || 0;
+    const productRevenue = orderAgg._sum.totalAmount || 0;
     const totalRevenue = serviceRevenue + productRevenue;
 
     return NextResponse.json({
@@ -76,9 +77,11 @@ export async function GET(req: NextRequest) {
         totalCustomers,
         totalTechnicians,
         verifiedTechnicians,
+        activeTechnicians: verifiedTechnicians,
         pendingTechnicians,
         activeJobs,
         completedJobs,
+        totalBookings,
         totalOrders,
         lowStockProducts,
         warrantyClaims,

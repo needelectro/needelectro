@@ -10,7 +10,7 @@ import {
 export const metadata: Metadata = {
   title: 'About NEED ELECTRO | Trusted Electrical & Technological Solutions – Moulvibazar',
   description:
-    'NEED ELECTRO is a sister concern of Amdads Group, providing expert electrical services, technology products, and verified technicians across Moulvibazar, Bangladesh.',
+    'NEED ELECTRO provides expert electrical services, technology products, and verified technicians across Moulvibazar, Bangladesh.',
 };
 
 const STATS = [
@@ -22,9 +22,9 @@ const STATS = [
 
 const TEAM = [
   {
-    name: 'Amdad Hossain',
-    role: 'Founder & CEO, Amdads Group',
-    bio: 'Visionary entrepreneur who established NEED ELECTRO to bring reliable electrical and technological services to Moulvibazar.',
+    name: 'Amdadur Rahman',
+    role: 'Founder & CEO, AMDADS Group & NEED ELECTRO SHOP',
+    bio: 'Visionary entrepreneur who established NEED ELECTRO SHOP to bring dependable electrical products, computer technologies, and certified technical services to customers nationwide across Bangladesh.',
     avatar: '👨‍💼',
   },
   {
@@ -89,7 +89,7 @@ export default function AboutPage() {
           </div>
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-1.5 text-xs font-bold text-brand-300 uppercase tracking-wider shadow-sm">
             <Zap className="w-3.5 h-3.5 text-brand-400" />
-            Sister Concern of Amdads Group
+            Verified Electrical &amp; Technology Platform
           </div>
           <h1 className="text-3xl sm:text-5xl font-black leading-tight tracking-tight">
             About <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 via-sky-300 to-white">NEED ELECTRO</span>
@@ -102,7 +102,7 @@ export default function AboutPage() {
           <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-slate-300 pt-2">
             <span className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-white/15">
               <MapPin className="w-3.5 h-3.5 text-brand-400" />
-              Shop #5, MR Plaza, Kusumbag, Moulvibazar
+              Moulvibazar, Bangladesh
             </span>
             <span className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-white/15">
               <Phone className="w-3.5 h-3.5 text-brand-400" />
@@ -188,14 +188,14 @@ export default function AboutPage() {
       <section className="py-16 px-4 bg-white">
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10">
           <div className="space-y-6">
-            <h2 className="text-2xl font-black text-slate-900">Find Us</h2>
+            <h2 className="text-2xl font-black text-slate-900">Operations & Nationwide Service</h2>
             <div className="space-y-4">
               {[
-                { icon: MapPin, label: 'Address', value: 'Shop #5, MR Plaza, Kusumbag, Moulvibazar-3200, Sylhet Division, Bangladesh' },
-                { icon: Phone, label: 'Phone', value: '01733-983752' },
+                { icon: MapPin, label: 'Registered Office', value: 'Moulvibazar, Bangladesh (Serving all 64 districts nationwide)' },
+                { icon: Phone, label: 'Helpline', value: '01733 983752' },
                 { icon: Mail, label: 'Email', value: 'needelectro23@gmail.com' },
-                { icon: Globe, label: 'Website', value: 'www.needelectro.com' },
-                { icon: Clock, label: 'Hours', value: 'Sat–Thu 9:00 AM – 8:00 PM\nFri: 2:00 PM – 8:00 PM' },
+                { icon: Globe, label: 'Website', value: 'www.needelectro.store' },
+                { icon: Clock, label: 'Online Desk Hours', value: 'Saturday – Thursday: 9:00 AM – 8:00 PM\nFriday: 2:00 PM – 8:00 PM' },
               ].map(({ icon: Icon, label, value }) => (
                 <div key={label} className="flex gap-4 items-start">
                   <div className="w-9 h-9 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
@@ -210,11 +210,13 @@ export default function AboutPage() {
             </div>
           </div>
 
-          <div className="bg-slate-100 rounded-3xl h-64 md:h-auto flex items-center justify-center text-slate-400 text-sm font-medium border border-slate-200">
-            <div className="text-center space-y-2">
-              <MapPin className="w-8 h-8 mx-auto text-brand-400" />
-              <p>Google Maps Integration</p>
-              <p className="text-xs text-slate-400">MR Plaza, Kusumbag, Moulvibazar</p>
+          <div className="bg-slate-100 rounded-3xl h-64 md:h-auto flex items-center justify-center text-slate-600 text-sm font-medium border border-slate-200 p-8">
+            <div className="text-center space-y-3">
+              <Globe className="w-10 h-10 mx-auto text-brand-500" />
+              <p className="font-bold text-slate-900">Bangladesh-Wide Delivery &amp; Services</p>
+              <p className="text-xs text-slate-500 max-w-xs mx-auto">
+                Reliable doorstep courier delivery across all 64 districts of Bangladesh with certified technical dispatch in central service hubs.
+              </p>
             </div>
           </div>
         </div>

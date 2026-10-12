@@ -15,6 +15,7 @@ import {
   Eye
 } from 'lucide-react';
 import { useCart } from '@/lib/context/CartContext';
+import { fastFetch } from '@/lib/fastFetch';
 
 export default function ShopPage() {
   const { addToCart } = useCart();
@@ -34,16 +35,15 @@ export default function ShopPage() {
 
   const fetchProducts = async () => {
     try {
-      setLoading(true);
-      let url = '/api/v1/products?';
+      if (products.length === 0) setLoading(true);
+      let url = '/api/v1/products?limit=60&';
       if (selectedCategory !== 'all') url += `category=${selectedCategory}&`;
       if (selectedBrand !== 'all') url += `brand=${selectedBrand}&`;
       if (selectedCondition !== 'all') url += `condition=${selectedCondition}&`;
       if (searchQuery) url += `search=${encodeURIComponent(searchQuery)}&`;
 
-      const res = await fetch(url);
-      const data = await res.json();
-      if (data.products) {
+      const data = await fastFetch(url, { ttlMs: 60000 });
+      if (data && data.products) {
         setProducts(data.products);
         if (data.categories) setCategories(data.categories);
         if (data.brands) setBrands(data.brands);
@@ -83,7 +83,7 @@ export default function ShopPage() {
 
       {/* Header Banner - Glass Dark */}
       <div className="glass-card-dark text-white rounded-3xl p-6 sm:p-10 md:p-12 relative overflow-hidden shadow-2xl">
-        <div className="absolute -top-20 -right-20 w-80 h-80 bg-brand-500/25 blur-[100px] pointer-events-none rounded-full" />
+        <div className="absolute -top-20 -right-20 w-80 h-80 bg-[radial-gradient(circle,rgba(8,127,229,0.25)_0%,rgba(8,127,229,0)_70%)] pointer-events-none rounded-full" />
         <div className="max-w-2xl relative z-10 space-y-3">
           <span className="text-xs font-bold uppercase tracking-wider text-brand-400">
             NEED ELECTRO Marketplace
@@ -242,6 +242,8 @@ export default function ShopPage() {
                         <img
                           src={img}
                           alt={product.name}
+                          loading="lazy"
+                          decoding="async"
                           className="max-h-full max-w-full object-contain mx-auto group-hover:scale-105 transition-transform duration-300"
                         />
                         <span className="absolute top-3 left-3 bg-slate-100 text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded shadow-xs">

@@ -139,15 +139,7 @@ function AdminLoginForm() {
             </button>
           </form>
 
-          {/* Seed credentials hint for development */}
-          <div className="pt-2 border-t border-white/10 text-center space-y-1">
-            <p className="text-[11px] text-slate-400">
-              Default Admin: <code className="text-white bg-white/10 px-1.5 py-0.5 rounded text-[11px]">admin@needelectro.com</code>
-            </p>
-            <p className="text-[11px] text-slate-400">
-              Default Password: <code className="text-white bg-white/10 px-1.5 py-0.5 rounded text-[11px]">admin123</code>
-            </p>
-          </div>
+
         </div>
 
         {/* Security Notice */}

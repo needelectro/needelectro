@@ -232,7 +232,7 @@ export default function BecomeASellerPage() {
                 <label className="text-xs font-bold text-slate-700">Physical Store / Office Address</label>
                 <input
                   type="text"
-                  placeholder="e.g. Shop #12, MR Plaza, Kusumbag, Moulvibazar"
+                  placeholder="e.g. Stadium Market, Sylhet or Motijheel, Dhaka"
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white/90 focus:outline-brand-500 shadow-2xs"

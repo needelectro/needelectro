@@ -30,10 +30,12 @@ export async function GET(
       specifications: product.specifications ? JSON.parse(product.specifications) : {},
     };
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       success: true,
       product: formattedProduct,
     });
+    res.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+    return res;
   } catch (error) {
     console.error('Fetch product detail error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

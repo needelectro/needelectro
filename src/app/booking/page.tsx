@@ -125,6 +125,35 @@ export default function BookingPage() {
         <p className="text-sm text-slate-500">Verified professionals dispatched to your location, same or next day.</p>
       </div>
 
+      {/* Customer Auth Notice */}
+      {!user && step !== 'done' && (
+        <div className="p-4 rounded-2xl bg-amber-50/90 border border-amber-200/90 text-amber-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs animate-in fade-in">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-bold text-xs sm:text-sm">Customer Sign In Required to Finalize Booking</h4>
+              <p className="text-[11px] sm:text-xs text-amber-800 mt-0.5">
+                Sign in or create an account so you can track your technician, view job updates, and access your digital warranty.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Link
+              href="/customer/login?redirect=/booking"
+              className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs"
+            >
+              Sign In
+            </Link>
+            <Link
+              href="/customer/register?redirect=/booking"
+              className="px-3.5 py-1.5 rounded-xl bg-white border border-amber-300 hover:bg-amber-100/50 text-amber-900 font-semibold text-xs"
+            >
+              Register
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Progress Steps */}
       {step !== 'done' && (
         <div className="flex items-center gap-2 text-[11px] font-bold overflow-x-auto pb-1">

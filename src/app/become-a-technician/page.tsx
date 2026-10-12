@@ -345,7 +345,7 @@ export default function BecomeATechnicianPage() {
           <div className="card-premium p-5 space-y-2">
             <h4 className="font-bold text-slate-900 text-sm">Which service areas are currently covered?</h4>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Our primary hub is Moulvibazar Sadar, Kusumbag, MR Plaza, Sreemangal, Kamalganj, Rajnagar, and neighboring areas, with active expansion across Sylhet division and all of Bangladesh.
+              Our on-site field hubs currently dispatch across Moulvibazar Sadar, Sreemangal, Kamalganj, Rajnagar, and Sylhet Division, with national expansion underway across all of Bangladesh.
             </p>
           </div>
         </div>

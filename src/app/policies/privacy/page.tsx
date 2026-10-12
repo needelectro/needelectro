@@ -61,7 +61,7 @@ export default function PrivacyPolicyPage() {
           },
           {
             title: '9. Contact Us',
-            content: `For privacy-related inquiries:\n\nNEED ELECTRO (A Sister Concern of Amdads Group)\nShop #5, MR Plaza, Kusumbag, Moulvibazar-3200\nPhone: 01733-983752\nEmail: needelectro23@gmail.com`,
+            content: `For privacy-related inquiries:\n\nNEED ELECTRO SHOP (A Sister Concern of AMDADS Group)\nMoulvibazar, Bangladesh\nPhone: 01733 983752\nEmail: needelectro23@gmail.com`,
           },
         ].map(({ title, content }) => (
           <div key={title} className="space-y-3">

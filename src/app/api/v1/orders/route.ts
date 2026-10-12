@@ -60,26 +60,33 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Cart items required' }, { status: 400 });
     }
 
-    // Resolve customer profile
-    let customerProfileId = session?.customerProfileId;
+    if (!session) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Please sign in or create a customer account to place an order.',
+          requiresAuth: true,
+          redirectUrl: '/customer/login?redirect=/checkout',
+        },
+        { status: 401 }
+      );
+    }
+
+    // Resolve customer profile for authenticated user
+    let customerProfileId = session.customerProfileId;
     if (!customerProfileId) {
-      if (session) {
-        let cp = await prisma.customerProfile.findUnique({ where: { userId: session.id } });
-        if (!cp) {
-          cp = await prisma.customerProfile.create({ data: { userId: session.id } });
-        }
-        customerProfileId = cp.id;
-      } else {
-        const defaultCust = await prisma.user.findFirst({
-          where: { role: 'CUSTOMER' },
-          include: { customerProfile: true },
-        });
-        customerProfileId = defaultCust?.customerProfile?.id;
+      let cp = await prisma.customerProfile.findUnique({ where: { userId: session.id } });
+      if (!cp) {
+        cp = await prisma.customerProfile.create({ data: { userId: session.id } });
       }
+      customerProfileId = cp.id;
     }
 
     if (!customerProfileId) {
-      return NextResponse.json({ error: 'Customer profile required' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: 'Customer profile required. Please sign in again.' },
+        { status: 400 }
+      );
     }
 
     // Resolve Address
@@ -93,8 +100,8 @@ export async function POST(req: NextRequest) {
           division: deliveryAddress.division || 'Sylhet',
           district: deliveryAddress.district || 'Moulvibazar',
           upazila: deliveryAddress.upazila || 'Moulvibazar Sadar',
-          area: deliveryAddress.area || 'Kusumbag',
-          addressLine: deliveryAddress.addressLine || 'Shop #5, MR Plaza',
+          area: deliveryAddress.area || 'Moulvibazar Sadar',
+          addressLine: deliveryAddress.addressLine || 'Moulvibazar, Bangladesh',
           landmark: deliveryAddress.landmark,
         },
       });

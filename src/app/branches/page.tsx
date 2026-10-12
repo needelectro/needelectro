@@ -66,7 +66,7 @@ export default function BranchesPage() {
           </h1>
 
           <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-2xl">
-            From our central headquarters at MR Plaza Kusumbag to regional hubs across Moulvibazar and Sylhet Division. Every branch operates fully equipped diagnostic testing equipment, spare parts stores, and certified electrical &amp; surveillance emergency dispatch units.
+            From our central operations in Moulvibazar to regional dispatch hubs across Sylhet Division and nationwide courier coverage. Every authorized hub coordinates diagnostic equipment, genuine components, and certified technical response units.
           </p>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2 w-full sm:w-auto">

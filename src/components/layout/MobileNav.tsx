@@ -31,7 +31,7 @@ export default function MobileNav() {
   const isTechnician = user?.role === 'TECHNICIAN';
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/85 backdrop-blur-2xl border-t border-white/70 px-2 pt-1 pb-[calc(0.35rem+env(safe-area-inset-bottom,0px))] shadow-[0_-8px_30px_rgba(15,23,42,0.06)]">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/92 backdrop-blur-md border-t border-slate-200/80 px-2 pt-1 pb-[calc(0.35rem+env(safe-area-inset-bottom,0px))] shadow-[0_-4px_20px_rgba(15,23,42,0.06)]">
       <div className="flex items-center justify-around">
         {/* Customer or Guest Navigation */}
         {!isTechnician && (

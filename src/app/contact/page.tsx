@@ -1,12 +1,16 @@
 import React from 'react';
+import Link from 'next/link';
 import type { Metadata } from 'next';
 import ContactForm from './ContactForm';
-import { MapPin, Phone, Mail, Clock, Zap, MessageCircle } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, Zap, MessageCircle, Globe } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Contact NEED ELECTRO | Get in Touch – Moulvibazar',
+  title: 'Contact NEED ELECTRO SHOP | Nationwide Customer Helpdesk',
   description:
-    'Contact NEED ELECTRO for electrical services, product inquiries, technician support, and warranty help. Located in Moulvibazar, Bangladesh.',
+    'Contact NEED ELECTRO SHOP for product inquiries, electrician booking, CCTV installation, and warranty help across all 64 districts in Bangladesh.',
+  alternates: {
+    canonical: 'https://www.needelectro.store/contact',
+  },
 };
 
 const CONTACT_METHODS = [
@@ -36,11 +40,11 @@ const CONTACT_METHODS = [
   },
   {
     icon: MapPin,
-    title: 'Visit Us',
-    detail: 'Shop #5, MR Plaza, Kusumbag',
-    sub: 'Moulvibazar-3200, Sylhet, Bangladesh',
+    title: 'Nationwide Service',
+    detail: 'All 64 Districts Coverage',
+    sub: 'Registered Office: Moulvibazar, Bangladesh',
     color: 'text-rose-600 bg-rose-50',
-    href: 'https://maps.google.com/?q=MR+Plaza+Kusumbag+Moulvibazar',
+    href: '/locations',
   },
 ];
 
@@ -98,48 +102,46 @@ export default function ContactPage() {
         {/* Office Info */}
         <div className="space-y-6">
           <div className="glass-card rounded-3xl p-6 sm:p-7 shadow-sm space-y-5">
-            <h3 className="font-black text-slate-900 text-sm">Main Office — Moulvibazar Branch</h3>
-              <div className="space-y-3 text-xs text-slate-600">
-                <div className="flex gap-3 items-start">
-                  <MapPin className="w-4 h-4 text-brand-500 shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-slate-800">Shop #5, MR Plaza, Kusumbag</strong>
-                    <p>Moulvibazar-3200, Sylhet Division, Bangladesh</p>
-                  </div>
+            <h3 className="font-black text-slate-900 text-sm">Operational Headquarters &amp; Support Hub</h3>
+            <div className="space-y-3 text-xs text-slate-600">
+              <div className="flex gap-3 items-start">
+                <MapPin className="w-4 h-4 text-brand-500 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="text-slate-800">NEED ELECTRO SHOP</strong>
+                  <p>Moulvibazar-3200, Bangladesh (Serving all 64 districts nationwide)</p>
                 </div>
-                <div className="flex gap-3 items-start">
-                  <Clock className="w-4 h-4 text-brand-500 shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-slate-800">Business Hours</strong>
-                    <p>Saturday – Thursday: 9:00 AM – 8:00 PM</p>
-                    <p>Friday: 2:00 PM – 8:00 PM</p>
-                  </div>
+              </div>
+              <div className="flex gap-3 items-start">
+                <Clock className="w-4 h-4 text-brand-500 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="text-slate-800">Support Hours</strong>
+                  <p>Saturday – Thursday: 9:00 AM – 8:00 PM</p>
+                  <p>Friday: 2:00 PM – 8:00 PM</p>
                 </div>
-                <div className="flex gap-3 items-start">
-                  <Phone className="w-4 h-4 text-brand-500 shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-slate-800">Phone / WhatsApp</strong>
-                    <p>01733-983752</p>
-                  </div>
+              </div>
+              <div className="flex gap-3 items-start">
+                <Phone className="w-4 h-4 text-brand-500 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="text-slate-800">Phone / WhatsApp Helpline</strong>
+                  <p>01733 983752</p>
                 </div>
               </div>
             </div>
+          </div>
 
-            <div className="bg-slate-200 rounded-3xl h-52 flex items-center justify-center border border-slate-200 overflow-hidden">
-              <div className="text-center space-y-2 text-slate-500">
-                <MapPin className="w-7 h-7 mx-auto text-brand-400" />
-                <p className="text-xs font-semibold">MR Plaza, Kusumbag</p>
-                <p className="text-[10px]">Moulvibazar, Sylhet</p>
-                <a
-                  href="https://maps.google.com/?q=Kusumbag+Moulvibazar"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-block text-[11px] font-bold text-brand-600 hover:underline mt-1"
-                >
-                  Open in Google Maps →
-                </a>
-              </div>
+          <div className="bg-slate-100 rounded-3xl h-52 flex items-center justify-center border border-slate-200 overflow-hidden p-6">
+            <div className="text-center space-y-2 text-slate-600">
+              <Globe className="w-7 h-7 mx-auto text-brand-500" />
+              <p className="text-xs font-bold text-slate-900">Doorstep Delivery Across Bangladesh</p>
+              <p className="text-[11px] text-slate-500">Fast insured delivery to every Upazila and District.</p>
+              <Link
+                href="/locations"
+                className="inline-block text-[11px] font-bold text-brand-600 hover:underline mt-1"
+              >
+                View 64 District Coverage Details →
+              </Link>
             </div>
+          </div>
 
             <div className="bg-amber-500/10 border border-amber-500/30 backdrop-blur-md rounded-2xl p-4 text-xs text-amber-900 font-medium space-y-1 shadow-xs">
               <p className="font-bold">🚨 Emergency Services</p>

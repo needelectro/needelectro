@@ -56,10 +56,6 @@ export default function Header() {
               <PhoneCall className="w-3.5 h-3.5 text-brand-400" />
               Hotline: <strong className="text-white">01733 983752</strong>
             </span>
-            <span className="text-slate-600">|</span>
-            <span className="text-slate-400">Shop #5, MR Plaza, Kusumbag, Moulvibazar</span>
-            <span className="text-slate-600">|</span>
-            <span className="text-brand-400 font-medium">A Sister Concern of Amdads Group</span>
           </div>
           <div className="flex items-center gap-4">
             <Link href="/training" className="text-slate-300 hover:text-white transition flex items-center gap-1">
@@ -85,8 +81,8 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Main Sticky Glass Header */}
-      <header className="sticky top-0 z-40 bg-white/75 backdrop-blur-2xl border-b border-white/60 shadow-[0_4px_30px_rgba(15,23,42,0.04)] transition-all">
+      {/* Main Sticky Glass Header (Optimized for 60fps scrolling) */}
+      <header className="sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-white/80 shadow-[0_2px_15px_rgba(15,23,42,0.04)] transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
@@ -99,6 +95,9 @@ export default function Header() {
               </Link>
               <Link href="/shop" className="hover:text-brand-500 transition-colors">
                 Shop
+              </Link>
+              <Link href="/locations" className="hover:text-brand-500 transition-colors">
+                Locations
               </Link>
               <Link href="/training" className="hover:text-brand-500 transition-colors">
                 Training
@@ -337,6 +336,13 @@ export default function Header() {
                 Become a Merchant / Seller
               </Link>
               <Link
+                href="/locations"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-xl hover:bg-slate-50 text-brand-600 font-semibold"
+              >
+                64 Districts Coverage
+              </Link>
+              <Link
                 href="/about"
                 onClick={() => setMobileMenuOpen(false)}
                 className="block px-3 py-2 rounded-xl hover:bg-slate-50"
@@ -348,7 +354,7 @@ export default function Header() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="block px-3 py-2 rounded-xl hover:bg-slate-50"
               >
-                Contact &amp; Branch
+                Contact &amp; Support
               </Link>
             </nav>
 

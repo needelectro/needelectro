@@ -3,6 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   compress: true,
   poweredByHeader: false,
+  serverExternalPackages: ['@prisma/client', 'prisma'],
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
@@ -15,7 +16,6 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: [
       'lucide-react',
-      '@prisma/client',
     ],
   },
   compiler: {

@@ -32,12 +32,7 @@ export default function Footer() {
               A comprehensive electrical and technological service ecosystem connecting residential and commercial clients with verified technicians, genuine technology products, and warranty protection.
             </p>
 
-            <div className="pt-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/5 backdrop-blur-md text-brand-300 border border-brand-500/30 shadow-inner">
-                <ShieldCheck className="w-3.5 h-3.5 text-brand-400" />
-                A Sister Concern of Amdads Group
-              </span>
-            </div>
+
           </div>
 
           {/* Core Services */}
@@ -98,6 +93,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/locations" className="text-sky-400 hover:text-sky-300 transition text-xs font-semibold">
+                  Bangladesh District Coverage &rarr;
+                </Link>
+              </li>
+              <li>
                 <Link href="/technicians" className="hover:text-white transition">
                   Verified Technicians
                 </Link>
@@ -120,14 +120,10 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Contact & Moulvibazar Branch */}
+          {/* Contact & Nationwide Support */}
           <div className="space-y-3">
-            <h4 className="text-sm font-bold text-white uppercase tracking-wider">Main Branch</h4>
+            <h4 className="text-sm font-bold text-white uppercase tracking-wider">Nationwide Support</h4>
             <ul className="space-y-2.5 text-xs text-slate-400">
-              <li className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 text-brand-400 shrink-0 mt-0.5" />
-                <span>Shop #5, MR Plaza, Kusumbag, Moulvibazar, Bangladesh</span>
-              </li>
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-brand-400 shrink-0" />
                 <a href="tel:01733983752" className="hover:text-white">01733 983752</a>
@@ -138,7 +134,7 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <Globe className="w-4 h-4 text-brand-400 shrink-0" />
-                <span>www.needelectro.com</span>
+                <span>www.needelectro.store</span>
               </li>
             </ul>
           </div>
@@ -151,9 +147,10 @@ export default function Footer() {
             <Link href="/policies/privacy" className="hover:text-slate-400">Privacy Policy</Link>
             <Link href="/policies/refund" className="hover:text-slate-400">Refund Policy</Link>
             <Link href="/policies/service" className="hover:text-slate-400">Service Policy</Link>
+            <Link href="/locations" className="hover:text-slate-400">Districts Directory</Link>
           </div>
           <div>
-            &copy; {new Date().getFullYear()} NEED ELECTRO. All rights reserved. A sister concern of Amdads Group.
+            &copy; {new Date().getFullYear()} NEED ELECTRO SHOP. All rights reserved. | Serving Customers Across Bangladesh | A Sister Concern of AMDADS Group
           </div>
         </div>
       </div>

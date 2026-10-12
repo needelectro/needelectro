@@ -24,6 +24,7 @@ import {
   Users,
   HardDrive
 } from 'lucide-react';
+import { fastFetch } from '@/lib/fastFetch';
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<'all' | 'electrical' | 'cctv' | 'computer'>('all');
@@ -31,28 +32,34 @@ export default function HomePage() {
   const [loadingProducts, setLoadingProducts] = useState(true);
 
   useEffect(() => {
-    fetch('/api/v1/products?featured=true')
-      .then((res) => res.json())
+    let isMounted = true;
+    fastFetch('/api/v1/products?featured=true&limit=4', { ttlMs: 120000 })
       .then((data) => {
-        if (data && Array.isArray(data.products)) {
+        if (isMounted && data && Array.isArray(data.products)) {
           setFeaturedProducts(data.products.slice(0, 4));
         }
       })
       .catch(() => {})
-      .finally(() => setLoadingProducts(false));
+      .finally(() => {
+        if (isMounted) setLoadingProducts(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (
     <div className="flex flex-col space-y-16 sm:space-y-24">
       {/* 1. HERO SECTION */}
       <section className="relative overflow-hidden pt-8 pb-16 md:pt-16 md:pb-24">
-        {/* Luminous background light sources for frosted glass refraction */}
-        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[750px] h-[380px] bg-gradient-to-tr from-brand-300/30 to-brand-500/20 blur-[120px] rounded-full pointer-events-none" />
-        <div className="absolute -top-10 right-10 w-[400px] h-[400px] bg-sky-300/20 blur-[100px] rounded-full pointer-events-none" />
+        {/* Hardware-accelerated radial light sources */}
+        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-[radial-gradient(ellipse_at_center,rgba(8,127,229,0.18)_0%,rgba(8,127,229,0)_70%)] pointer-events-none" />
+        <div className="absolute -top-10 right-10 w-[400px] h-[400px] bg-[radial-gradient(ellipse_at_center,rgba(56,189,248,0.14)_0%,rgba(56,189,248,0)_70%)] pointer-events-none" />
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-3xl mx-auto space-y-6">
-            {/* Sister Concern Frosted Glass Badge */}
+            {/* Premium Ecosystem Badge */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 backdrop-blur-xl text-slate-800 text-xs font-semibold tracking-wide border border-white/90 shadow-[0_4px_20px_rgba(8,127,229,0.08)] animate-in fade-in duration-500">
               <Image
                 src="/brand/needelectro-icon.png"
@@ -62,14 +69,14 @@ export default function HomePage() {
                 className="w-4.5 h-4.5 object-contain"
                 priority
               />
-              <span className="text-slate-600 font-medium">A Sister Concern of Amdads Group &bull; Founded 2023</span>
+              <span className="text-slate-600 font-medium">Verified Electrical &amp; Technology Platform &bull; Founded 2023</span>
             </div>
 
             {/* Headline */}
             <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-slate-950 tracking-tight leading-[1.2] sm:leading-[1.15] break-words">
-              Trusted Electrical and <br className="hidden sm:inline" />
+              NEED ELECTRO SHOP &mdash; <br className="hidden sm:inline" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 via-brand-500 to-sky-400">
-                Technological Solutions
+                Laptops, Computers, CCTV &amp; Electrical Services in Bangladesh
               </span>
             </h1>
 
@@ -141,170 +148,9 @@ export default function HomePage() {
                 </div>
                 <div className="min-w-0">
                   <h4 className="text-xs font-bold text-slate-900 truncate sm:whitespace-normal">Direct Branch</h4>
-                  <p className="text-[10px] sm:text-[11px] text-slate-500 truncate sm:whitespace-normal">Shop #5, MR Plaza</p>
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 truncate sm:whitespace-normal">Moulvibazar Hub</p>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 2. POPULAR SERVICES SECTION */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
-          <div>
-            <span className="text-xs font-bold tracking-wider uppercase text-brand-600">Verified Service Marketplace</span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">Popular Electrical &amp; Tech Services</h2>
-          </div>
-          <Link href="/services" className="text-sm font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1 group">
-            Browse All Services
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 max-w-4xl">
-          {/* Service Card 1 */}
-          <div className="card-premium overflow-hidden group flex flex-col justify-between transition-all duration-300 hover:-translate-y-1">
-            <div>
-              <div className="relative aspect-square w-full bg-slate-100 overflow-hidden">
-                <img
-                  src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&auto=format&fit=crop&q=80"
-                  alt="House Electrical Wiring"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <span className="absolute top-2 left-2 bg-white/95 backdrop-blur-md text-brand-700 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
-                  Electrical
-                </span>
-              </div>
-              <div className="p-3">
-                <h3 className="font-bold text-slate-900 text-xs sm:text-sm mb-1 group-hover:text-brand-600 transition-colors leading-tight line-clamp-1">
-                  Complete House Electrical Wiring
-                </h3>
-                <p className="text-[11px] text-slate-500 leading-snug line-clamp-2">
-                  Conduit wiring, load balancing, circuit breaker boards &amp; earthing tests.
-                </p>
-                <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                  <span className="text-slate-400">Starting</span>
-                  <span className="font-extrabold text-slate-950 text-xs sm:text-sm">৳1,500</span>
-                </div>
-              </div>
-            </div>
-            <div className="p-3 pt-0">
-              <Link
-                href="/services/complete-house-electrical-wiring"
-                className="btn-primary w-full text-[11px] py-1.5 rounded-lg shadow-xs text-center"
-              >
-                Book Inspection
-              </Link>
-            </div>
-          </div>
-
-          {/* Service Card 2 */}
-          <div className="card-premium overflow-hidden group flex flex-col justify-between transition-all duration-300 hover:-translate-y-1">
-            <div>
-              <div className="relative aspect-square w-full bg-slate-100 overflow-hidden">
-                <img
-                  src="https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=800&auto=format&fit=crop&q=80"
-                  alt="CCTV Camera Setup"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <span className="absolute top-2 left-2 bg-white/95 backdrop-blur-md text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
-                  CCTV
-                </span>
-              </div>
-              <div className="p-3">
-                <h3 className="font-bold text-slate-900 text-xs sm:text-sm mb-1 group-hover:text-brand-600 transition-colors leading-tight line-clamp-1">
-                  CCTV Installation &amp; Setup
-                </h3>
-                <p className="text-[11px] text-slate-500 leading-snug line-clamp-2">
-                  Mounting, neat cable routing, DVR/NVR configuration &amp; mobile setup.
-                </p>
-                <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                  <span className="text-slate-400">Package</span>
-                  <span className="font-extrabold text-slate-950 text-xs sm:text-sm">৳1,200</span>
-                </div>
-              </div>
-            </div>
-            <div className="p-3 pt-0">
-              <Link
-                href="/services/cctv-camera-installation-setup"
-                className="btn-primary w-full text-[11px] py-1.5 rounded-lg shadow-xs text-center"
-              >
-                Book CCTV Setup
-              </Link>
-            </div>
-          </div>
-
-          {/* Service Card 3 */}
-          <div className="card-premium overflow-hidden group flex flex-col justify-between transition-all duration-300 hover:-translate-y-1">
-            <div>
-              <div className="relative aspect-square w-full bg-slate-100 overflow-hidden">
-                <img
-                  src="https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=800&auto=format&fit=crop&q=80"
-                  alt="Laptop Servicing"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <span className="absolute top-2 left-2 bg-white/95 backdrop-blur-md text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
-                  Laptop / PC
-                </span>
-              </div>
-              <div className="p-3">
-                <h3 className="font-bold text-slate-900 text-xs sm:text-sm mb-1 group-hover:text-brand-600 transition-colors leading-tight line-clamp-1">
-                  Laptop &amp; PC Diagnostics &amp; Repair
-                </h3>
-                <p className="text-[11px] text-slate-500 leading-snug line-clamp-2">
-                  Thermal paste service, SSD/RAM upgrades, screen fix &amp; OS setup.
-                </p>
-                <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                  <span className="text-slate-400">Diagnostics</span>
-                  <span className="font-extrabold text-slate-950 text-xs sm:text-sm">৳600</span>
-                </div>
-              </div>
-            </div>
-            <div className="p-3 pt-0">
-              <Link
-                href="/services/laptop-desktop-hardware-servicing"
-                className="btn-primary w-full text-[11px] py-1.5 rounded-lg shadow-xs text-center"
-              >
-                Book Tech Service
-              </Link>
-            </div>
-          </div>
-
-          {/* Service Card 4 (Emergency) */}
-          <div className="card-premium overflow-hidden group flex flex-col justify-between border-amber-300/80 bg-amber-50/20 transition-all duration-300 hover:-translate-y-1">
-            <div>
-              <div className="relative aspect-square w-full bg-slate-100 overflow-hidden">
-                <img
-                  src="https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?w=800&auto=format&fit=crop&q=80"
-                  alt="Emergency Electrical"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <span className="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs flex items-center gap-1">
-                  <Zap className="w-2.5 h-2.5 fill-white" />
-                  24/7 Rapid
-                </span>
-              </div>
-              <div className="p-3">
-                <h3 className="font-bold text-slate-900 text-xs sm:text-sm mb-1 group-hover:text-brand-600 transition-colors leading-tight line-clamp-1">
-                  Emergency Troubleshooting
-                </h3>
-                <p className="text-[11px] text-slate-500 leading-snug line-clamp-2">
-                  Immediate dispatch for sparking, short circuits &amp; electrical hazards.
-                </p>
-                <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                  <span className="text-slate-400">Rapid Callout</span>
-                  <span className="font-extrabold text-slate-950 text-xs sm:text-sm">৳500</span>
-                </div>
-              </div>
-            </div>
-            <div className="p-3 pt-0">
-              <Link
-                href="/services/emergency-electrical-troubleshooting"
-                className="btn-danger w-full text-[11px] py-1.5 rounded-lg shadow-xs text-center"
-              >
-                Emergency Help
-              </Link>
             </div>
           </div>
         </div>
@@ -312,8 +158,8 @@ export default function HomePage() {
 
       {/* 3. FEATURED TECHNOLOGY PRODUCTS */}
       <section className="relative py-16 overflow-hidden">
-        {/* Subtle glass ambient glow */}
-        <div className="absolute top-1/2 left-10 w-[500px] h-[350px] bg-brand-400/10 blur-[120px] rounded-full pointer-events-none" />
+        {/* Hardware-accelerated radial glow */}
+        <div className="absolute top-1/2 left-10 w-[500px] h-[350px] bg-[radial-gradient(ellipse_at_center,rgba(8,127,229,0.12)_0%,rgba(8,127,229,0)_70%)] pointer-events-none" />
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
@@ -346,6 +192,8 @@ export default function HomePage() {
                         <img
                           src={img}
                           alt={p.name}
+                          loading="lazy"
+                          decoding="async"
                           className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform"
                         />
                         {p.brand?.name && (
@@ -495,7 +343,7 @@ export default function HomePage() {
 
           {/* How It Works Step Progression - Glass Dark Panel */}
           <div className="glass-card-dark text-white p-8 sm:p-10 rounded-3xl relative overflow-hidden space-y-6">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/20 blur-[90px] rounded-full pointer-events-none" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[radial-gradient(circle,rgba(8,127,229,0.22)_0%,rgba(8,127,229,0)_70%)] pointer-events-none" />
 
             <h3 className="text-xl font-bold tracking-tight text-white flex items-center gap-2 relative z-10">
               <Zap className="w-5 h-5 text-brand-400 fill-brand-400" />
@@ -554,7 +402,7 @@ export default function HomePage() {
       </section>
 
       {/* 5. VERIFIED TECHNICIANS NETWORK SHOWCASE */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 content-deferred">
         <div className="text-center max-w-2xl mx-auto mb-10">
           <span className="text-xs font-bold tracking-wider uppercase text-brand-600">The Human Backbone</span>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
@@ -572,6 +420,8 @@ export default function HomePage() {
               <img
                 src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80"
                 alt="Md. Abul Kalam"
+                loading="lazy"
+                decoding="async"
                 className="w-14 h-14 rounded-2xl object-cover border-2 border-brand-200"
               />
               <div className="flex-1">
@@ -614,6 +464,8 @@ export default function HomePage() {
               <img
                 src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80"
                 alt="Tariqul Islam"
+                loading="lazy"
+                decoding="async"
                 className="w-14 h-14 rounded-2xl object-cover border-2 border-purple-200"
               />
               <div className="flex-1">
@@ -670,43 +522,45 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 6. SERVICE AREAS SECTION - Glass Dark Panel */}
-      <section className="glass-card-dark text-white py-14 relative overflow-hidden">
-        <div className="absolute -top-24 left-1/4 w-96 h-96 bg-brand-500/15 blur-[100px] rounded-full pointer-events-none" />
+      {/* 6. NATIONWIDE COVERAGE SECTION - Glass Dark Panel */}
+      <section className="glass-card-dark text-white py-14 relative overflow-hidden content-deferred">
+        <div className="absolute -top-24 left-1/4 w-96 h-96 bg-[radial-gradient(circle,rgba(8,127,229,0.18)_0%,rgba(8,127,229,0)_70%)] pointer-events-none" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="space-y-2 text-center md:text-left">
-              <span className="text-xs font-bold uppercase tracking-wider text-brand-400">Regional Coverage</span>
-              <h3 className="text-2xl font-extrabold text-white">Serving Moulvibazar &amp; Sylhet Division</h3>
+              <span className="text-xs font-bold uppercase tracking-wider text-brand-400">Bangladesh-Wide Coverage</span>
+              <h2 className="text-2xl font-extrabold text-white">Serving All 64 Districts Nationwide</h2>
               <p className="text-xs text-slate-300 max-w-xl">
-                Rapid on-site service in Moulvibazar Sadar, Kusumbag, Sreemangal, Kamalganj, Rajnagar, and Kulaura. Technology products delivered across Bangladesh.
+                Fast courier delivery of genuine laptops, computers, CCTV surveillance kits, and networking equipment to all 64 districts. On-site technical support available in verified regional hubs.
               </p>
             </div>
-            <div className="flex flex-wrap gap-2.5 justify-center">
-              <span className="px-3.5 py-1.5 rounded-xl bg-white/10 backdrop-blur-md text-xs font-semibold text-white border border-white/15 shadow-xs">Moulvibazar Sadar</span>
-              <span className="px-3.5 py-1.5 rounded-xl bg-white/10 backdrop-blur-md text-xs font-semibold text-white border border-white/15 shadow-xs">Kusumbag Point</span>
-              <span className="px-3.5 py-1.5 rounded-xl bg-white/10 backdrop-blur-md text-xs font-semibold text-white border border-white/15 shadow-xs">Sreemangal</span>
-              <span className="px-3.5 py-1.5 rounded-xl bg-white/10 backdrop-blur-md text-xs font-semibold text-white border border-white/15 shadow-xs">Kamalganj</span>
-              <span className="px-3.5 py-1.5 rounded-xl bg-white/10 backdrop-blur-md text-xs font-semibold text-white border border-white/15 shadow-xs">Rajnagar</span>
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <Link
+                href="/locations"
+                className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold transition shadow-lg shadow-brand-600/30 flex items-center gap-2"
+              >
+                <MapPin className="w-4 h-4" />
+                <span>Explore 64 Districts Coverage</span>
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
       {/* 7. NEED HELP / HOTLINE CALLOUT - Frosted Gradient Sheen Banner */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        <div className="bg-gradient-to-r from-brand-600/90 via-brand-700/90 to-slate-900/90 backdrop-blur-2xl text-white rounded-3xl p-6 sm:p-10 md:p-12 shadow-2xl border border-white/20 flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-sky-400/20 blur-[100px] pointer-events-none rounded-full" />
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 content-deferred">
+        <div className="bg-gradient-to-r from-brand-600/90 via-brand-700/90 to-slate-900/90 backdrop-blur-md text-white rounded-3xl p-6 sm:p-10 md:p-12 shadow-2xl border border-white/20 flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-[radial-gradient(circle,rgba(56,189,248,0.22)_0%,rgba(56,189,248,0)_70%)] pointer-events-none" />
           
           <div className="space-y-3 text-center md:text-left relative z-10 w-full">
             <span className="inline-block px-3.5 py-1 rounded-full text-[11px] font-bold bg-white/20 backdrop-blur-md border border-white/30 text-white">
               NEED HELP? WE ARE HERE 7 DAYS A WEEK
             </span>
-            <h3 className="text-xl sm:text-3xl font-black text-white">
+            <h2 className="text-xl sm:text-3xl font-black text-white">
               Speak Directly With Our Electrical &amp; Tech Engineers
-            </h3>
+            </h2>
             <p className="text-xs sm:text-sm text-brand-100 max-w-lg mx-auto md:mx-0">
-              Have questions about wiring safety, computer repairs, or warranty claims? Call our direct hotline or visit our branch in Kusumbag.
+              Have questions about wiring safety, computer repairs, or warranty claims? Call our direct hotline or connect with our support desk online.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 relative z-10 w-full sm:w-auto">
@@ -721,7 +575,7 @@ export default function HomePage() {
               href="/contact"
               className="w-full sm:w-auto text-center px-5 py-3 rounded-xl border border-white/40 bg-white/10 backdrop-blur-md text-white hover:bg-white/20 text-sm font-semibold transition shadow-xs"
             >
-              Visit Kusumbag Branch
+              Contact Support Desk
             </Link>
           </div>
         </div>

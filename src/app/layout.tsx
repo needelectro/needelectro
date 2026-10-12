@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/lib/context/AuthContext';
 import { CartProvider } from '@/lib/context/CartContext';
@@ -8,19 +9,33 @@ import MobileNav from '@/components/layout/MobileNav';
 import PwaInstallPrompt from '@/components/pwa/PwaInstallPrompt';
 import AdminGuard from '@/components/common/AdminGuard';
 
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-inter',
+});
+
 export const metadata: Metadata = {
-  title: 'NEED ELECTRO | Trusted Electrical & Technological Solutions',
+  metadataBase: new URL('https://www.needelectro.store'),
+  title: {
+    default: 'NEED ELECTRO SHOP | Laptops, Computers, CCTV & Electrical Services in Bangladesh',
+    template: '%s | NEED ELECTRO SHOP',
+  },
   description:
-    'Book verified electricians, order laptops, computers, CCTV surveillance systems, and manage warranty through NEED ELECTRO - Moulvibazar, Bangladesh. A sister concern of Amdads Group.',
+    'Shop laptops, computers, CCTV cameras, networking devices and electrical products at NEED ELECTRO SHOP. Explore electrical installation, electrician booking, repairs and technology services across Bangladesh.',
   keywords: [
-    'electrical service bangladesh',
-    'moulvibazar electrician',
-    'cctv installation moulvibazar',
-    'laptop repair bangladesh',
-    'house wiring expert',
+    'laptop price in bangladesh',
+    'computer shop bangladesh',
+    'cctv camera price in bangladesh',
+    'cctv installation service',
+    'electrician service bangladesh',
+    'electrical repair service',
+    'router price in bangladesh',
+    'wifi installation service',
+    'need electro shop',
     'need electro',
     'amdads group',
-    'ips inverter setup',
   ],
   manifest: '/manifest.json',
   icons: {
@@ -37,24 +52,31 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'NEED ELECTRO',
+    title: 'NEED ELECTRO SHOP',
   },
   openGraph: {
-    title: 'NEED ELECTRO - Trusted Electrical & Technological Solutions',
+    title: 'NEED ELECTRO SHOP | Laptops, Computers, CCTV & Electrical Services in Bangladesh',
     description:
-      'Digital platform connecting residential & commercial clients with certified technicians and verified technology products.',
-    url: 'https://www.needelectro.com',
-    siteName: 'NEED ELECTRO',
+      'Shop laptops, computers, CCTV cameras, networking devices and electrical products at NEED ELECTRO SHOP. Explore electrical installation, electrician booking, repairs and technology services across Bangladesh.',
+    url: 'https://www.needelectro.store',
+    siteName: 'NEED ELECTRO SHOP',
     images: [
       {
         url: '/brand/needelectro-logo.png',
         width: 1132,
         height: 570,
-        alt: 'NEED ELECTRO Brand Logo',
+        alt: 'NEED ELECTRO SHOP Logo',
       },
     ],
     locale: 'en_US',
     type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'NEED ELECTRO SHOP | Laptops, Computers, CCTV & Electrical Services in Bangladesh',
+    description:
+      'Shop laptops, computers, CCTV cameras, networking devices and electrical products at NEED ELECTRO SHOP across Bangladesh.',
+    images: ['/brand/needelectro-logo.png'],
   },
 };
 
@@ -71,33 +93,80 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="overflow-x-hidden max-w-full">
+    <html lang="en" className={`overflow-x-hidden ${inter.variable}`}>
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/favicon.png" type="image/png" />
         <link rel="icon" href="/brand/needelectro-icon.png" type="image/png" sizes="256x256" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
-          rel="stylesheet"
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              name: 'NEED ELECTRO SHOP',
+              legalName: 'NEED ELECTRO SHOP',
+              url: 'https://www.needelectro.store',
+              logo: 'https://www.needelectro.store/brand/needelectro-logo.png',
+              description:
+                'Bangladesh-wide online technology, electronics, electrical products, and technical services marketplace.',
+              parentOrganization: {
+                '@type': 'Organization',
+                name: 'AMDADS Group',
+              },
+              founder: {
+                '@type': 'Person',
+                name: 'Amdadur Rahman',
+                jobTitle: 'Founder & CEO',
+              },
+              contactPoint: {
+                '@type': 'ContactPoint',
+                telephone: '+8801733983752',
+                contactType: 'customer service',
+                areaServed: 'BD',
+                availableLanguage: ['Bengali', 'English'],
+              },
+              address: {
+                '@type': 'PostalAddress',
+                addressLocality: 'Moulvibazar',
+                addressRegion: 'Sylhet',
+                addressCountry: 'BD',
+              },
+            }),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebSite',
+              name: 'NEED ELECTRO SHOP',
+              url: 'https://www.needelectro.store',
+              potentialAction: {
+                '@type': 'SearchAction',
+                target: 'https://www.needelectro.store/shop?q={search_term_string}',
+                'query-input': 'required name=search_term_string',
+              },
+            }),
+          }}
         />
       </head>
-      <body className="flex flex-col min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 text-slate-900 selection:bg-brand-500 selection:text-white font-sans relative antialiased overflow-x-hidden max-w-full">
-        {/* Ambient Glassmorphism Background Mesh & Light Orbs */}
-        <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
+      <body className={`flex flex-col min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 text-slate-900 selection:bg-brand-500 selection:text-white font-sans relative antialiased overflow-x-hidden max-w-full ${inter.className}`}>
+        {/* Hardware-Accelerated Ambient Background Mesh & Tech Glows */}
+        <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden [contain:strict] [transform:translateZ(0)]">
           {/* Subtle tech dot matrix */}
-          <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:32px_32px] opacity-[0.20]" />
+          <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:32px_32px] opacity-[0.16]" />
           
-          {/* Luminous Top-Right Electric Blue Glow */}
-          <div className="absolute -top-32 -right-32 w-[650px] h-[650px] rounded-full bg-gradient-to-br from-brand-400/20 to-brand-600/10 blur-[130px] animate-ambient-1" />
+          {/* Static Top-Right Electric Blue Ambient Gradient */}
+          <div className="absolute -top-24 -right-24 w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(8,127,229,0.12)_0%,rgba(8,127,229,0)_70%)] pointer-events-none" />
           
-          {/* Luminous Mid-Left Sky Glow */}
-          <div className="absolute top-1/3 -left-40 w-[550px] h-[550px] rounded-full bg-gradient-to-tr from-sky-400/20 to-indigo-400/10 blur-[140px] animate-ambient-2" />
+          {/* Static Mid-Left Sky Ambient Gradient */}
+          <div className="absolute top-1/3 -left-28 w-[450px] h-[450px] rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.10)_0%,rgba(56,189,248,0)_70%)] pointer-events-none" />
           
-          {/* Luminous Bottom-Center Cyan/Blue Accent */}
-          <div className="absolute -bottom-40 left-1/3 w-[600px] h-[600px] rounded-full bg-gradient-to-t from-cyan-400/15 via-brand-500/10 to-transparent blur-[140px]" />
+          {/* Static Bottom-Center Cyan/Blue Accent */}
+          <div className="absolute -bottom-24 left-1/3 w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(6,182,212,0.08)_0%,rgba(6,182,212,0)_70%)] pointer-events-none" />
         </div>
 
         <AuthProvider>

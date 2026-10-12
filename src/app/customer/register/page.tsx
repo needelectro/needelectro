@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   UserPlus, Eye, EyeOff, ShieldCheck, MapPin, Phone, 
   Mail, Lock, User, ArrowRight, Wrench, CheckCircle2 
@@ -22,8 +22,10 @@ const MOULVIBAZAR_AREAS = [
   'Outside Sylhet',
 ];
 
-export default function CustomerRegisterPage() {
+function CustomerRegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTarget = searchParams.get('redirect');
   const { register } = useAuth();
 
   const [form, setForm] = useState({
@@ -75,7 +77,7 @@ export default function CustomerRegisterPage() {
     setLoading(false);
 
     if (result.success) {
-      router.push(result.redirectUrl || '/customer/dashboard');
+      router.push(redirectTarget || result.redirectUrl || '/customer/dashboard');
     } else {
       setError(result.error || 'Registration failed. Please check your inputs and try again.');
     }
@@ -298,7 +300,10 @@ export default function CustomerRegisterPage() {
           <div className="text-center pt-2 border-t border-white/10">
             <p className="text-xs text-slate-400">
               Already have an account?{' '}
-              <Link href="/customer/login" className="text-brand-400 font-bold hover:text-brand-300 transition">
+              <Link
+                href={redirectTarget ? `/customer/login?redirect=${encodeURIComponent(redirectTarget)}` : '/customer/login'}
+                className="text-brand-400 font-bold hover:text-brand-300 transition"
+              >
                 Sign In as Customer &rarr;
               </Link>
             </p>
@@ -322,5 +327,13 @@ export default function CustomerRegisterPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CustomerRegisterPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">Loading Customer Sign Up...</div>}>
+      <CustomerRegisterForm />
+    </Suspense>
   );
 }

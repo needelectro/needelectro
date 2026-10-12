@@ -41,9 +41,16 @@ export async function GET(req: NextRequest) {
         createdAt: true,
         customerProfile: {
           select: {
-            address: true,
-            city: true,
-            district: true,
+            id: true,
+            alternativePhone: true,
+            addresses: {
+              take: 1,
+              select: {
+                area: true,
+                district: true,
+                addressLine: true,
+              },
+            },
           },
         },
         technicianProfile: {
@@ -51,8 +58,8 @@ export async function GET(req: NextRequest) {
             id: true,
             verificationStatus: true,
             skills: true,
-            rating: true,
-            totalJobs: true,
+            ratingOverall: true,
+            totalCompletedJobs: true,
           },
         },
       },

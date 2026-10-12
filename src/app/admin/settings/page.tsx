@@ -153,10 +153,10 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Central Physical Address</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Registered Address / Location</label>
             <input
               type="text"
-              value={settings.address || "Shop #5, MR Plaza, Kusumbag, Moulvibazar"}
+              value={settings.address || "Moulvibazar, Bangladesh"}
               onChange={(e) => handleChange("address", e.target.value)}
               className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
             />

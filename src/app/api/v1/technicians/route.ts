@@ -39,10 +39,12 @@ export async function GET(req: NextRequest) {
       totalReviews: t.totalReviews,
     }));
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       success: true,
       technicians: formatted,
     });
+    res.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+    return res;
   } catch (error) {
     console.error('Fetch technicians error:', error);
     return NextResponse.json({ error: 'Failed to load technicians' }, { status: 500 });

@@ -28,7 +28,7 @@ function CustomerLoginForm() {
     setLoading(false);
 
     if (result.success) {
-      router.push(result.redirectUrl || redirectTarget);
+      router.push(redirectTarget || result.redirectUrl || '/customer/dashboard');
     } else {
       setError(result.error || 'Login failed. Please check your details and try again.');
     }
@@ -150,7 +150,10 @@ function CustomerLoginForm() {
           <div className="text-center pt-2 border-t border-white/10">
             <p className="text-xs text-slate-400">
               New to NEED ELECTRO?{' '}
-              <Link href="/customer/register" className="text-brand-400 font-bold hover:text-brand-300 transition">
+              <Link
+                href={redirectTarget ? `/customer/register?redirect=${encodeURIComponent(redirectTarget)}` : '/customer/register'}
+                className="text-brand-400 font-bold hover:text-brand-300 transition"
+              >
                 Create Customer Account &rarr;
               </Link>
             </p>

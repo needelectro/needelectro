@@ -277,9 +277,9 @@ export default function AdminOrdersPage() {
               {/* Header */}
               <div className="flex justify-between items-start">
                 <div>
-                  <h2 className="text-xl font-black text-slate-950">NEED ELECTRO</h2>
-                  <p className="text-xs text-slate-500">A Sister Concern of Amdads Group</p>
-                  <p className="text-xs text-slate-500">Shop #5, MR Plaza, Kusumbag, Moulvibazar</p>
+                  <h2 className="text-xl font-black text-slate-950">NEED ELECTRO SHOP</h2>
+                  <p className="text-xs text-slate-500">A Sister Concern of AMDADS Group</p>
+                  <p className="text-xs text-slate-500">Moulvibazar, Bangladesh &bull; Serving Nationwide</p>
                   <p className="text-xs text-slate-500">Hotline: 01733 983752 &bull; needelectro23@gmail.com</p>
                 </div>
                 <div className="text-right">

@@ -11,12 +11,12 @@ export async function GET(req: NextRequest) {
 
     // Provide default fallback values if empty
     const defaults = {
-      site_name: "NEED ELECTRO",
+      site_name: "NEED ELECTRO SHOP",
       tagline: "Trusted Electrical and Technological Solutions",
       parent_company: "AMDADS GROUP",
       currency: "BDT (৳)",
       hotline: "01733 983752",
-      address: "Shop #5, MR Plaza, Kusumbag, Moulvibazar",
+      address: "Moulvibazar, Bangladesh",
       commission_rate: "15",
       delivery_charge_inside: "60",
       delivery_charge_outside: "120",

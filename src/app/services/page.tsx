@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
   Zap, 
   Search, 
@@ -13,11 +14,14 @@ import {
   ChevronRight,
   ShieldAlert,
   Wrench,
-  X
+  X,
+  ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '@/lib/context/AuthContext';
+import { fastFetch } from '@/lib/fastFetch';
 
 export default function ServicesPage() {
+  const router = useRouter();
   const { user } = useAuth();
   const [services, setServices] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -45,15 +49,14 @@ export default function ServicesPage() {
 
   const fetchServices = async () => {
     try {
-      setLoading(true);
+      if (services.length === 0) setLoading(true);
       let url = '/api/v1/services?';
       if (selectedCategory !== 'all') url += `category=${selectedCategory}&`;
       if (emergencyOnly) url += `emergency=true&`;
       if (searchQuery) url += `search=${encodeURIComponent(searchQuery)}&`;
 
-      const res = await fetch(url);
-      const data = await res.json();
-      if (data.services) {
+      const data = await fastFetch(url, { ttlMs: 120000 });
+      if (data && data.services) {
         setServices(data.services);
         if (data.categories) setCategories(data.categories);
       }
@@ -74,6 +77,10 @@ export default function ServicesPage() {
 
   const handleCreateBooking = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      router.push('/customer/login?redirect=/services');
+      return;
+    }
     if (!selectedService || !problemDescription) return;
 
     setBookingSubmitting(true);
@@ -116,7 +123,7 @@ export default function ServicesPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Header Banner - Glass Dark */}
       <div className="glass-card-dark text-white rounded-3xl p-6 sm:p-10 md:p-12 relative overflow-hidden shadow-2xl">
-        <div className="absolute -top-24 -right-24 w-80 h-80 bg-brand-500/25 blur-[100px] pointer-events-none rounded-full" />
+        <div className="absolute -top-24 -right-24 w-80 h-80 bg-[radial-gradient(circle,rgba(8,127,229,0.25)_0%,rgba(8,127,229,0)_70%)] pointer-events-none rounded-full" />
         <div className="max-w-2xl relative z-10 space-y-3">
           <span className="text-xs font-bold uppercase tracking-wider text-brand-400">
             Professional Electrical &amp; Technological Services
@@ -287,152 +294,196 @@ export default function ServicesPage() {
 
       {/* BOOKING MODAL - Frosted Glass Sheen */}
       {bookingModalOpen && selectedService && (
-        <div className="fixed inset-0 z-50 bg-slate-950/65 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white/85 backdrop-blur-2xl rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-white/90 relative animate-in zoom-in-95 my-8">
-            <button
-              onClick={() => setBookingModalOpen(false)}
-              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-white/60 transition"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            {bookingSuccess ? (
-              <div className="text-center py-6 space-y-4">
-                <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-600 border border-emerald-500/30 flex items-center justify-center mx-auto shadow-xs">
-                  <CheckCircle2 className="w-10 h-10" />
+        <div 
+          className="fixed inset-0 z-[100] bg-slate-950/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setBookingModalOpen(false);
+          }}
+        >
+          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl border border-white/90 relative animate-in zoom-in-95 my-auto overflow-hidden">
+            {/* Header (Always Visible at Top) */}
+            <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-100 bg-slate-50/80 backdrop-blur-md shrink-0">
+              <div className="flex items-center gap-3 min-w-0 pr-2">
+                <div className="w-10 h-10 rounded-xl bg-brand-500 text-white flex items-center justify-center font-bold shrink-0 shadow-xs">
+                  <Zap className="w-5 h-5 fill-white" />
                 </div>
-                <h3 className="text-2xl font-black text-slate-950">Booking Confirmed!</h3>
-                <p className="text-xs text-slate-600 max-w-sm mx-auto">
-                  Your booking reference is <strong className="text-brand-600 text-sm font-mono">{bookingSuccess.bookingNumber}</strong>. We are broadcasting to verified technicians in your area.
-                </p>
-                <div className="glass-card p-4 rounded-2xl text-xs text-left space-y-1.5">
-                  <p><strong>Service:</strong> {selectedService.name}</p>
-                  <p><strong>Scheduled:</strong> {bookingSuccess.preferredDate} ({bookingSuccess.preferredTimeSlot})</p>
-                  <p><strong>Estimated Amount:</strong> ৳{bookingSuccess.totalAmount}</p>
-                </div>
-                <div className="pt-2 flex gap-3">
-                  <Link
-                    href="/customer/dashboard"
-                    className="btn-primary flex-1 text-xs py-2.5"
-                  >
-                    Track in Dashboard
-                  </Link>
-                  <button
-                    onClick={() => setBookingModalOpen(false)}
-                    className="btn-secondary flex-1 text-xs py-2.5"
-                  >
-                    Done
-                  </button>
+                <div className="min-w-0">
+                  <h3 className="font-extrabold text-slate-900 text-sm sm:text-base leading-tight truncate">
+                    {bookingSuccess ? 'Booking Confirmed' : selectedService.name}
+                  </h3>
+                  <p className="text-xs text-brand-600 font-semibold truncate">
+                    {bookingSuccess 
+                      ? `Ref: ${bookingSuccess.bookingNumber}` 
+                      : `Estimated: ৳${selectedService.basePrice} (${selectedService.priceType})`}
+                  </p>
                 </div>
               </div>
-            ) : (
-              <form onSubmit={handleCreateBooking} className="space-y-4">
-                <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
-                  <div className="w-10 h-10 rounded-xl bg-brand-500 text-white flex items-center justify-center font-bold">
-                    <Zap className="w-5 h-5 fill-white" />
+
+              <button
+                type="button"
+                onClick={() => setBookingModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition shrink-0"
+                aria-label="Close modal"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Scrollable Content Body */}
+            <div className="overflow-y-auto p-5 sm:p-6 overscroll-contain flex-1">
+              {bookingSuccess ? (
+                <div className="text-center py-4 space-y-4">
+                  <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-600 border border-emerald-500/30 flex items-center justify-center mx-auto shadow-xs">
+                    <CheckCircle2 className="w-10 h-10" />
+                  </div>
+                  <h3 className="text-2xl font-black text-slate-950">Booking Confirmed!</h3>
+                  <p className="text-xs text-slate-600 max-w-sm mx-auto">
+                    Your booking reference is <strong className="text-brand-600 text-sm font-mono">{bookingSuccess.bookingNumber}</strong>. We are broadcasting to verified technicians in your area.
+                  </p>
+                  <div className="glass-card p-4 rounded-2xl text-xs text-left space-y-1.5">
+                    <p><strong>Service:</strong> {selectedService.name}</p>
+                    <p><strong>Scheduled:</strong> {bookingSuccess.preferredDate} ({bookingSuccess.preferredTimeSlot})</p>
+                    <p><strong>Estimated Amount:</strong> ৳{bookingSuccess.totalAmount}</p>
+                  </div>
+                  <div className="pt-2 flex gap-3">
+                    <Link
+                      href="/customer/dashboard"
+                      className="btn-primary flex-1 text-xs py-2.5 text-center"
+                    >
+                      Track in Dashboard
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => setBookingModalOpen(false)}
+                      className="btn-secondary flex-1 text-xs py-2.5"
+                    >
+                      Done
+                    </button>
+                  </div>
+                </div>
+              ) : !user ? (
+                <div className="p-6 text-center space-y-4">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto">
+                    <ShieldCheck className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-slate-900 text-base">{selectedService.name}</h3>
-                    <p className="text-xs text-brand-600 font-semibold">
-                      Estimated: ৳{selectedService.basePrice} ({selectedService.priceType})
+                    <h4 className="font-extrabold text-slate-900 text-base">Customer Sign In Required</h4>
+                    <p className="text-xs text-slate-600 leading-relaxed max-w-sm mx-auto mt-1">
+                      To schedule a verified technician and receive real-time job updates, please sign in or create your customer account.
                     </p>
                   </div>
+                  <div className="space-y-2 pt-2 max-w-xs mx-auto">
+                    <Link
+                      href="/customer/login?redirect=/services"
+                      className="btn-primary w-full text-xs py-2.5 block text-center font-bold"
+                    >
+                      Sign In as Customer
+                    </Link>
+                    <Link
+                      href="/customer/register?redirect=/services"
+                      className="btn-secondary w-full text-xs py-2 block text-center bg-slate-50 border-slate-200"
+                    >
+                      Create Free Account
+                    </Link>
+                  </div>
                 </div>
-
-                {/* Problem Description */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Describe the Issue or Job Requirements *
-                  </label>
-                  <textarea
-                    rows={3}
-                    required
-                    placeholder="e.g. 2nd floor wiring trip, need short circuit check and earthing voltage inspection..."
-                    value={problemDescription}
-                    onChange={(e) => setProblemDescription(e.target.value)}
-                    className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500"
-                  />
-                </div>
-
-                {/* Date and Time Slot */}
-                <div className="grid grid-cols-2 gap-3">
+              ) : (
+                <form onSubmit={handleCreateBooking} className="space-y-4">
+                  {/* Problem Description */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Preferred Date *</label>
-                    <input
-                      type="date"
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Describe the Issue or Job Requirements *
+                    </label>
+                    <textarea
+                      rows={3}
                       required
-                      value={preferredDate}
-                      onChange={(e) => setPreferredDate(e.target.value)}
-                      className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+                      placeholder="e.g. 2nd floor wiring trip, need short circuit check and earthing voltage inspection..."
+                      value={problemDescription}
+                      onChange={(e) => setProblemDescription(e.target.value)}
+                      className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500"
                     />
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Preferred Time *</label>
-                    <select
-                      value={preferredTimeSlot}
-                      onChange={(e) => setPreferredTimeSlot(e.target.value)}
-                      className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
-                    >
-                      <option>09:00 AM - 12:00 PM</option>
-                      <option>12:00 PM - 03:00 PM</option>
-                      <option>03:00 PM - 06:00 PM</option>
-                      <option>06:00 PM - 09:00 PM</option>
-                      <option>Immediate (Emergency)</option>
-                    </select>
-                  </div>
-                </div>
 
-                {/* Area & Address */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Service Area (Moulvibazar) *</label>
-                    <select
-                      value={addressArea}
-                      onChange={(e) => setAddressArea(e.target.value)}
-                      className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
-                    >
-                      <option>Kusumbag Point</option>
-                      <option>Moulvibazar Sadar</option>
-                      <option>Court Road</option>
-                      <option>Sreemangal Road</option>
-                      <option>Shamshernagar Road</option>
-                      <option>Rajnagar</option>
-                    </select>
+                  {/* Date and Time Slot */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Preferred Date *</label>
+                      <input
+                        type="date"
+                        required
+                        value={preferredDate}
+                        onChange={(e) => setPreferredDate(e.target.value)}
+                        className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Preferred Time *</label>
+                      <select
+                        value={preferredTimeSlot}
+                        onChange={(e) => setPreferredTimeSlot(e.target.value)}
+                        className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+                      >
+                        <option>09:00 AM - 12:00 PM</option>
+                        <option>12:00 PM - 03:00 PM</option>
+                        <option>03:00 PM - 06:00 PM</option>
+                        <option>06:00 PM - 09:00 PM</option>
+                        <option>Immediate (Emergency)</option>
+                      </select>
+                    </div>
                   </div>
+
+                  {/* Area & Address */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Service Area (Moulvibazar) *</label>
+                      <select
+                        value={addressArea}
+                        onChange={(e) => setAddressArea(e.target.value)}
+                        className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+                      >
+                        <option>Kusumbag Point</option>
+                        <option>Moulvibazar Sadar</option>
+                        <option>Court Road</option>
+                        <option>Sreemangal Road</option>
+                        <option>Shamshernagar Road</option>
+                        <option>Rajnagar</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Contact Phone *</label>
+                      <input
+                        type="text"
+                        required
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+                      />
+                    </div>
+                  </div>
+
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Contact Phone *</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Street Address / Landmark</label>
                     <input
                       type="text"
-                      required
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="House/Holding #, Road #, Near Mosque or Market"
+                      value={addressLine}
+                      onChange={(e) => setAddressLine(e.target.value)}
                       className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
                     />
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Street Address / Landmark</label>
-                  <input
-                    type="text"
-                    placeholder="House/Holding #, Road #, Near Mosque or Market"
-                    value={addressLine}
-                    onChange={(e) => setAddressLine(e.target.value)}
-                    className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
-                  />
-                </div>
-
-                <div className="pt-2">
-                  <button
-                    type="submit"
-                    disabled={bookingSubmitting}
-                    className="btn-primary w-full py-3 text-xs"
-                  >
-                    {bookingSubmitting ? 'Confirming Booking...' : 'Confirm & Request Technician'}
-                  </button>
-                </div>
-              </form>
-            )}
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={bookingSubmitting}
+                      className="btn-primary w-full py-3 text-xs font-bold shadow-md"
+                    >
+                      {bookingSubmitting ? 'Confirming Booking...' : 'Confirm & Request Technician'}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
           </div>
         </div>
       )}

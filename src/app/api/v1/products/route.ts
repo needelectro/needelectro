@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 
+// Cached categories and brands to avoid redundant DB roundtrips
+let cachedCategories: { data: any[]; timestamp: number } | null = null;
+let cachedBrands: { data: any[]; timestamp: number } | null = null;
+const CACHE_TTL_MS = 60 * 1000; // 1 minute
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -9,16 +14,23 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('search');
     const featured = searchParams.get('featured') === 'true';
     const condition = searchParams.get('condition'); // NEW or REFURBISHED
+    const pageParam = parseInt(searchParams.get('page') || '1', 10);
+    const limitParam = searchParams.get('limit');
+    
+    // Support limit=all or numerical limit
+    const page = Math.max(1, isNaN(pageParam) ? 1 : pageParam);
+    const take = limitParam === 'all' ? undefined : Math.min(100, Math.max(1, parseInt(limitParam || '50', 10)));
+    const skip = take !== undefined ? (page - 1) * take : undefined;
 
     const whereClause: any = {
       isActive: true,
     };
 
-    if (categorySlug) {
+    if (categorySlug && categorySlug !== 'all') {
       whereClause.category = { slug: categorySlug };
     }
 
-    if (brandSlug) {
+    if (brandSlug && brandSlug !== 'all') {
       whereClause.brand = { slug: brandSlug };
     }
 
@@ -26,48 +38,91 @@ export async function GET(req: NextRequest) {
       whereClause.isFeatured = true;
     }
 
-    if (condition) {
+    if (condition && condition !== 'all') {
       whereClause.condition = condition;
     }
 
     if (search) {
       whereClause.OR = [
-        { name: { contains: search } },
-        { shortDescription: { contains: search } },
-        { sku: { contains: search } },
+        { name: { contains: search, mode: 'insensitive' } },
+        { shortDescription: { contains: search, mode: 'insensitive' } },
+        { sku: { contains: search, mode: 'insensitive' } },
       ];
     }
 
-    const [products, categories, brands] = await Promise.all([
+    const now = Date.now();
+    const needCategories = !cachedCategories || now - cachedCategories.timestamp > CACHE_TTL_MS;
+    const needBrands = !cachedBrands || now - cachedBrands.timestamp > CACHE_TTL_MS;
+
+    const [products, totalCount, freshCategories, freshBrands] = await Promise.all([
       prisma.product.findMany({
         where: whereClause,
-        include: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          sku: true,
+          shortDescription: true,
+          price: true,
+          discountPrice: true,
+          stock: true,
+          condition: true,
+          warrantyPeriodMonths: true,
+          images: true,
+          isFeatured: true,
+          isActive: true,
+          createdAt: true,
           category: { select: { id: true, name: true, slug: true } },
           brand: { select: { id: true, name: true, slug: true } },
         },
         orderBy: [{ isFeatured: 'desc' }, { createdAt: 'desc' }],
+        take,
+        skip,
       }),
-      prisma.productCategory.findMany({
-        where: { isActive: true },
-        orderBy: { sortOrder: 'asc' },
-      }),
-      prisma.brand.findMany({
-        orderBy: { name: 'asc' },
-      }),
+      prisma.product.count({ where: whereClause }),
+      needCategories
+        ? prisma.productCategory.findMany({
+            where: { isActive: true },
+            orderBy: { sortOrder: 'asc' },
+            select: { id: true, name: true, slug: true, imageUrl: true },
+          })
+        : Promise.resolve(null),
+      needBrands
+        ? prisma.brand.findMany({
+            orderBy: { name: 'asc' },
+            select: { id: true, name: true, slug: true, logoUrl: true },
+          })
+        : Promise.resolve(null),
     ]);
+
+    if (freshCategories) {
+      cachedCategories = { data: freshCategories, timestamp: now };
+    }
+    if (freshBrands) {
+      cachedBrands = { data: freshBrands, timestamp: now };
+    }
 
     const formattedProducts = products.map((p: any) => ({
       ...p,
       images: p.images ? p.images.split(',') : [],
-      specifications: p.specifications ? JSON.parse(p.specifications) : {},
     }));
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       products: formattedProducts,
-      categories,
-      brands,
+      categories: cachedCategories?.data || [],
+      brands: cachedBrands?.data || [],
+      pagination: {
+        total: totalCount,
+        page,
+        limit: take || totalCount,
+        totalPages: take ? Math.ceil(totalCount / take) : 1,
+      },
     });
+
+    // Public caching at edge & browser
+    response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+    return response;
   } catch (error) {
     console.error('Fetch products error:', error);
     return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
