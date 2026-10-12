@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/context/AuthContext';
@@ -21,7 +21,10 @@ import {
   LogOut,
   GraduationCap,
   Building2,
-  Store
+  Store,
+  MapPin,
+  ShoppingBag,
+  Users
 } from 'lucide-react';
 
 export default function Header() {
@@ -32,6 +35,13 @@ export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setMoreMenuOpen(false);
+    setAccountMenuOpen(false);
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   // Isolate Admin: Do not render the public header for admin users or on /admin routes
   const isAdmin = user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN');
@@ -88,32 +98,118 @@ export default function Header() {
             {/* Logo */}
             <BrandLogo priority size="md" />
 
-            {/* Desktop Navigation Links */}
-            <nav className="hidden lg:flex items-center space-x-6 font-medium text-sm text-slate-700">
-              <Link href="/services" className="hover:text-brand-500 transition-colors">
-                Services
+            {/* Desktop Navigation Links - 5 Core Glassmorphism Buttons */}
+            <nav className="hidden lg:flex items-center gap-2 font-medium">
+              {/* 1. Services */}
+              <Link
+                href="/services"
+                className={`group flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 border ${
+                  pathname?.startsWith('/services')
+                    ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white border-white/25 shadow-md shadow-brand-500/25 scale-[1.02]'
+                    : 'bg-white/65 hover:bg-white/95 text-slate-700 hover:text-brand-600 border-white/85 hover:border-brand-200/80 backdrop-blur-md shadow-2xs hover:shadow-md hover:-translate-y-0.5 active:scale-95'
+                }`}
+              >
+                <Zap className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-110 ${pathname?.startsWith('/services') ? 'fill-white text-white' : 'text-brand-500'}`} />
+                <span>Services</span>
               </Link>
-              <Link href="/shop" className="hover:text-brand-500 transition-colors">
-                Shop
+
+              {/* 2. Shop */}
+              <Link
+                href="/shop"
+                className={`group flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 border ${
+                  pathname?.startsWith('/shop') || pathname?.startsWith('/product')
+                    ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white border-white/25 shadow-md shadow-brand-500/25 scale-[1.02]'
+                    : 'bg-white/65 hover:bg-white/95 text-slate-700 hover:text-brand-600 border-white/85 hover:border-brand-200/80 backdrop-blur-md shadow-2xs hover:shadow-md hover:-translate-y-0.5 active:scale-95'
+                }`}
+              >
+                <ShoppingBag className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-110 ${pathname?.startsWith('/shop') || pathname?.startsWith('/product') ? 'text-white' : 'text-purple-600'}`} />
+                <span>Shop</span>
               </Link>
-              <Link href="/locations" className="hover:text-brand-500 transition-colors">
-                Locations
+
+              {/* 3. Locations */}
+              <Link
+                href="/locations"
+                className={`group flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 border ${
+                  pathname?.startsWith('/locations')
+                    ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white border-white/25 shadow-md shadow-brand-500/25 scale-[1.02]'
+                    : 'bg-white/65 hover:bg-white/95 text-slate-700 hover:text-brand-600 border-white/85 hover:border-brand-200/80 backdrop-blur-md shadow-2xs hover:shadow-md hover:-translate-y-0.5 active:scale-95'
+                }`}
+              >
+                <MapPin className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-110 ${pathname?.startsWith('/locations') ? 'text-white' : 'text-emerald-600'}`} />
+                <span>Locations</span>
               </Link>
-              <Link href="/training" className="hover:text-brand-500 transition-colors">
-                Training
+
+              {/* 4. Technicians */}
+              <Link
+                href="/technicians"
+                className={`group flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 border ${
+                  pathname?.startsWith('/technicians')
+                    ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white border-white/25 shadow-md shadow-brand-500/25 scale-[1.02]'
+                    : 'bg-white/65 hover:bg-white/95 text-slate-700 hover:text-brand-600 border-white/85 hover:border-brand-200/80 backdrop-blur-md shadow-2xs hover:shadow-md hover:-translate-y-0.5 active:scale-95'
+                }`}
+              >
+                <Users className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-110 ${pathname?.startsWith('/technicians') ? 'text-white' : 'text-sky-600'}`} />
+                <span>Technicians</span>
               </Link>
-              <Link href="/branches" className="hover:text-brand-500 transition-colors">
-                Branches
+
+              {/* 5. Warranty */}
+              <Link
+                href="/warranty"
+                className={`group flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 border ${
+                  pathname?.startsWith('/warranty')
+                    ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white border-white/25 shadow-md shadow-brand-500/25 scale-[1.02]'
+                    : 'bg-white/65 hover:bg-white/95 text-slate-700 hover:text-brand-600 border-white/85 hover:border-brand-200/80 backdrop-blur-md shadow-2xs hover:shadow-md hover:-translate-y-0.5 active:scale-95'
+                }`}
+              >
+                <ShieldCheck className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-110 ${pathname?.startsWith('/warranty') ? 'text-white' : 'text-amber-600'}`} />
+                <span>Warranty</span>
               </Link>
-              <Link href="/technicians" className="hover:text-brand-500 transition-colors">
-                Technicians
-              </Link>
-              <Link href="/warranty" className="hover:text-brand-500 transition-colors">
-                Warranty
-              </Link>
-              <Link href="/about" className="hover:text-brand-500 transition-colors">
-                About
-              </Link>
+
+              {/* Secondary More Dropdown Glassmorphism Button */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setMoreMenuOpen(!moreMenuOpen)}
+                  className={`flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 border ${
+                    moreMenuOpen || pathname === '/training' || pathname === '/branches' || pathname === '/about'
+                      ? 'bg-white text-brand-600 border-brand-300 shadow-sm'
+                      : 'bg-white/50 hover:bg-white/90 text-slate-600 hover:text-slate-900 border-white/80 backdrop-blur-md shadow-2xs hover:shadow-sm'
+                  }`}
+                  aria-expanded={moreMenuOpen}
+                >
+                  <span>More</span>
+                  <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${moreMenuOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {moreMenuOpen && (
+                  <div className="absolute top-full mt-2 right-0 w-48 bg-white/95 backdrop-blur-xl border border-white/90 rounded-2xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2">
+                    <Link
+                      href="/training"
+                      onClick={() => setMoreMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600 transition"
+                    >
+                      <GraduationCap className="w-4 h-4 text-amber-500 shrink-0" />
+                      <span>Training Academy</span>
+                    </Link>
+                    <Link
+                      href="/branches"
+                      onClick={() => setMoreMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600 transition"
+                    >
+                      <Building2 className="w-4 h-4 text-sky-500 shrink-0" />
+                      <span>Branch Network</span>
+                    </Link>
+                    <Link
+                      href="/about"
+                      onClick={() => setMoreMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600 transition"
+                    >
+                      <Store className="w-4 h-4 text-slate-500 shrink-0" />
+                      <span>About Us</span>
+                    </Link>
+                  </div>
+                )}
+              </div>
             </nav>
 
             {/* Header Right Actions */}
