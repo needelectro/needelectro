@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/context/AuthContext';
 import { useCart } from '@/lib/context/CartContext';
 import BrandLogo from '@/components/common/BrandLogo';
 import { 
+  Home,
   Search, 
   ShoppingCart, 
   User as UserIcon, 
@@ -98,9 +99,22 @@ export default function Header() {
             {/* Logo */}
             <BrandLogo priority size="md" />
 
-            {/* Desktop Navigation Links - 5 Core Glassmorphism Buttons */}
+            {/* Desktop Navigation Links - Glassmorphism Buttons */}
             <nav className="hidden lg:flex items-center gap-2 font-medium">
-              {/* 1. Services */}
+              {/* 1. Home */}
+              <Link
+                href="/"
+                className={`group flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 border ${
+                  pathname === '/'
+                    ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white border-white/25 shadow-md shadow-brand-500/25 scale-[1.02]'
+                    : 'bg-white/65 hover:bg-white/95 text-slate-700 hover:text-brand-600 border-white/85 hover:border-brand-200/80 backdrop-blur-md shadow-2xs hover:shadow-md hover:-translate-y-0.5 active:scale-95'
+                }`}
+              >
+                <Home className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-110 ${pathname === '/' ? 'text-white' : 'text-brand-500'}`} />
+                <span>Home</span>
+              </Link>
+
+              {/* 2. Services */}
               <Link
                 href="/services"
                 className={`group flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 border ${
@@ -109,11 +123,11 @@ export default function Header() {
                     : 'bg-white/65 hover:bg-white/95 text-slate-700 hover:text-brand-600 border-white/85 hover:border-brand-200/80 backdrop-blur-md shadow-2xs hover:shadow-md hover:-translate-y-0.5 active:scale-95'
                 }`}
               >
-                <Zap className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-110 ${pathname?.startsWith('/services') ? 'fill-white text-white' : 'text-brand-500'}`} />
+                <Zap className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-110 ${pathname?.startsWith('/services') ? 'fill-white text-white' : 'text-amber-500'}`} />
                 <span>Services</span>
               </Link>
 
-              {/* 2. Shop */}
+              {/* 3. Shop */}
               <Link
                 href="/shop"
                 className={`group flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 border ${
@@ -126,33 +140,7 @@ export default function Header() {
                 <span>Shop</span>
               </Link>
 
-              {/* 3. Locations */}
-              <Link
-                href="/locations"
-                className={`group flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 border ${
-                  pathname?.startsWith('/locations')
-                    ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white border-white/25 shadow-md shadow-brand-500/25 scale-[1.02]'
-                    : 'bg-white/65 hover:bg-white/95 text-slate-700 hover:text-brand-600 border-white/85 hover:border-brand-200/80 backdrop-blur-md shadow-2xs hover:shadow-md hover:-translate-y-0.5 active:scale-95'
-                }`}
-              >
-                <MapPin className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-110 ${pathname?.startsWith('/locations') ? 'text-white' : 'text-emerald-600'}`} />
-                <span>Locations</span>
-              </Link>
-
-              {/* 4. Technicians */}
-              <Link
-                href="/technicians"
-                className={`group flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 border ${
-                  pathname?.startsWith('/technicians')
-                    ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white border-white/25 shadow-md shadow-brand-500/25 scale-[1.02]'
-                    : 'bg-white/65 hover:bg-white/95 text-slate-700 hover:text-brand-600 border-white/85 hover:border-brand-200/80 backdrop-blur-md shadow-2xs hover:shadow-md hover:-translate-y-0.5 active:scale-95'
-                }`}
-              >
-                <Users className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-110 ${pathname?.startsWith('/technicians') ? 'text-white' : 'text-sky-600'}`} />
-                <span>Technicians</span>
-              </Link>
-
-              {/* 5. Warranty */}
+              {/* 4. Warranty */}
               <Link
                 href="/warranty"
                 className={`group flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 border ${
@@ -161,7 +149,7 @@ export default function Header() {
                     : 'bg-white/65 hover:bg-white/95 text-slate-700 hover:text-brand-600 border-white/85 hover:border-brand-200/80 backdrop-blur-md shadow-2xs hover:shadow-md hover:-translate-y-0.5 active:scale-95'
                 }`}
               >
-                <ShieldCheck className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-110 ${pathname?.startsWith('/warranty') ? 'text-white' : 'text-amber-600'}`} />
+                <ShieldCheck className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-110 ${pathname?.startsWith('/warranty') ? 'text-white' : 'text-emerald-600'}`} />
                 <span>Warranty</span>
               </Link>
 
@@ -171,7 +159,7 @@ export default function Header() {
                   type="button"
                   onClick={() => setMoreMenuOpen(!moreMenuOpen)}
                   className={`flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 border ${
-                    moreMenuOpen || pathname === '/training' || pathname === '/branches' || pathname === '/about'
+                    moreMenuOpen || pathname === '/technicians' || pathname === '/locations' || pathname === '/training' || pathname === '/branches' || pathname === '/about'
                       ? 'bg-white text-brand-600 border-brand-300 shadow-sm'
                       : 'bg-white/50 hover:bg-white/90 text-slate-600 hover:text-slate-900 border-white/80 backdrop-blur-md shadow-2xs hover:shadow-sm'
                   }`}
@@ -182,7 +170,23 @@ export default function Header() {
                 </button>
 
                 {moreMenuOpen && (
-                  <div className="absolute top-full mt-2 right-0 w-48 bg-white/95 backdrop-blur-xl border border-white/90 rounded-2xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2">
+                  <div className="absolute top-full mt-2 right-0 w-52 bg-white/95 backdrop-blur-xl border border-white/90 rounded-2xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2">
+                    <Link
+                      href="/technicians"
+                      onClick={() => setMoreMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600 transition"
+                    >
+                      <Users className="w-4 h-4 text-sky-500 shrink-0" />
+                      <span>Technicians</span>
+                    </Link>
+                    <Link
+                      href="/locations"
+                      onClick={() => setMoreMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600 transition"
+                    >
+                      <MapPin className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>Locations</span>
+                    </Link>
                     <Link
                       href="/training"
                       onClick={() => setMoreMenuOpen(false)}
@@ -375,6 +379,13 @@ export default function Header() {
         {mobileMenuOpen && (
           <div className="lg:hidden border-t border-white/60 bg-white/90 backdrop-blur-2xl px-4 pt-3 pb-6 space-y-3 shadow-2xl">
             <nav className="space-y-1 text-sm font-medium text-slate-800">
+              <Link
+                href="/"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-xl hover:bg-white/80 hover:text-brand-600 transition"
+              >
+                Home
+              </Link>
               <Link
                 href="/services"
                 onClick={() => setMobileMenuOpen(false)}
