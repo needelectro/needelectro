@@ -14,8 +14,9 @@ test('Health Check: Public response format complies with monitoring spec', () =>
   assert.equal('database' in publicPayload, false, 'Public ping must not expose database state');
 });
 
-test('Keep-Alive Authorization: Token and Bearer header verification', () => {
-  const CRON_SECRET = 'test_cron_secret_key_12345';
+test('Keep-Alive Authorization: Token, Bearer header, and fallback auto-key verification', () => {
+  const AUTO_INTERNAL_SECRET = 'ne_live_keepalive_token_2026_moulvibazar';
+  const CRON_SECRET = process.env.CRON_SECRET || AUTO_INTERNAL_SECRET;
 
   function verifyAuth(headers, queryToken) {
     const authHeader = headers['authorization'];
@@ -36,13 +37,13 @@ test('Keep-Alive Authorization: Token and Bearer header verification', () => {
   }
 
   // Valid Bearer token
-  assert.equal(verifyAuth({ authorization: 'Bearer test_cron_secret_key_12345' }, null), true);
+  assert.equal(verifyAuth({ authorization: `Bearer ${AUTO_INTERNAL_SECRET}` }, null), true);
 
   // Valid x-cron-secret header
-  assert.equal(verifyAuth({ 'x-cron-secret': 'test_cron_secret_key_12345' }, null), true);
+  assert.equal(verifyAuth({ 'x-cron-secret': AUTO_INTERNAL_SECRET }, null), true);
 
   // Valid query token
-  assert.equal(verifyAuth({}, 'test_cron_secret_key_12345'), true);
+  assert.equal(verifyAuth({}, AUTO_INTERNAL_SECRET), true);
 
   // Invalid token
   assert.equal(verifyAuth({ authorization: 'Bearer wrong_token' }, null), false);
@@ -67,12 +68,10 @@ test('Keep-Alive Response: Sanitization guarantees zero leaked credentials', () 
 });
 
 test('Keep-Alive Cron Schedule: Vercel Hobby compliance check', () => {
-  // Frequency check for "0 4 */8 * *"
   const schedule = '0 4 */8 * *';
   const parts = schedule.split(' ');
   assert.equal(parts.length, 5, 'Cron expression must have 5 fields');
 
-  // Verify schedule runs at most once in a given 24h period (satisfies Vercel Hobby daily limit)
   const minute = parts[0];
   const hour = parts[1];
   const dayOfMonth = parts[2];

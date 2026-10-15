@@ -16,16 +16,17 @@ jobs:
     steps:
       - name: Ping Keep-Alive API
         env:
-          APP_URL: ${{ secrets.APP_URL || 'https://need-electro.vercel.app' }}
-          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: ${{ secrets.APP_URL || 'https://www.needelectro.store' }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET || 'ne_live_keepalive_token_2026_moulvibazar' }}
         run: |
-          echo "Triggering keep-alive endpoint: ${APP_URL}/api/v1/health?action=keep-alive"
+          TARGET_URL="${APP_URL}/api/v1/health?action=keep-alive&token=${CRON_SECRET}"
+          echo "Triggering automated keep-alive: ${APP_URL}/api/v1/health?action=keep-alive"
           
           # Execute ping with 10s timeout
           RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
             -H "x-cron-secret: ${CRON_SECRET}" \
             -H "User-Agent: GitHub-Actions-KeepAlive" \
-            "${APP_URL}/api/v1/health?action=keep-alive")
+            "${TARGET_URL}")
           
           HTTP_BODY=$(echo "$RESPONSE" | sed -e '$d')
           HTTP_STATUS=$(echo "$RESPONSE" | tail -n1 | cut -d':' -f2)

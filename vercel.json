@@ -5,7 +5,7 @@
   "regions": ["sin1"],
   "crons": [
     {
-      "path": "/api/v1/health?action=keep-alive",
+      "path": "/api/v1/health?action=keep-alive&token=ne_live_keepalive_token_2026_moulvibazar",
       "schedule": "0 4 */8 * *"
     }
   ]

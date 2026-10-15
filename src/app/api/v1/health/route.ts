@@ -4,6 +4,9 @@ import prisma from '@/lib/db';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 10; // 10s maximum for serverless execution
 
+// Fallback internal token so automation works immediately with 0 manual secret setup
+const AUTO_INTERNAL_SECRET = 'ne_live_keepalive_token_2026_moulvibazar';
+
 /**
  * Health Check & Supabase Keep-Alive Endpoint
  *
@@ -13,8 +16,8 @@ export const maxDuration = 10; // 10s maximum for serverless execution
  *    to register PostgreSQL activity on Supabase and keep the project active.
  *
  * Security:
- * - When CRON_SECRET is configured, database keep-alive queries require
- *   either `Authorization: Bearer <CRON_SECRET>` or `x-cron-secret: <CRON_SECRET>`.
+ * - Validates against process.env.CRON_SECRET or AUTO_INTERNAL_SECRET.
+ * - Accepts Bearer header, x-cron-secret header, or ?token= query parameter.
  * - Never returns or logs database credentials, connection strings, or user data.
  */
 export async function GET(request: NextRequest) {
@@ -27,7 +30,7 @@ export async function GET(request: NextRequest) {
   const actionParam = url.searchParams.get('action');
   const tokenParam = url.searchParams.get('token');
 
-  const configuredSecret = process.env.CRON_SECRET;
+  const configuredSecret = process.env.CRON_SECRET || AUTO_INTERNAL_SECRET;
 
   // Check if keep-alive database ping is requested
   const isKeepAliveRequested =
@@ -37,21 +40,16 @@ export async function GET(request: NextRequest) {
 
   // Authorization check for keep-alive operations
   let isAuthorized = false;
-  if (!configuredSecret) {
-    // If no secret configured in environment, allow keep-alive by default
-    isAuthorized = true;
-  } else {
-    const bearerToken = authHeader?.startsWith('Bearer ')
-      ? authHeader.slice(7).trim()
-      : null;
+  const bearerToken = authHeader?.startsWith('Bearer ')
+    ? authHeader.slice(7).trim()
+    : null;
 
-    if (
-      (bearerToken && bearerToken === configuredSecret) ||
-      (cronSecretHeader && cronSecretHeader === configuredSecret) ||
-      (tokenParam && tokenParam === configuredSecret)
-    ) {
-      isAuthorized = true;
-    }
+  if (
+    (bearerToken && bearerToken === configuredSecret) ||
+    (cronSecretHeader && cronSecretHeader === configuredSecret) ||
+    (tokenParam && tokenParam === configuredSecret)
+  ) {
+    isAuthorized = true;
   }
 
   // If simple health check without keep-alive requested
