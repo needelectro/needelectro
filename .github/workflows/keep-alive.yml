@@ -1,0 +1,41 @@
+name: Supabase Keep-Alive Automation
+
+on:
+  schedule:
+    # Runs at 04:00 UTC every 8 days
+    - cron: '0 4 */8 * *'
+  workflow_dispatch:
+    # Allows manual execution anytime via GitHub Actions tab
+
+jobs:
+  ping-keep-alive:
+    name: Ping Database Keep-Alive
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Ping Keep-Alive API
+        env:
+          APP_URL: ${{ secrets.APP_URL || 'https://need-electro.vercel.app' }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          echo "Triggering keep-alive endpoint: ${APP_URL}/api/v1/health?action=keep-alive"
+          
+          # Execute ping with 10s timeout
+          RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
+            -H "x-cron-secret: ${CRON_SECRET}" \
+            -H "User-Agent: GitHub-Actions-KeepAlive" \
+            "${APP_URL}/api/v1/health?action=keep-alive")
+          
+          HTTP_BODY=$(echo "$RESPONSE" | sed -e '$d')
+          HTTP_STATUS=$(echo "$RESPONSE" | tail -n1 | cut -d':' -f2)
+          
+          echo "Response Status: $HTTP_STATUS"
+          echo "Response Body: $HTTP_BODY"
+          
+          if [ "$HTTP_STATUS" -ne 200 ]; then
+            echo "::error::Keep-alive ping failed with HTTP status $HTTP_STATUS"
+            exit 1
+          fi
+          
+          echo "Keep-alive ping succeeded successfully."
