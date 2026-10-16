@@ -500,19 +500,6 @@ export default function Header() {
 
             {/* Desktop Right Actions */}
             <div className="flex items-center gap-2 shrink-0">
-              {/* PWA Install (xl+) */}
-              {!isInstalled && (
-                <button
-                  type="button"
-                  onClick={handleInstallClick}
-                  className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-brand-200 bg-brand-50 hover:bg-brand-100 text-brand-700 text-xs font-bold transition shadow-xs app-tap"
-                  title="Install as Mobile App"
-                >
-                  <Smartphone className="w-3.5 h-3.5 text-brand-600 animate-pulse" />
-                  <span>Install App</span>
-                </button>
-              )}
-
               {/* Search */}
               <button
                 onClick={() => setSearchOpen(!searchOpen)}
