@@ -28,7 +28,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 type TabKey = 'overview' | 'jobs' | 'earnings' | 'profile';
 
-export default function TechnicianDashboard() {
+function TechnicianDashboardContent() {
   const { user, logout } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -460,5 +460,13 @@ export default function TechnicianDashboard() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function TechnicianDashboard() {
+  return (
+    <React.Suspense fallback={<div className="min-h-screen bg-slate-50 flex items-center justify-center text-xs text-slate-400">Loading technician portal...</div>}>
+      <TechnicianDashboardContent />
+    </React.Suspense>
   );
 }
