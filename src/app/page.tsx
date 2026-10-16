@@ -27,13 +27,68 @@ import {
 import { fastFetch } from '@/lib/fastFetch';
 import ProductCard from '@/components/common/ProductCard';
 
+const DEFAULT_FEATURED_SERVICES = [
+  {
+    id: 'srv-house-wiring',
+    name: 'Complete House Electrical Wiring',
+    slug: 'complete-house-electrical-wiring',
+    shortDescription: 'Standard copper conduit wiring, distribution board balancing, and earth leakage protection.',
+    imageUrl: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800',
+    basePrice: 1500,
+    priceType: 'INSPECTION_BASED',
+    estimatedDuration: '1-3 Days',
+    isEmergencyService: false,
+    category: { slug: 'electrical', name: 'Electrical' },
+  },
+  {
+    id: 'srv-emergency',
+    name: '24/7 Emergency Electrical Troubleshooting',
+    slug: 'emergency-electrical-troubleshooting',
+    shortDescription: 'Rapid 30-minute response for short circuits, sparking, sudden blackouts, and electrical hazards.',
+    imageUrl: 'https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?w=800',
+    basePrice: 500,
+    priceType: 'STARTING_FROM',
+    estimatedDuration: '45-90 Mins',
+    isEmergencyService: true,
+    category: { slug: 'electrical', name: 'Electrical' },
+  },
+  {
+    id: 'srv-cctv',
+    name: 'CCTV Camera Installation & Setup',
+    slug: 'cctv-camera-installation-setup',
+    shortDescription: 'Full HD/IP camera mounting, DVR/NVR network configuration, and live mobile surveillance.',
+    imageUrl: 'https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=800',
+    basePrice: 1200,
+    priceType: 'STARTING_FROM',
+    estimatedDuration: '2-4 Hours',
+    isEmergencyService: false,
+    category: { slug: 'cctv', name: 'CCTV & Security' },
+  },
+  {
+    id: 'srv-laptop',
+    name: 'Laptop & Computer Hardware Repair',
+    slug: 'laptop-computer-hardware-repair',
+    shortDescription: 'Chip-level diagnostics, thermal paste servicing, motherboard repair, and genuine screen replacement.',
+    imageUrl: 'https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?w=800',
+    basePrice: 600,
+    priceType: 'INSPECTION_BASED',
+    estimatedDuration: '1-2 Days',
+    isEmergencyService: false,
+    category: { slug: 'computer', name: 'Computer' },
+  },
+];
+
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<'all' | 'electrical' | 'cctv' | 'computer'>('all');
+  const [services, setServices] = useState<any[]>(DEFAULT_FEATURED_SERVICES);
+  const [loadingServices, setLoadingServices] = useState(true);
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
+    
+    // Fetch Featured Products
     fastFetch('/api/v1/products?featured=true&limit=4', { ttlMs: 120000 })
       .then((data) => {
         if (isMounted && data && Array.isArray(data.products)) {
@@ -45,10 +100,38 @@ export default function HomePage() {
         if (isMounted) setLoadingProducts(false);
       });
 
+    // Fetch Services
+    fastFetch('/api/v1/services', { ttlMs: 120000 })
+      .then((data) => {
+        if (isMounted && data && Array.isArray(data.services) && data.services.length > 0) {
+          setServices(data.services);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (isMounted) setLoadingServices(false);
+      });
+
     return () => {
       isMounted = false;
     };
   }, []);
+
+  const filteredServices = services.filter((s) => {
+    if (activeTab === 'all') return true;
+    const catSlug = s.category?.slug?.toLowerCase() || '';
+    const sName = s.name.toLowerCase();
+    if (activeTab === 'electrical') {
+      return catSlug.includes('electrical') || sName.includes('wiring') || sName.includes('troubleshooting');
+    }
+    if (activeTab === 'cctv') {
+      return catSlug.includes('cctv') || catSlug.includes('security') || sName.includes('cctv') || sName.includes('camera');
+    }
+    if (activeTab === 'computer') {
+      return catSlug.includes('computer') || catSlug.includes('laptop') || sName.includes('laptop') || sName.includes('hardware') || sName.includes('pc');
+    }
+    return true;
+  }).slice(0, 4);
 
   return (
     <div className="flex flex-col space-y-16 sm:space-y-24">
@@ -153,6 +236,151 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 2. VERIFIED SERVICES SHOWCASE (PLACED DIRECTLY ABOVE FEATURED PRODUCTS) */}
+      <section className="relative py-8 md:py-12 overflow-hidden">
+        {/* Hardware-accelerated radial glow */}
+        <div className="absolute top-1/3 right-10 w-[500px] h-[350px] bg-[radial-gradient(ellipse_at_center,rgba(0,140,255,0.12)_0%,rgba(0,140,255,0)_70%)] pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-50 border border-brand-200/80 text-brand-700 text-xs font-bold mb-2">
+                <Zap className="w-3.5 h-3.5 fill-brand-600 text-brand-600" />
+                <span>On-Demand Certified Specialists</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                Professional Electrical &amp; Technology Services
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl leading-relaxed">
+                Book verified master electricians and IT technicians in Moulvibazar and across Bangladesh. Transparent pricing, genuine parts, and post-service digital warranty.
+              </p>
+            </div>
+
+            <Link
+              href="/services"
+              className="text-xs sm:text-sm font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1.5 group shrink-0"
+            >
+              <span>Explore All Services</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+
+          {/* Filter Tabs */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+            {[
+              { id: 'all', label: 'All Services' },
+              { id: 'electrical', label: 'Electrical Wiring' },
+              { id: 'cctv', label: 'CCTV & Security' },
+              { id: 'computer', label: 'Computer & Hardware' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
+                  activeTab === tab.id
+                    ? 'bg-brand-500 text-white shadow-md shadow-brand-500/25'
+                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Services Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {filteredServices.map((service) => (
+              <div
+                key={service.id || service.slug}
+                className={`card-premium overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:-translate-y-1 ${
+                  service.isEmergencyService ? 'border-amber-300/80 bg-amber-50/15' : ''
+                }`}
+              >
+                <div>
+                  <div className="relative aspect-video sm:aspect-square w-full bg-slate-100 overflow-hidden">
+                    <img
+                      src={service.imageUrl || 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800'}
+                      alt={service.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <span className="absolute top-2.5 left-2.5 bg-white/95 backdrop-blur-md text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
+                      {service.category?.name || 'Service'}
+                    </span>
+                    {service.isEmergencyService && (
+                      <span className="absolute top-2.5 right-2.5 bg-red-600 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-xs flex items-center gap-1 animate-pulse">
+                        <Zap className="w-2.5 h-2.5 fill-white" />
+                        Rapid 24/7
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="p-4 space-y-2">
+                    <div className="flex items-center gap-1.5 text-slate-500 text-[11px]">
+                      <Clock className="w-3.5 h-3.5 text-brand-600 shrink-0" />
+                      <span>{service.estimatedDuration || '1-2 Hours'}</span>
+                    </div>
+
+                    <h3 className="font-bold text-slate-900 text-sm leading-tight line-clamp-2 group-hover:text-brand-600 transition-colors">
+                      {service.name}
+                    </h3>
+                    <p className="text-[11px] text-slate-500 leading-relaxed line-clamp-2">
+                      {service.shortDescription}
+                    </p>
+
+                    <div className="pt-2 border-t border-slate-100 flex items-baseline justify-between">
+                      <span className="text-[10px] text-slate-400 font-medium">
+                        {service.priceType === 'INSPECTION_BASED'
+                          ? 'Inspection: '
+                          : service.priceType === 'STARTING_FROM'
+                          ? 'Starting from: '
+                          : 'Service Charge: '}
+                      </span>
+                      <strong className="text-sm font-extrabold text-slate-900">
+                        ৳{Number(service.basePrice).toLocaleString()}
+                      </strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 pt-0 grid grid-cols-2 gap-2">
+                  <Link
+                    href={`/services/${service.slug}`}
+                    className="btn-secondary text-[11px] py-2 px-2 text-center rounded-xl font-bold justify-center"
+                  >
+                    Details
+                  </Link>
+                  <Link
+                    href={`/booking?service=${service.id || service.slug}`}
+                    className={`text-[11px] py-2 px-2 text-center rounded-xl font-bold justify-center flex items-center gap-1 ${
+                      service.isEmergencyService ? 'btn-danger shadow-md shadow-red-500/20' : 'btn-primary shadow-md shadow-brand-500/20'
+                    }`}
+                  >
+                    <span>Book Now</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Warranty Assurance Pill */}
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-brand-50 via-sky-50 to-indigo-50/60 border border-brand-200/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-brand-950">
+            <div className="flex items-center gap-2.5">
+              <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+              <span>
+                <strong>Post-Service Workmanship Warranty:</strong> Every verified electrical and tech service includes 30 days coverage registered in your customer dashboard.
+              </span>
+            </div>
+            <Link
+              href="/booking"
+              className="btn-primary text-xs py-2 px-4 shrink-0 shadow-sm"
+            >
+              Book Custom Service
+            </Link>
           </div>
         </div>
       </section>
