@@ -626,7 +626,7 @@ export default function Header() {
               </div>
 
               {/* Book Service CTA */}
-              <Link href="/services" className="hidden sm:inline-flex btn-primary text-xs sm:text-sm py-2 px-4">
+              <Link href="/booking" className="hidden sm:inline-flex btn-primary text-xs sm:text-sm py-2 px-4 shadow-md shadow-brand-500/20">
                 <Zap className="w-4 h-4 mr-1.5 fill-white" />
                 Book Service
               </Link>

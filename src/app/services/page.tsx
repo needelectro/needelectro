@@ -67,18 +67,22 @@ export default function ServicesPage() {
     }
   };
 
+  const [customerName, setCustomerName] = useState(user?.name || '');
+
   const handleOpenBooking = (service: any) => {
     setSelectedService(service);
     setBookingSuccess(null);
     setProblemDescription('');
+    setCustomerName(user?.name || '');
+    setPhone(user?.phone || '01733983752');
     setUrgency(service.isEmergencyService ? 'EMERGENCY' : 'NORMAL');
     setBookingModalOpen(true);
   };
 
   const handleCreateBooking = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) {
-      router.push('/customer/login?redirect=/services');
+    if (!phone) {
+      alert('Please enter your contact phone number');
       return;
     }
     if (!selectedService || !problemDescription) return;
@@ -94,8 +98,10 @@ export default function ServicesPage() {
           preferredDate,
           preferredTimeSlot,
           urgency,
+          customerPhone: phone,
+          customerName: customerName || user?.name || 'Customer',
           address: {
-            recipientName: user?.name || 'Customer',
+            recipientName: customerName || user?.name || 'Customer',
             phone,
             division: 'Sylhet',
             district: 'Moulvibazar',
@@ -361,32 +367,6 @@ export default function ServicesPage() {
                     </button>
                   </div>
                 </div>
-              ) : !user ? (
-                <div className="p-6 text-center space-y-4">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto">
-                    <ShieldCheck className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h4 className="font-extrabold text-slate-900 text-base">Customer Sign In Required</h4>
-                    <p className="text-xs text-slate-600 leading-relaxed max-w-sm mx-auto mt-1">
-                      To schedule a verified technician and receive real-time job updates, please sign in or create your customer account.
-                    </p>
-                  </div>
-                  <div className="space-y-2 pt-2 max-w-xs mx-auto">
-                    <Link
-                      href="/customer/login?redirect=/services"
-                      className="btn-primary w-full text-xs py-2.5 block text-center font-bold"
-                    >
-                      Sign In as Customer
-                    </Link>
-                    <Link
-                      href="/customer/register?redirect=/services"
-                      className="btn-secondary w-full text-xs py-2 block text-center bg-slate-50 border-slate-200"
-                    >
-                      Create Free Account
-                    </Link>
-                  </div>
-                </div>
               ) : (
                 <form onSubmit={handleCreateBooking} className="space-y-4">
                   {/* Problem Description */}
@@ -432,33 +412,47 @@ export default function ServicesPage() {
                     </div>
                   </div>
 
-                  {/* Area & Address */}
+                  {/* Customer Name & Phone */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Service Area (Moulvibazar) *</label>
-                      <select
-                        value={addressArea}
-                        onChange={(e) => setAddressArea(e.target.value)}
-                        className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
-                      >
-                        <option>Kusumbag Point</option>
-                        <option>Moulvibazar Sadar</option>
-                        <option>Court Road</option>
-                        <option>Sreemangal Road</option>
-                        <option>Shamshernagar Road</option>
-                        <option>Rajnagar</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Contact Phone *</label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Your Full Name *</label>
                       <input
                         type="text"
                         required
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="e.g. Rahim Ahmed"
+                        value={customerName}
+                        onChange={(e) => setCustomerName(e.target.value)}
                         className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
                       />
                     </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Contact Mobile Number *</label>
+                      <input
+                        type="tel"
+                        required
+                        placeholder="01XXXXXXXXX"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Area & Address */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Service Area (Moulvibazar) *</label>
+                    <select
+                      value={addressArea}
+                      onChange={(e) => setAddressArea(e.target.value)}
+                      className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+                    >
+                      <option>Kusumbag Point</option>
+                      <option>Moulvibazar Sadar</option>
+                      <option>Court Road</option>
+                      <option>Sreemangal Road</option>
+                      <option>Shamshernagar Road</option>
+                      <option>Rajnagar</option>
+                    </select>
                   </div>
 
                   <div>

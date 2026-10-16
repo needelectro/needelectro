@@ -89,7 +89,7 @@ export default function HomePage() {
             {/* CTA Buttons with Glass Sheen */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-2 w-full max-w-xs sm:max-w-none mx-auto">
               <Link
-                href="/services"
+                href="/booking"
                 className="btn-primary w-full sm:w-auto text-sm sm:text-base py-3 px-6 shadow-lg shadow-brand-500/25 justify-center"
               >
                 <Zap className="w-5 h-5 mr-2 fill-white shrink-0" />
