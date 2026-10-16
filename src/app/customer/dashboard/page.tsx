@@ -10,7 +10,7 @@ import {
   User, ChevronRight, Package, Clock, CheckCircle2, AlertCircle,
   Star, Bell, Settings, ArrowRight, Zap, MapPin, Lock, Eye, EyeOff,
   Plus, Trash2, Check, Phone, Mail, Sparkles, Building, Home, Briefcase,
-  Edit2, Save, X, Printer, ShieldCheck
+  Edit2, Save, X, ShieldCheck
 } from 'lucide-react';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -1163,13 +1163,13 @@ export default function CustomerDashboard() {
             </div>
           )}
 
-          {/* ORDERS TAB (WITH INVOICE & WARRANTY VERIFICATION) */}
+          {/* ORDERS TAB (ORDER DETAILS & WARRANTY VERIFICATION) */}
           {!loading && activeTab === 'orders' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-black text-slate-900">My Orders &amp; Invoices</h2>
-                  <p className="text-xs text-slate-500">Track shipments, verify digital warranties, and print official invoices</p>
+                  <h2 className="text-lg font-black text-slate-900">My Orders</h2>
+                  <p className="text-xs text-slate-500">Track shipments, items, delivery destination, and warranty records</p>
                 </div>
                 <Link href="/shop" className="btn-primary text-xs py-2">Shop Products</Link>
               </div>
@@ -1201,10 +1201,10 @@ export default function CustomerDashboard() {
                           setSelectedOrder(o);
                           setShowInvoiceModal(true);
                         }}
-                        className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
+                        className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5 hover:border-brand-400 hover:text-brand-600 transition-colors"
                       >
-                        <Printer className="w-3.5 h-3.5 text-brand-600" />
-                        View &amp; Print Invoice
+                        <Eye className="w-3.5 h-3.5 text-brand-600" />
+                        View Order Details
                       </button>
                     </div>
                   </div>
@@ -1244,35 +1244,35 @@ export default function CustomerDashboard() {
                       <div>
                         <div className="flex items-center gap-2">
                           <Image src="/logo.png" alt="NEED ELECTRO" width={120} height={40} className="h-7 w-auto object-contain" />
-                          <span className="text-[10px] font-bold uppercase tracking-wider bg-brand-50 text-brand-700 px-2 py-0.5 rounded">
-                            Official Tax Invoice
+                          <span className="text-[10px] font-bold uppercase tracking-wider bg-brand-50 text-brand-700 px-2.5 py-0.5 rounded-full">
+                            Order Details
                           </span>
                         </div>
                         <p className="text-[11px] text-slate-500 mt-1">
-                          NEED ELECTRO &bull; AMDADS GROUP &bull; Hotline: 01733 983752
+                          NEED ELECTRO &bull; AMDADS GROUP &bull; Nationwide Customer Support: 01733 983752
                         </p>
                       </div>
                       <button
                         onClick={() => setShowInvoiceModal(false)}
-                        className="text-slate-400 hover:text-slate-700 p-1 rounded-lg"
+                        className="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-slate-100 transition"
                       >
                         <X className="w-5 h-5" />
                       </button>
                     </div>
 
-                    {/* Invoice Body (Printable) */}
+                    {/* Order Details Body */}
                     <div className="space-y-4 text-xs text-slate-800">
                       <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl">
                         <div>
-                          <p className="font-bold text-slate-500 uppercase text-[10px]">Invoice Details</p>
+                          <p className="font-bold text-slate-500 uppercase text-[10px]">Order Information</p>
                           <p className="font-mono font-black text-brand-600 text-sm mt-0.5">{selectedOrder.orderNumber}</p>
                           <p className="text-slate-500">
                             Date: {new Date(selectedOrder.createdAt).toLocaleDateString('en-BD', { day: 'numeric', month: 'short', year: 'numeric' })}
                           </p>
-                          <p className="text-slate-500">Status: <strong className="text-emerald-600">{selectedOrder.status}</strong></p>
+                          <p className="text-slate-500">Status: <strong className="text-emerald-600 uppercase">{selectedOrder.status?.replace(/_/g, ' ')}</strong></p>
                         </div>
                         <div>
-                          <p className="font-bold text-slate-500 uppercase text-[10px]">Customer / Delivery To</p>
+                          <p className="font-bold text-slate-500 uppercase text-[10px]">Delivery Destination</p>
                           <p className="font-bold text-slate-900 mt-0.5">{selectedOrder.deliveryAddress?.recipientName || user.name}</p>
                           <p className="text-slate-600">{selectedOrder.deliveryAddress?.phone || user.phone}</p>
                           <p className="text-slate-600">{selectedOrder.deliveryAddress?.addressLine}</p>
@@ -1336,28 +1336,21 @@ export default function CustomerDashboard() {
                       <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl text-[11px] text-amber-900 space-y-1">
                         <p className="font-bold flex items-center gap-1.5">
                           <ShieldCheck className="w-4 h-4 text-amber-700" />
-                          Official Digital Warranty Notice:
+                          Official Digital Warranty Record:
                         </p>
                         <p>
-                          Keep this invoice and matching product serial numbers for official warranty service. You can submit warranty claims directly in your account.
+                          Keep your product serial numbers for official warranty service. You can submit warranty claims directly in your account.
                         </p>
                       </div>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex gap-3 pt-2 border-t border-slate-200">
-                      <button
-                        onClick={() => window.print()}
-                        className="btn-primary flex-1 text-xs py-2.5 flex items-center justify-center gap-2"
-                      >
-                        <Printer className="w-4 h-4" />
-                        Print Official Invoice
-                      </button>
+                    {/* Actions: Clean close without printing */}
+                    <div className="pt-2 border-t border-slate-200">
                       <button
                         onClick={() => setShowInvoiceModal(false)}
-                        className="btn-secondary text-xs py-2.5 px-5"
+                        className="btn-secondary w-full text-xs py-2.5 font-bold text-center justify-center hover:bg-slate-100 transition"
                       >
-                        Close
+                        Close Order Details
                       </button>
                     </div>
                   </div>

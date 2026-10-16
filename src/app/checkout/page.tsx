@@ -249,20 +249,11 @@ export default function CheckoutPage() {
 
           {/* Printable Invoice Summary Card */}
           <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm text-xs text-left space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div>
-                <h3 className="font-extrabold text-sm text-slate-900">Official Order Summary</h3>
-                <p className="text-[11px] text-slate-500">
-                  Estimated Delivery: <strong>{currentDistrictInfo?.deliveryTimeDays || '2-4 Days'}</strong>
-                </p>
-              </div>
-              <button
-                onClick={() => window.print()}
-                className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
-              >
-                <Printer className="w-3.5 h-3.5" />
-                Print Invoice
-              </button>
+            <div className="border-b border-slate-100 pb-3">
+              <h3 className="font-extrabold text-sm text-slate-900">Official Order Summary</h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Estimated Delivery: <strong>{currentDistrictInfo?.deliveryTimeDays || '2-4 Days'}</strong>
+              </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-slate-700">
