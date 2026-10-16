@@ -99,9 +99,11 @@ Sister concern of **Amdads Group**.
 
 ---
 
-## 🏢 Contact & Branch Information
+## 🏢 Business & Contact Information
 
-- **Branch Address**: Shop #5, MR Plaza, Kusumbag, Moulvibazar, Bangladesh
-- **Phone**: +880 1733 983752
+- **Headquarters & Diagnostic Hub**: Kusumbag Point, Moulvibazar Sadar, Moulvibazar 3200, Bangladesh
+- **Nationwide Coverage**: Insured courier delivery & certified technician dispatch across all 64 districts in Bangladesh
+- **Hotline & WhatsApp**: +880 1733 983752
 - **Email**: needelectro23@gmail.com
-- **Website**: [needelectro.com](https://www.needelectro.com)
+- **Official Website**: [www.needelectro.store](https://www.needelectro.store)
+

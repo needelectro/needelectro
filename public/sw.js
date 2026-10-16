@@ -1,4 +1,4 @@
-const CACHE_NAME = 'need-electro-v2';
+const CACHE_NAME = 'need-electro-v3';
 const STATIC_ASSETS = [
   '/',
   '/offline',

@@ -508,7 +508,7 @@ async function main() {
     update: {},
     create: {
       key: 'main_branch_location',
-      value: 'Shop #5, MR Plaza, Kusumbag, Moulvibazar',
+      value: 'Kusumbag Point, Moulvibazar Sadar, Moulvibazar 3200',
       description: 'Headquarters physical address.',
     },
   });
@@ -564,7 +564,7 @@ async function main() {
       division: 'Sylhet',
       district: 'Moulvibazar',
       upazila: 'Moulvibazar Sadar',
-      address: 'Shop #5, 2nd Floor, MR Plaza, Kusumbag Point, Moulvibazar',
+      address: 'Kusumbag Point, Moulvibazar Sadar, Moulvibazar 3200',
       phone: '01733 983752',
       email: 'moulvibazar@needelectro.com',
       managerName: 'Kalam Ahmed',

@@ -2,19 +2,16 @@
 
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/context/AuthContext';
 import { 
   Home, 
-  Wrench, 
-  ShoppingBag, 
+  LayoutGrid, 
+  Search, 
   Package, 
   User, 
   Briefcase, 
-  Wallet, 
-  Calendar,
-  Zap
+  Wallet
 } from 'lucide-react';
 
 export default function MobileNav() {
@@ -27,120 +24,105 @@ export default function MobileNav() {
     return null;
   }
 
-  const isCustomer = user?.role === 'CUSTOMER';
   const isTechnician = user?.role === 'TECHNICIAN';
 
+  // Navigation items for Marketplace Customer / Guest
+  const customerNavItems = [
+    {
+      label: 'Home',
+      href: '/',
+      icon: Home,
+      isActive: pathname === '/',
+    },
+    {
+      label: 'Categories',
+      href: '/categories',
+      icon: LayoutGrid,
+      isActive: pathname === '/categories' || pathname?.startsWith('/shop'),
+    },
+    {
+      label: 'Search',
+      href: '/search',
+      icon: Search,
+      isActive: pathname?.startsWith('/search'),
+    },
+    {
+      label: 'Orders',
+      href: '/orders',
+      icon: Package,
+      isActive: pathname?.startsWith('/orders'),
+    },
+    {
+      label: user ? 'Account' : 'Sign In',
+      href: user ? '/customer/dashboard' : '/customer/login',
+      icon: User,
+      isActive: pathname?.startsWith('/customer') || pathname === '/login',
+    },
+  ];
+
+  // Navigation items for Verified Technician
+  const technicianNavItems = [
+    {
+      label: 'Home',
+      href: '/technician/dashboard',
+      icon: Home,
+      isActive: pathname === '/technician/dashboard',
+    },
+    {
+      label: 'Jobs',
+      href: '/technician/jobs',
+      icon: Briefcase,
+      isActive: pathname === '/technician/jobs',
+    },
+    {
+      label: 'Earnings',
+      href: '/technician/earnings',
+      icon: Wallet,
+      isActive: pathname === '/technician/earnings',
+    },
+    {
+      label: 'Profile',
+      href: '/technician/profile',
+      icon: User,
+      isActive: pathname === '/technician/profile',
+    },
+  ];
+
+  const items = isTechnician ? technicianNavItems : customerNavItems;
+
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/92 backdrop-blur-md border-t border-slate-200/80 px-2 pt-1 pb-[calc(0.35rem+env(safe-area-inset-bottom,0px))] shadow-[0_-4px_20px_rgba(15,23,42,0.06)]">
-      <div className="flex items-center justify-around">
-        {/* Customer or Guest Navigation */}
-        {!isTechnician && (
-          <>
+    <nav 
+      aria-label="Mobile Navigation Bar"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-slate-200/90 px-1 pt-1.5 shadow-[0_-4px_25px_rgba(15,23,42,0.08)]"
+      style={{ paddingBottom: 'calc(0.45rem + env(safe-area-inset-bottom, 0px))' }}
+    >
+      <div className="flex items-center justify-around max-w-lg mx-auto">
+        {items.map((item) => {
+          const Icon = item.icon;
+          const active = item.isActive;
+
+          return (
             <Link
-              href="/"
-              className={`flex flex-col items-center py-1.5 px-2 rounded-xl text-[10px] font-semibold transition-colors ${
-                pathname === '/' ? 'text-brand-600' : 'text-slate-600 hover:text-slate-900'
+              key={item.href}
+              href={item.href}
+              className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-150 min-h-[48px] ${
+                active 
+                  ? 'text-brand-600 font-bold scale-[1.02]' 
+                  : 'text-slate-500 hover:text-slate-900 font-medium'
               }`}
             >
-              <Home className="w-5 h-5 mb-0.5" />
-              <span>Home</span>
-            </Link>
-
-            <Link
-              href="/services"
-              className={`flex flex-col items-center py-1.5 px-2 rounded-xl text-[10px] font-semibold transition-colors ${
-                pathname?.startsWith('/services') ? 'text-brand-600' : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Wrench className="w-5 h-5 mb-0.5" />
-              <span>Services</span>
-            </Link>
-
-            {/* Quick Emergency / Book Center Action */}
-            <Link
-              href="/services"
-              className="flex flex-col items-center -mt-5 group"
-            >
-              <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-brand-600 via-brand-500 to-sky-400 text-white flex items-center justify-center shadow-lg shadow-brand-500/40 border-4 border-white/95 backdrop-blur-md active:scale-95 group-hover:scale-105 transition-transform p-1.5">
-                <Image
-                  src="/brand/needelectro-icon.png"
-                  alt="Book Service"
-                  width={36}
-                  height={36}
-                  className="w-full h-full object-contain filter drop-shadow-sm"
-                />
+              <div className="relative">
+                <Icon className={`w-5 h-5 mb-0.5 transition-transform duration-150 ${active ? 'stroke-[2.5px]' : 'stroke-[1.8px]'}`} />
+                {active && (
+                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-brand-500 rounded-full" />
+                )}
               </div>
-              <span className="text-[10px] font-bold text-brand-600 mt-0.5">Book</span>
+              <span className={`text-[10px] tracking-tight leading-tight mt-0.5 ${active ? 'text-brand-600' : 'text-slate-600'}`}>
+                {item.label}
+              </span>
             </Link>
-
-            <Link
-              href="/shop"
-              className={`flex flex-col items-center py-1.5 px-2 rounded-xl text-[10px] font-semibold transition-colors ${
-                pathname?.startsWith('/shop') ? 'text-brand-600' : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <ShoppingBag className="w-5 h-5 mb-0.5" />
-              <span>Shop</span>
-            </Link>
-
-            <Link
-              href={user ? '/customer/dashboard' : '/login'}
-              className={`flex flex-col items-center py-1.5 px-2 rounded-xl text-[10px] font-semibold transition-colors ${
-                pathname?.startsWith('/customer') || pathname === '/login'
-                  ? 'text-brand-600'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <User className="w-5 h-5 mb-0.5" />
-              <span>{user ? 'Account' : 'Sign In'}</span>
-            </Link>
-          </>
-        )}
-
-        {/* Technician Specific Bottom Bar */}
-        {isTechnician && (
-          <>
-            <Link
-              href="/technician/dashboard"
-              className={`flex flex-col items-center py-1.5 px-3 rounded-xl text-[10px] font-semibold transition-colors ${
-                pathname === '/technician/dashboard' ? 'text-brand-600' : 'text-slate-600'
-              }`}
-            >
-              <Home className="w-5 h-5 mb-0.5" />
-              <span>Home</span>
-            </Link>
-
-            <Link
-              href="/technician/jobs"
-              className={`flex flex-col items-center py-1.5 px-3 rounded-xl text-[10px] font-semibold transition-colors ${
-                pathname === '/technician/jobs' ? 'text-brand-600' : 'text-slate-600'
-              }`}
-            >
-              <Briefcase className="w-5 h-5 mb-0.5" />
-              <span>Jobs</span>
-            </Link>
-
-            <Link
-              href="/technician/earnings"
-              className={`flex flex-col items-center py-1.5 px-3 rounded-xl text-[10px] font-semibold transition-colors ${
-                pathname === '/technician/earnings' ? 'text-brand-600' : 'text-slate-600'
-              }`}
-            >
-              <Wallet className="w-5 h-5 mb-0.5" />
-              <span>Earnings</span>
-            </Link>
-
-            <Link
-              href="/technician/profile"
-              className={`flex flex-col items-center py-1.5 px-3 rounded-xl text-[10px] font-semibold transition-colors ${
-                pathname === '/technician/profile' ? 'text-brand-600' : 'text-slate-600'
-              }`}
-            >
-              <User className="w-5 h-5 mb-0.5" />
-              <span>Profile</span>
-            </Link>
-          </>
-        )}
+          );
+        })}
       </div>
     </nav>
   );

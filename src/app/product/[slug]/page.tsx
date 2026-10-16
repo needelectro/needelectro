@@ -172,6 +172,26 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     ],
   };
 
+  // Fetch related and compatible products from same category
+  let relatedProducts: any[] = [];
+  try {
+    relatedProducts = await prisma.product.findMany({
+      where: {
+        categoryId: product.categoryId,
+        id: { not: product.id },
+        isActive: true,
+      },
+      take: 4,
+      include: {
+        category: true,
+        brand: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  } catch (err) {
+    console.warn('[ProductDetailPage] Related products fetch warning:', err);
+  }
+
   return (
     <>
       <script
@@ -182,7 +202,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-      <ProductDetailClient product={formattedProduct} />
+      <ProductDetailClient product={formattedProduct} relatedProducts={relatedProducts} />
     </>
   );
 }

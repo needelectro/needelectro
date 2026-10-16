@@ -51,7 +51,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default',
+    statusBarStyle: 'black-translucent', // Allows content to render under iOS status bar
     title: 'NEED ELECTRO SHOP',
   },
   openGraph: {
@@ -81,10 +81,16 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#008CFF',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#008CFF' },
+    { media: '(prefers-color-scheme: dark)', color: '#0F172A' },
+  ],
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
+  // NOTE: Do NOT set userScalable: false — it's a WCAG 2.1 violation (SC 1.4.4)
+  // and hurts Google mobile ranking. Allow users to zoom.
+  viewportFit: 'cover', // Enables safe-area-inset CSS env() on iOS notch devices
 };
 
 export default function RootLayout({
@@ -93,7 +99,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`overflow-x-hidden ${inter.variable}`}>
+    <html lang="en-BD" className={inter.variable}>
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/favicon.png" type="image/png" />
@@ -153,9 +159,9 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`flex flex-col min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 text-slate-900 selection:bg-brand-500 selection:text-white font-sans relative antialiased overflow-x-hidden max-w-full ${inter.className}`}>
+      <body className={`flex flex-col min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 text-slate-900 selection:bg-brand-500 selection:text-white font-sans relative antialiased max-w-full ${inter.className}`}>
         {/* Hardware-Accelerated Ambient Background Mesh & Tech Glows */}
-        <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden [contain:strict] [transform:translateZ(0)]">
+        <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
           {/* Subtle tech dot matrix */}
           <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:32px_32px] opacity-[0.16]" />
           
@@ -173,7 +179,7 @@ export default function RootLayout({
           <CartProvider>
             <AdminGuard>
               <Header />
-              <main className="flex-1 pb-24 md:pb-0 relative z-0 min-w-0 w-full overflow-x-hidden">{children}</main>
+              <main className="flex-1 pb-24 md:pb-0 relative z-0 min-w-0 w-full">{children}</main>
               <Footer />
               <MobileNav />
               <PwaInstallPrompt />

@@ -16,10 +16,10 @@ Progressive Web App (PWA), backed by a shared API and database.
 **Tagline:** Trusted Electrical and Technological Solutions\
 **Founded:** 2023\
 **Main Branch:** Moulvibazar, Bangladesh\
-**Address:** Shop #5, MR Plaza, Kusumbag, Moulvibazar\
+**Address:** Kusumbag Point, Moulvibazar Sadar, Moulvibazar 3200\
 **Phone:** 01733-983752\
 **Email:** needelectro23@gmail.com\
-**Website:** www.needelectro.com\
+**Website:** www.needelectro.store\
 **Organization:** Sister concern of Amdads Group
 
 ## 3. Product Goals

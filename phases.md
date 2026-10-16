@@ -250,7 +250,7 @@ Establish the physical branch network across Moulvibazar and Sylhet Division.
 ### Deliverables
 - [x] Branch model (`Branch` in Prisma schema)
 - [x] Branch network directory (`/branches`)
-- [x] Moulvibazar Headquarters (MR Plaza Kusumbag)
+- [x] Moulvibazar Headquarters (Kusumbag Point)
 - [x] Sreemangal Regional Lab & Hub (Station Road)
 - [x] Sylhet Divisional Center (Zindabazar)
 - [x] Branch dispatch logic & coverage mapping

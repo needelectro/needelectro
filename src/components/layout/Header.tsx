@@ -1,22 +1,23 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import Image from 'next/image';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/context/AuthContext';
 import { useCart } from '@/lib/context/CartContext';
 import BrandLogo from '@/components/common/BrandLogo';
-import { 
+import {
   Home,
-  Search, 
-  ShoppingCart, 
-  User as UserIcon, 
-  Zap, 
-  Menu, 
-  X, 
-  PhoneCall, 
-  ShieldCheck, 
-  Wrench, 
+  Search,
+  ShoppingCart,
+  User as UserIcon,
+  Zap,
+  Menu,
+  X,
+  PhoneCall,
+  ShieldCheck,
+  Wrench,
   ChevronDown,
   LayoutDashboard,
   LogOut,
@@ -26,24 +27,84 @@ import {
   MapPin,
   ShoppingBag,
   Users,
-  Layers
+  Layers,
+  Smartphone,
+  Camera,
+  Wifi,
+  ArrowRight,
 } from 'lucide-react';
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
 
 export default function Header() {
   const { user, logout } = useAuth();
   const { itemCount } = useCart();
   const pathname = usePathname();
+  const router = useRouter();
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
 
+  // Close all menus on navigation
   useEffect(() => {
     setMoreMenuOpen(false);
     setAccountMenuOpen(false);
     setMobileMenuOpen(false);
+    setSearchOpen(false);
   }, [pathname]);
+
+  // PWA Install Prompt capture
+  useEffect(() => {
+    if (window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone) {
+      setIsInstalled(true);
+    }
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    window.addEventListener('appinstalled', () => { setIsInstalled(true); setDeferredPrompt(null); });
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  // Lock body scroll only when mobile menu is explicitly open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [mobileMenuOpen]);
+
+  const handleInstallClick = useCallback(async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    setDeferredPrompt(null);
+  }, [deferredPrompt]);
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchOpen(false);
+      setSearchQuery('');
+    }
+  };
 
   // Isolate Admin: Do not render the public header for admin users or on /admin routes
   const isAdmin = user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN');
@@ -51,23 +112,16 @@ export default function Header() {
     return null;
   }
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      window.location.href = `/search?q=${encodeURIComponent(searchQuery.trim())}`;
-    }
-  };
-
   return (
     <>
-      {/* Top Hotline Bar */}
+      {/* ═══ TOP HOTLINE BAR (Desktop Only) ═══ */}
       <div className="bg-slate-950/85 backdrop-blur-md text-slate-300 text-xs py-1.5 px-4 hidden md:block border-b border-white/10 relative z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1.5 text-slate-300">
+            <a href="tel:01733983752" className="flex items-center gap-1.5 text-slate-300 hover:text-white transition">
               <PhoneCall className="w-3.5 h-3.5 text-brand-400" />
               Hotline: <strong className="text-white">01733 983752</strong>
-            </span>
+            </a>
           </div>
           <div className="flex items-center gap-4">
             <Link href="/training" className="text-slate-300 hover:text-white transition flex items-center gap-1">
@@ -93,76 +147,283 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Main Sticky Glass Header (Optimized for 60fps scrolling) */}
-      <header className="sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-white/80 shadow-[0_2px_15px_rgba(15,23,42,0.04)] transition-all">
+      {/* ═══ MOBILE HEADER (App-Style, lg:hidden) ═══ */}
+      <header className="lg:hidden sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-slate-200/90 shadow-[0_1px_8px_rgba(15,23,42,0.06)] select-none pt-safe">
+        <div className="px-3 h-14 flex items-center justify-between">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2 app-tap" aria-label="NEED ELECTRO Home">
+            <div className="w-8 h-8 rounded-xl bg-white p-0.5 border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.08)] flex items-center justify-center shrink-0">
+              <Image
+                src="/brand/needelectro-icon.png"
+                alt="NEED ELECTRO"
+                width={26}
+                height={26}
+                className="w-full h-full object-contain"
+                priority
+              />
+            </div>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1">
+                <span className="font-black text-sm text-slate-950 tracking-tight leading-none">NEED ELECTRO</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-500" />
+              </div>
+              <span className="text-[9px] font-bold text-slate-500 leading-none mt-0.5">Tech &amp; Electrical Services</span>
+            </div>
+          </Link>
+
+          {/* Right Actions */}
+          <div className="flex items-center gap-1.5">
+            {/* PWA App Install Button */}
+            {!isInstalled && (
+              <button
+                type="button"
+                onClick={handleInstallClick}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-brand-600 via-brand-500 to-sky-500 text-white text-[11px] font-black shadow-sm active:scale-95 border border-white/40 app-tap shrink-0"
+                title="Install as Mobile App"
+                aria-label="Install NEED ELECTRO as Mobile App"
+              >
+                <Smartphone className="w-3.5 h-3.5 animate-pulse" />
+                <span>App</span>
+              </button>
+            )}
+
+            {/* Hotline Call */}
+            <a
+              href="tel:01733983752"
+              className="p-1.5 text-slate-600 hover:text-brand-600 rounded-xl app-tap"
+              title="Call 24/7 Hotline"
+              aria-label="Call NEED ELECTRO Hotline"
+            >
+              <PhoneCall className="w-4 h-4 text-brand-600" />
+            </a>
+
+            {/* Search */}
+            <button
+              type="button"
+              onClick={() => setSearchOpen(!searchOpen)}
+              className="p-2 text-slate-600 hover:text-brand-600 rounded-xl app-tap"
+              title="Search"
+              aria-label="Search services and products"
+            >
+              <Search className="w-[18px] h-[18px]" />
+            </button>
+
+            {/* Cart */}
+            <Link
+              href="/cart"
+              className="relative p-2 text-slate-600 hover:text-brand-600 rounded-xl app-tap"
+              title="View Cart"
+              aria-label="View Cart"
+            >
+              <ShoppingCart className="w-[18px] h-[18px]" />
+              {itemCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 bg-brand-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs animate-in zoom-in">
+                  {itemCount > 9 ? '9+' : itemCount}
+                </span>
+              )}
+            </Link>
+
+            {/* Hamburger Menu */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 text-slate-700 hover:text-brand-600 rounded-xl app-tap focus:outline-none"
+              aria-label="Open mobile navigation drawer"
+              aria-expanded={mobileMenuOpen}
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Search Overlay */}
+        {searchOpen && (
+          <div className="border-t border-slate-100 bg-white px-3 py-2.5 animate-in slide-in-from-top-1">
+            <form onSubmit={handleSearchSubmit} className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <input
+                  type="search"
+                  placeholder="Search laptops, CCTV, services..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400"
+                  autoFocus
+                />
+              </div>
+              <button type="submit" className="btn-primary text-xs px-3 py-2 rounded-xl shrink-0">
+                Go
+              </button>
+            </form>
+          </div>
+        )}
+      </header>
+
+      {/* ═══ MOBILE NAVIGATION DRAWER OVERLAY ═══ */}
+      {mobileMenuOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-50 flex"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Mobile Navigation"
+        >
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+
+          {/* Drawer Panel */}
+          <div className="relative ml-auto w-[85vw] max-w-sm bg-white h-full flex flex-col shadow-2xl animate-in slide-in-from-right overflow-y-auto">
+            {/* Drawer Header */}
+            <div className="flex items-center justify-between px-4 py-4 border-b border-slate-100 shrink-0">
+              <div className="flex items-center gap-2">
+                <Image src="/brand/needelectro-icon.png" alt="NEED ELECTRO" width={28} height={28} className="rounded-lg" />
+                <div>
+                  <p className="font-black text-sm text-slate-900 leading-tight">NEED ELECTRO</p>
+                  <p className="text-[10px] text-slate-500">Bangladesh</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl app-tap"
+                aria-label="Close navigation"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* User Profile Section */}
+            {user ? (
+              <div className="px-4 py-3 bg-brand-50/60 border-b border-brand-100/60 shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-brand-500 text-white flex items-center justify-center font-black text-base shadow-sm shrink-0">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-bold text-sm text-slate-900 truncate">{user.name}</p>
+                    <span className="text-[10px] font-bold uppercase bg-brand-100 text-brand-700 px-2 py-0.5 rounded-full">{user.role}</span>
+                  </div>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {user.role === 'CUSTOMER' && (
+                    <Link href="/customer/dashboard" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-brand-700 bg-white rounded-xl border border-brand-200 app-tap">
+                      <LayoutDashboard className="w-3.5 h-3.5" /> My Account
+                    </Link>
+                  )}
+                  {user.role === 'TECHNICIAN' && (
+                    <Link href="/technician/dashboard" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-emerald-700 bg-white rounded-xl border border-emerald-200 app-tap">
+                      <LayoutDashboard className="w-3.5 h-3.5" /> Workspace
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => { logout(); setMobileMenuOpen(false); }}
+                    className="flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-red-600 bg-white rounded-xl border border-red-200 app-tap"
+                  >
+                    <LogOut className="w-3.5 h-3.5" /> Sign Out
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 shrink-0">
+                <div className="grid grid-cols-2 gap-2">
+                  <Link href="/customer/login" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold text-brand-700 bg-white rounded-xl border border-brand-200 shadow-xs app-tap">
+                    <UserIcon className="w-3.5 h-3.5" /> Customer Sign In
+                  </Link>
+                  <Link href="/technician/login" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold text-amber-800 bg-amber-50 rounded-xl border border-amber-200 shadow-xs app-tap">
+                    <Wrench className="w-3.5 h-3.5" /> Technician Portal
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            {/* Navigation Links */}
+            <nav className="flex-1 px-3 py-3 space-y-0.5">
+              {[
+                { href: '/', label: 'Home', icon: Home, color: 'text-brand-500 bg-brand-50' },
+                { href: '/services', label: 'Services & Booking', icon: Zap, color: 'text-amber-500 bg-amber-50' },
+                { href: '/shop', label: 'Shop Marketplace', icon: ShoppingBag, color: 'text-purple-500 bg-purple-50' },
+                { href: '/categories', label: 'All Categories', icon: Layers, color: 'text-sky-500 bg-sky-50' },
+                { href: '/warranty', label: 'Warranty Check', icon: ShieldCheck, color: 'text-emerald-500 bg-emerald-50' },
+                { href: '/technicians', label: 'Verified Technicians', icon: Users, color: 'text-indigo-500 bg-indigo-50' },
+                { href: '/training', label: 'Skills Academy', icon: GraduationCap, color: 'text-rose-500 bg-rose-50' },
+                { href: '/branches', label: 'Branch Network', icon: Building2, color: 'text-slate-500 bg-slate-100' },
+                { href: '/locations', label: '64 Districts Coverage', icon: MapPin, color: 'text-teal-500 bg-teal-50' },
+                { href: '/software', label: 'Software & ERP', icon: Layers, color: 'text-violet-500 bg-violet-50' },
+                { href: '/about', label: 'About Us', icon: Store, color: 'text-slate-400 bg-slate-50' },
+                { href: '/contact', label: 'Contact & Support', icon: PhoneCall, color: 'text-brand-400 bg-brand-50' },
+              ].map(({ href, label, icon: Icon, color }) => {
+                const isActive = pathname === href || (href !== '/' && pathname?.startsWith(href));
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all app-tap ${
+                      isActive ? 'bg-brand-50 text-brand-700' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${isActive ? 'bg-brand-100 text-brand-600' : color}`}>
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <span>{label}</span>
+                    {isActive && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-brand-500" />}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            {/* CTA Footer */}
+            <div className="px-4 pb-6 pt-3 border-t border-slate-100 space-y-2 shrink-0">
+              <Link href="/services" onClick={() => setMobileMenuOpen(false)} className="btn-primary w-full justify-center py-3 app-tap">
+                <Zap className="w-4 h-4 mr-2 fill-white" /> Book a Service Now
+              </Link>
+              <a href="tel:01733983752" className="flex items-center justify-center gap-2 w-full py-2.5 text-sm font-semibold text-slate-600 bg-slate-50 rounded-xl border border-slate-200 app-tap">
+                <PhoneCall className="w-4 h-4 text-brand-500" /> 01733 983752
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ DESKTOP HEADER (hidden on mobile) ═══ */}
+      <header className="hidden lg:block sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-white/80 shadow-[0_2px_15px_rgba(15,23,42,0.04)] transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
             <BrandLogo priority size="md" />
 
-            {/* Desktop Navigation Links - Glassmorphism Buttons */}
+            {/* Desktop Navigation Links */}
             <nav className="hidden lg:flex items-center gap-2 font-medium">
-              {/* 1. Home */}
-              <Link
-                href="/"
-                className={`group flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 border ${
-                  pathname === '/'
-                    ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white border-white/25 shadow-md shadow-brand-500/25 scale-[1.02]'
-                    : 'bg-white/65 hover:bg-white/95 text-slate-700 hover:text-brand-600 border-white/85 hover:border-brand-200/80 backdrop-blur-md shadow-2xs hover:shadow-md hover:-translate-y-0.5 active:scale-95'
-                }`}
-              >
-                <Home className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-110 ${pathname === '/' ? 'text-white' : 'text-brand-500'}`} />
-                <span>Home</span>
-              </Link>
+              {[
+                { href: '/', label: 'Home', icon: Home, active: pathname === '/' },
+                { href: '/services', label: 'Services', icon: Zap, active: pathname?.startsWith('/services') },
+                { href: '/shop', label: 'Shop', icon: ShoppingBag, active: pathname?.startsWith('/shop') || pathname?.startsWith('/product') },
+                { href: '/warranty', label: 'Warranty', icon: ShieldCheck, active: pathname?.startsWith('/warranty') },
+              ].map(({ href, label, icon: Icon, active }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`group flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 border ${
+                    active
+                      ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white border-white/25 shadow-md shadow-brand-500/25 scale-[1.02]'
+                      : 'bg-white/65 hover:bg-white/95 text-slate-700 hover:text-brand-600 border-white/85 hover:border-brand-200/80 backdrop-blur-md shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-md hover:-translate-y-0.5 active:scale-95'
+                  }`}
+                >
+                  <Icon className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-110 ${active ? 'text-white' : ''}`} />
+                  <span>{label}</span>
+                </Link>
+              ))}
 
-              {/* 2. Services */}
-              <Link
-                href="/services"
-                className={`group flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 border ${
-                  pathname?.startsWith('/services')
-                    ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white border-white/25 shadow-md shadow-brand-500/25 scale-[1.02]'
-                    : 'bg-white/65 hover:bg-white/95 text-slate-700 hover:text-brand-600 border-white/85 hover:border-brand-200/80 backdrop-blur-md shadow-2xs hover:shadow-md hover:-translate-y-0.5 active:scale-95'
-                }`}
-              >
-                <Zap className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-110 ${pathname?.startsWith('/services') ? 'fill-white text-white' : 'text-amber-500'}`} />
-                <span>Services</span>
-              </Link>
-
-              {/* 3. Shop */}
-              <Link
-                href="/shop"
-                className={`group flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 border ${
-                  pathname?.startsWith('/shop') || pathname?.startsWith('/product')
-                    ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white border-white/25 shadow-md shadow-brand-500/25 scale-[1.02]'
-                    : 'bg-white/65 hover:bg-white/95 text-slate-700 hover:text-brand-600 border-white/85 hover:border-brand-200/80 backdrop-blur-md shadow-2xs hover:shadow-md hover:-translate-y-0.5 active:scale-95'
-                }`}
-              >
-                <ShoppingBag className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-110 ${pathname?.startsWith('/shop') || pathname?.startsWith('/product') ? 'text-white' : 'text-purple-600'}`} />
-                <span>Shop</span>
-              </Link>
-
-              {/* 4. Warranty */}
-              <Link
-                href="/warranty"
-                className={`group flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 border ${
-                  pathname?.startsWith('/warranty')
-                    ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white border-white/25 shadow-md shadow-brand-500/25 scale-[1.02]'
-                    : 'bg-white/65 hover:bg-white/95 text-slate-700 hover:text-brand-600 border-white/85 hover:border-brand-200/80 backdrop-blur-md shadow-2xs hover:shadow-md hover:-translate-y-0.5 active:scale-95'
-                }`}
-              >
-                <ShieldCheck className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-110 ${pathname?.startsWith('/warranty') ? 'text-white' : 'text-emerald-600'}`} />
-                <span>Warranty</span>
-              </Link>
-
-              {/* Secondary More Dropdown Glassmorphism Button */}
+              {/* More Dropdown */}
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setMoreMenuOpen(!moreMenuOpen)}
                   className={`flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 border ${
-                    moreMenuOpen || pathname === '/technicians' || pathname === '/locations' || pathname === '/training' || pathname === '/branches' || pathname === '/about'
+                    moreMenuOpen
                       ? 'bg-white text-brand-600 border-brand-300 shadow-sm'
-                      : 'bg-white/50 hover:bg-white/90 text-slate-600 hover:text-slate-900 border-white/80 backdrop-blur-md shadow-2xs hover:shadow-sm'
+                      : 'bg-white/50 hover:bg-white/90 text-slate-600 hover:text-slate-900 border-white/80 backdrop-blur-md shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-sm'
                   }`}
                   aria-expanded={moreMenuOpen}
                 >
@@ -171,102 +432,87 @@ export default function Header() {
                 </button>
 
                 {moreMenuOpen && (
-                  <div className="absolute top-full mt-2 right-0 w-52 bg-white/95 backdrop-blur-xl border border-white/90 rounded-2xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2">
-                    <Link
-                      href="/technicians"
-                      onClick={() => setMoreMenuOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600 transition"
-                    >
-                      <Users className="w-4 h-4 text-sky-500 shrink-0" />
-                      <span>Technicians</span>
-                    </Link>
-                    <Link
-                      href="/locations"
-                      onClick={() => setMoreMenuOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600 transition"
-                    >
-                      <MapPin className="w-4 h-4 text-emerald-500 shrink-0" />
-                      <span>Locations</span>
-                    </Link>
-                    <Link
-                      href="/training"
-                      onClick={() => setMoreMenuOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600 transition"
-                    >
-                      <GraduationCap className="w-4 h-4 text-amber-500 shrink-0" />
-                      <span>Training Academy</span>
-                    </Link>
-                    <Link
-                      href="/software"
-                      onClick={() => setMoreMenuOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600 transition"
-                    >
-                      <Layers className="w-4 h-4 text-brand-500 shrink-0" />
-                      <span>Software &amp; ERP</span>
-                    </Link>
-                    <Link
-                      href="/branches"
-                      onClick={() => setMoreMenuOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600 transition"
-                    >
-                      <Building2 className="w-4 h-4 text-sky-500 shrink-0" />
-                      <span>Branch Network</span>
-                    </Link>
-                    <Link
-                      href="/about"
-                      onClick={() => setMoreMenuOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600 transition"
-                    >
-                      <Store className="w-4 h-4 text-slate-500 shrink-0" />
-                      <span>About Us</span>
-                    </Link>
+                  <div className="absolute top-full mt-2 right-0 w-52 bg-white/96 backdrop-blur-xl border border-white/90 rounded-2xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2">
+                    {[
+                      { href: '/technicians', label: 'Technicians', icon: Users, color: 'text-sky-500' },
+                      { href: '/locations', label: 'Locations', icon: MapPin, color: 'text-emerald-500' },
+                      { href: '/training', label: 'Training Academy', icon: GraduationCap, color: 'text-amber-500' },
+                      { href: '/software', label: 'Software & ERP', icon: Layers, color: 'text-brand-500' },
+                      { href: '/branches', label: 'Branch Network', icon: Building2, color: 'text-sky-600' },
+                      { href: '/about', label: 'About Us', icon: Store, color: 'text-slate-500' },
+                    ].map(({ href, label, icon: Icon, color }) => (
+                      <Link
+                        key={href}
+                        href={href}
+                        onClick={() => setMoreMenuOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600 transition"
+                      >
+                        <Icon className={`w-4 h-4 ${color} shrink-0`} />
+                        <span>{label}</span>
+                      </Link>
+                    ))}
                   </div>
                 )}
               </div>
             </nav>
 
-            {/* Header Right Actions */}
-            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-              {/* Search Toggle */}
+            {/* Desktop Right Actions */}
+            <div className="flex items-center gap-2 shrink-0">
+              {/* PWA Install (xl+) */}
+              {!isInstalled && (
+                <button
+                  type="button"
+                  onClick={handleInstallClick}
+                  className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-brand-200 bg-brand-50 hover:bg-brand-100 text-brand-700 text-xs font-bold transition shadow-xs app-tap"
+                  title="Install as Mobile App"
+                >
+                  <Smartphone className="w-3.5 h-3.5 text-brand-600 animate-pulse" />
+                  <span>Install App</span>
+                </button>
+              )}
+
+              {/* Search */}
               <button
                 onClick={() => setSearchOpen(!searchOpen)}
-                className="p-2 sm:p-2.5 text-slate-600 hover:text-brand-500 hover:bg-slate-100 rounded-xl transition-all"
+                className="p-2.5 text-slate-600 hover:text-brand-500 hover:bg-slate-100 rounded-xl transition-all"
                 title="Search services and products"
+                aria-label="Search"
               >
-                <Search className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Search className="w-5 h-5" />
               </button>
 
-              {/* Cart Button */}
+              {/* Cart */}
               <Link
                 href="/cart"
-                className="relative p-2 sm:p-2.5 text-slate-600 hover:text-brand-500 hover:bg-slate-100 rounded-xl transition-all"
+                className="relative p-2.5 text-slate-600 hover:text-brand-500 hover:bg-slate-100 rounded-xl transition-all"
                 title="View Cart"
+                aria-label="View Cart"
               >
-                <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
+                <ShoppingCart className="w-5 h-5" />
                 {itemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-brand-500 text-white text-[10px] sm:text-[11px] font-bold w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center shadow-xs animate-in zoom-in">
-                    {itemCount}
+                  <span className="absolute -top-1 -right-1 bg-brand-500 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-xs animate-in zoom-in">
+                    {itemCount > 9 ? '9+' : itemCount}
                   </span>
                 )}
               </Link>
 
-              {/* Account Dropdown */}
+              {/* Account */}
               <div className="relative">
                 {user ? (
-                  <div className="relative">
+                  <>
                     <button
                       onClick={() => setAccountMenuOpen(!accountMenuOpen)}
-                      className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-xl border border-white/80 bg-white/60 backdrop-blur-md hover:bg-white/90 hover:border-brand-300 transition-all text-xs font-semibold shadow-xs"
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/80 bg-white/60 backdrop-blur-md hover:bg-white/90 hover:border-brand-300 transition-all text-xs font-semibold shadow-xs"
+                      aria-expanded={accountMenuOpen}
                     >
-                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-brand-500 text-white flex items-center justify-center font-bold shadow-xs text-xs">
-                        {user.name.charAt(0)}
+                      <div className="w-7 h-7 rounded-lg bg-brand-500 text-white flex items-center justify-center font-bold shadow-xs text-xs shrink-0">
+                        {user.name.charAt(0).toUpperCase()}
                       </div>
-                      <span className="hidden md:inline max-w-[100px] truncate">{user.name.split(' ')[0]}</span>
-                      <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                      <span className="hidden md:inline max-w-[90px] truncate">{user.name.split(' ')[0]}</span>
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${accountMenuOpen ? 'rotate-180' : ''}`} />
                     </button>
-
                     {accountMenuOpen && (
-                      <div className="absolute right-0 mt-2 w-56 bg-white/85 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/80 py-2 z-50 animate-in fade-in zoom-in-95">
+                      <div className="absolute right-0 mt-2 w-56 bg-white/90 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/80 py-2 z-50 animate-in fade-in zoom-in-95">
                         <div className="px-4 py-2 border-b border-slate-100/80">
                           <p className="text-xs text-slate-500">Signed in as</p>
                           <p className="text-sm font-bold text-slate-900 truncate">{user.name}</p>
@@ -274,67 +520,37 @@ export default function Header() {
                             {user.role}
                           </span>
                         </div>
-
                         {user.role === 'CUSTOMER' && (
-                          <Link
-                            href="/customer/dashboard"
-                            onClick={() => setAccountMenuOpen(false)}
-                            className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-white/80 hover:text-brand-600 transition"
-                          >
-                            <LayoutDashboard className="w-4 h-4 text-brand-500" />
-                            Customer Portal
+                          <Link href="/customer/dashboard" onClick={() => setAccountMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-white/80 hover:text-brand-600 transition">
+                            <LayoutDashboard className="w-4 h-4 text-brand-500" /> Customer Portal
                           </Link>
                         )}
-
                         {user.role === 'TECHNICIAN' && (
-                          <Link
-                            href="/technician/dashboard"
-                            onClick={() => setAccountMenuOpen(false)}
-                            className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-white/80 hover:text-emerald-600 transition"
-                          >
-                            <LayoutDashboard className="w-4 h-4 text-emerald-500" />
-                            Technician Workspace
+                          <Link href="/technician/dashboard" onClick={() => setAccountMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-white/80 hover:text-emerald-600 transition">
+                            <LayoutDashboard className="w-4 h-4 text-emerald-500" /> Technician Workspace
                           </Link>
                         )}
-
                         {(user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') && (
-                          <Link
-                            href="/admin"
-                            onClick={() => setAccountMenuOpen(false)}
-                            className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-white/80 hover:text-amber-600 transition"
-                          >
-                            <LayoutDashboard className="w-4 h-4 text-amber-500" />
-                            Admin Console
+                          <Link href="/admin" onClick={() => setAccountMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-white/80 hover:text-amber-600 transition">
+                            <LayoutDashboard className="w-4 h-4 text-amber-500" /> Admin Console
                           </Link>
                         )}
-
                         <button
-                          onClick={() => {
-                            logout();
-                            setAccountMenuOpen(false);
-                          }}
+                          onClick={() => { logout(); setAccountMenuOpen(false); }}
                           className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50/80 text-left border-t border-slate-100/80 mt-1 transition"
                         >
-                          <LogOut className="w-4 h-4" />
-                          Sign Out
+                          <LogOut className="w-4 h-4" /> Sign Out
                         </button>
                       </div>
                     )}
-                  </div>
+                  </>
                 ) : (
                   <div className="hidden sm:flex items-center gap-2">
-                    <Link
-                      href="/customer/login"
-                      className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-brand-600 rounded-xl bg-white/60 hover:bg-white/90 border border-white/80 backdrop-blur-md shadow-2xs transition"
-                    >
+                    <Link href="/customer/login" className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-brand-600 rounded-xl bg-white/60 hover:bg-white/90 border border-white/80 backdrop-blur-md shadow-xs transition">
                       <UserIcon className="w-3.5 h-3.5 text-brand-500" />
                       Sign In
                     </Link>
-                    <Link
-                      href="/technician/login"
-                      className="hidden md:flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-amber-800 hover:text-amber-900 rounded-xl bg-amber-50/90 hover:bg-amber-100 border border-amber-200/60 backdrop-blur-md transition"
-                      title="Technician Workspace Portal"
-                    >
+                    <Link href="/technician/login" className="hidden md:flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-amber-800 hover:text-amber-900 rounded-xl bg-amber-50/90 hover:bg-amber-100 border border-amber-200/60 backdrop-blur-md transition" title="Technician Workspace Portal">
                       <Wrench className="w-3.5 h-3.5 text-amber-600" />
                       Technician
                     </Link>
@@ -342,38 +558,27 @@ export default function Header() {
                 )}
               </div>
 
-              {/* Book Service CTA Button (Tablet & Desktop, mobile uses bottom floating navigation) */}
-              <Link
-                href="/services"
-                className="hidden sm:inline-flex btn-primary text-xs sm:text-sm py-2 px-3.5 sm:px-4"
-              >
+              {/* Book Service CTA */}
+              <Link href="/services" className="hidden sm:inline-flex btn-primary text-xs sm:text-sm py-2 px-4">
                 <Zap className="w-4 h-4 mr-1.5 fill-white" />
                 Book Service
               </Link>
-
-              {/* Mobile menu hamburger */}
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-2 text-slate-600 hover:bg-white/80 border border-transparent hover:border-white/80 rounded-xl transition"
-              >
-                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </button>
             </div>
           </div>
         </div>
 
-        {/* Global Search Bar (Expands on click) */}
+        {/* Desktop Search Bar (Expands on click) */}
         {searchOpen && (
           <div className="border-t border-white/60 bg-white/80 backdrop-blur-2xl px-4 py-3 shadow-lg animate-in fade-in">
             <form onSubmit={handleSearchSubmit} className="max-w-3xl mx-auto flex gap-2">
               <div className="relative flex-1">
                 <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
-                  type="text"
+                  type="search"
                   placeholder="Search electrical services, CCTV, laptops, components..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 text-sm bg-white/70 border border-white/90 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-brand-500 backdrop-blur-md shadow-inner"
+                  className="w-full pl-10 pr-4 py-2 text-sm bg-white/70 border border-white/90 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/30 backdrop-blur-md shadow-inner"
                   autoFocus
                 />
               </div>
@@ -381,136 +586,6 @@ export default function Header() {
                 Search
               </button>
             </form>
-          </div>
-        )}
-
-        {/* Mobile Navigation Dropdown */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden border-t border-white/60 bg-white/90 backdrop-blur-2xl px-4 pt-3 pb-6 space-y-3 shadow-2xl">
-            <nav className="space-y-1 text-sm font-medium text-slate-800">
-              <Link
-                href="/"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-xl hover:bg-white/80 hover:text-brand-600 transition"
-              >
-                Home
-              </Link>
-              <Link
-                href="/services"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-xl hover:bg-white/80 hover:text-brand-600 transition"
-              >
-                Services
-              </Link>
-              <Link
-                href="/shop"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-xl hover:bg-white/80 hover:text-brand-600 transition"
-              >
-                Shop Marketplace
-              </Link>
-              <Link
-                href="/technicians"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-xl hover:bg-slate-50"
-              >
-                Verified Technicians
-              </Link>
-              <Link
-                href="/warranty"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-xl hover:bg-slate-50"
-              >
-                Warranty Check
-              </Link>
-              <Link
-                href="/training"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-xl hover:bg-slate-50 text-amber-600 font-semibold"
-              >
-                Skills Academy &amp; Training
-              </Link>
-              <Link
-                href="/branches"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-xl hover:bg-slate-50"
-              >
-                Branch Network
-              </Link>
-              <Link
-                href="/become-a-technician"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-xl hover:bg-slate-50 text-brand-600 font-semibold"
-              >
-                Become a Technician
-              </Link>
-              <Link
-                href="/become-a-seller"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-xl hover:bg-slate-50 text-emerald-600 font-semibold"
-              >
-                Become a Merchant / Seller
-              </Link>
-              <Link
-                href="/locations"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-xl hover:bg-slate-50 text-brand-600 font-semibold"
-              >
-                64 Districts Coverage
-              </Link>
-              <Link
-                href="/about"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-xl hover:bg-slate-50"
-              >
-                About Us
-              </Link>
-              <Link
-                href="/contact"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-xl hover:bg-slate-50"
-              >
-                Contact &amp; Support
-              </Link>
-            </nav>
-
-            {!user && (
-              <div className="pt-3 border-t border-slate-100 space-y-2">
-                <div className="flex gap-2">
-                  <Link
-                    href="/customer/login"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex-1 text-center py-2.5 text-xs font-bold border border-brand-200 text-brand-700 rounded-xl bg-brand-50/80 hover:bg-brand-100 transition"
-                  >
-                    Customer Sign In
-                  </Link>
-                  <Link
-                    href="/technician/login"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex-1 text-center py-2.5 text-xs font-bold border border-amber-200 text-amber-800 rounded-xl bg-amber-50/80 hover:bg-amber-100 transition"
-                  >
-                    Technician Portal
-                  </Link>
-                </div>
-                <div className="flex gap-2 text-center text-[11px] font-semibold text-slate-500">
-                  <Link
-                    href="/customer/register"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex-1 py-1 hover:text-brand-600 transition"
-                  >
-                    Register as Customer
-                  </Link>
-                  <span className="text-slate-300">|</span>
-                  <Link
-                    href="/technician/register"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex-1 py-1 hover:text-amber-600 transition"
-                  >
-                    Apply as Technician
-                  </Link>
-                </div>
-              </div>
-            )}
           </div>
         )}
       </header>

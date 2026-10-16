@@ -13,8 +13,6 @@
 
 @layer base {
   html {
-    overflow-x: hidden;
-    max-width: 100vw;
     width: 100%;
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
@@ -28,10 +26,8 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     min-height: 100vh;
-    max-width: 100vw;
-    overflow-x: hidden;
+    width: 100%;
     position: relative;
-    transform: translateZ(0); /* Hardware accelerated composite layer */
   }
 
   img, svg, video {
@@ -139,4 +135,47 @@
 
 .animate-soft-pulse {
   animation: soft-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ─── Mobile App UX Utilities ─── */
+
+/* app-tap: Remove iOS tap highlight, optimize touch response for app-like feel */
+.app-tap {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* no-scrollbar: Hide scrollbar while keeping scroll functionality */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE/Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;             /* Chrome/Safari */
+}
+
+/* scrollbar-thin: Thin styled scrollbar for admin/dashboard panels */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 9999px;
+}
+
+/* Safe-area padding for iOS notch/home indicator */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
 }
