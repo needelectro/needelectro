@@ -13,7 +13,7 @@ test('Mobile Navigation: Must have the 5 primary marketplace destinations with c
   assert.ok(content.includes("'Home'"), 'MobileNav must have Home destination');
   assert.ok(content.includes("'Services'") || content.includes("'Categories'"), 'MobileNav must have Services or Categories destination');
   assert.ok(content.includes("'Book Now'") || content.includes("'Search'"), 'MobileNav must have Book Now or Search destination');
-  assert.ok(content.includes("'My Bookings'") || content.includes("'Orders'"), 'MobileNav must have Bookings or Orders destination');
+  assert.ok(content.includes("'Shop'") || content.includes("'My Bookings'") || content.includes("'Orders'"), 'MobileNav must have Shop, Bookings or Orders destination');
   assert.ok(content.includes("'Account'") || content.includes("'Sign In'"), 'MobileNav must have Account/Sign In destination');
 
   // Verify paths

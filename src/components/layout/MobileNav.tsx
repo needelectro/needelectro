@@ -14,7 +14,8 @@ import {
   Wallet,
   Zap,
   CalendarCheck,
-  ClipboardList
+  ClipboardList,
+  ShoppingBag
 } from 'lucide-react';
 
 export default function MobileNav() {
@@ -50,10 +51,10 @@ export default function MobileNav() {
       isActive: pathname?.startsWith('/booking'),
     },
     {
-      label: 'My Bookings',
-      href: user ? '/customer/dashboard?tab=bookings' : '/customer/login?redirect=/customer/dashboard?tab=bookings',
-      icon: ClipboardList,
-      isActive: pathname?.includes('tab=bookings'),
+      label: 'Shop',
+      href: '/shop',
+      icon: ShoppingBag,
+      isActive: pathname?.startsWith('/shop') || pathname?.startsWith('/parts'),
     },
     {
       label: user ? 'Account' : 'Sign In',
