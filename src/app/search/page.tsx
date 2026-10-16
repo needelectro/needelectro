@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Search, Package, Wrench, ArrowRight, Zap, RefreshCw } from 'lucide-react';
+import ProductCard from '@/components/common/ProductCard';
 
 function SearchContent() {
   const searchParams = useSearchParams();
@@ -118,29 +119,9 @@ function SearchContent() {
               <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
                 <Package className="w-5 h-5 text-brand-500" /> Products & Hardware ({products.length})
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                 {products.map((p) => (
-                  <div key={p.id} className="bg-white rounded-2xl border border-slate-200 p-4 flex flex-col justify-between hover:shadow-md transition">
-                    <div className="space-y-2">
-                      <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-                        {p.category?.name || 'Hardware'}
-                      </span>
-                      <h3 className="font-bold text-slate-900 text-xs line-clamp-2">{p.name}</h3>
-                      <p className="text-[11px] text-slate-500 line-clamp-2">{p.shortDescription}</p>
-                    </div>
-                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between mt-3">
-                      <div>
-                        <div className="text-xs font-black text-slate-900">৳{p.price?.toLocaleString()}</div>
-                        {p.salePrice && <div className="text-[10px] text-emerald-600">৳{p.salePrice}</div>}
-                      </div>
-                      <Link
-                        href={`/product/${p.slug}`}
-                        className="px-3 py-1.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-[11px]"
-                      >
-                        View
-                      </Link>
-                    </div>
-                  </div>
+                  <ProductCard key={p.id} product={p} />
                 ))}
               </div>
             </div>

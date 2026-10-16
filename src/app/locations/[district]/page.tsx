@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { BANGLADESH_DISTRICTS, getDistrictBySlug } from '@/lib/data/districts';
+import ProductCard from '@/components/common/ProductCard';
 
 interface PageProps {
   params: Promise<{
@@ -293,64 +294,10 @@ export default async function DistrictLandingPage({ params }: PageProps) {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {products.map((product) => {
-              const imageList = product.images ? product.images.split(',') : [];
-              const mainImg = imageList[0] || '/brand/needelectro-icon.png';
-
-              return (
-                <div
-                  key={product.id}
-                  className="group rounded-2xl bg-white border border-slate-200/80 p-4 hover:shadow-xl hover:border-brand-500/50 transition-all flex flex-col justify-between"
-                >
-                  <div className="space-y-3">
-                    <div className="relative h-44 w-full bg-slate-50 rounded-xl overflow-hidden flex items-center justify-center">
-                      <Image
-                        src={mainImg}
-                        alt={`${product.name} available in ${district.name}`}
-                        fill
-                        className="object-contain p-2 group-hover:scale-105 transition-transform"
-                        sizes="(max-width: 768px) 100vw, 33vw"
-                      />
-                      {product.condition === 'REFURBISHED' && (
-                        <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">
-                          Refurbished
-                        </span>
-                      )}
-                    </div>
-
-                    <div>
-                      <span className="text-[11px] font-bold text-brand-600 uppercase tracking-wider">
-                        {product.category?.name || 'Electronics'}
-                      </span>
-                      <h3 className="font-bold text-slate-900 text-sm line-clamp-2 mt-0.5 group-hover:text-brand-600 transition-colors">
-                        {product.name}
-                      </h3>
-                      <p className="text-xs text-slate-500 line-clamp-2 mt-1">
-                        {product.shortDescription}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
-                    <div>
-                      <div className="text-base font-black text-slate-900">
-                        ৳{product.price.toLocaleString('en-BD')}
-                      </div>
-                      <div className="text-[10px] text-emerald-600 font-semibold">
-                        In Stock &bull; Ships to {district.name}
-                      </div>
-                    </div>
-                    <Link
-                      href={`/product/${product.slug}`}
-                      className="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-brand-600 text-white text-xs font-semibold transition-colors"
-                    >
-                      View Details
-                    </Link>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
           </div>
         </div>
       )}

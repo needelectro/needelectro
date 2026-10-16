@@ -18,6 +18,7 @@ import {
   Layers,
   Sparkles
 } from 'lucide-react';
+import ProductCard from '@/components/common/ProductCard';
 
 export const revalidate = 60; // Incremental Static Regeneration every 60 seconds
 
@@ -159,60 +160,10 @@ export default async function HomePage() {
           </div>
 
           {featuredProducts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {featuredProducts.map((p) => {
-                const img = Array.isArray(p.images) && p.images.length > 0 
-                  ? p.images[0] 
-                  : (typeof p.images === 'string' ? p.images.split(',')[0].trim() : '/brand/needelectro-icon.png');
-                const price = p.discountPrice ?? p.price;
-                return (
-                  <div key={p.id} className="card-premium overflow-hidden group flex flex-col justify-between">
-                    <div>
-                      <div className="relative h-44 w-full bg-white p-3 flex items-center justify-center border-b border-slate-100">
-                        <img
-                          src={img || '/brand/needelectro-icon.png'}
-                          alt={p.name}
-                          loading="lazy"
-                          decoding="async"
-                          className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform"
-                        />
-                        {p.brand?.name && (
-                          <span className="absolute top-2.5 left-2.5 bg-slate-100 text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded-md">
-                            {p.brand.name}
-                          </span>
-                        )}
-                        {p.warrantyPeriodMonths && (
-                          <span className="absolute top-2.5 right-2.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-md">
-                            {p.warrantyPeriodMonths}M Warranty
-                          </span>
-                        )}
-                      </div>
-                      <div className="p-4 space-y-1">
-                        <h4 className="font-bold text-slate-900 text-sm line-clamp-1 group-hover:text-brand-600 transition-colors">
-                          {p.name}
-                        </h4>
-                        <p className="text-[11px] text-slate-500 line-clamp-1">
-                          {p.shortDescription || p.category?.name || 'Verified Equipment'}
-                        </p>
-                        <div className="pt-2 flex items-baseline gap-2">
-                          <span className="text-base font-extrabold text-slate-900">৳{price.toLocaleString('en-BD')}</span>
-                          {p.discountPrice && p.discountPrice < p.price && (
-                            <span className="text-xs text-slate-400 line-through">৳{p.price.toLocaleString('en-BD')}</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-4 pt-0">
-                      <Link
-                        href={`/product/${p.slug}`}
-                        className="btn-secondary w-full text-xs py-2 hover:border-brand-500 hover:text-brand-600 text-center"
-                      >
-                        View Specifications
-                      </Link>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+              {featuredProducts.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
             </div>
           ) : (
             <div className="glass-card p-8 rounded-3xl text-center space-y-4">

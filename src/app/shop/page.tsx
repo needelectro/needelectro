@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useCart } from '@/lib/context/CartContext';
 import { fastFetch } from '@/lib/fastFetch';
+import ProductCard from '@/components/common/ProductCard';
 
 export default function ShopPage() {
   const { addToCart } = useCart();
@@ -228,78 +229,14 @@ export default function ShopPage() {
               <p className="text-xs text-slate-500 mt-1">Try clearing filters or search terms.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {products.map((product) => {
-                const img = product.images?.[0] || 'https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=800';
-                return (
-                  <div
-                    key={product.id}
-                    className="card-premium overflow-hidden group flex flex-col justify-between"
-                  >
-                    <div>
-                      {/* Product Image */}
-                      <Link href={`/product/${product.slug}`} className="block relative h-48 w-full bg-white p-4 overflow-hidden">
-                        <img
-                          src={img}
-                          alt={product.name}
-                          loading="lazy"
-                          decoding="async"
-                          className="max-h-full max-w-full object-contain mx-auto group-hover:scale-105 transition-transform duration-300"
-                        />
-                        <span className="absolute top-3 left-3 bg-slate-100 text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded shadow-xs">
-                          {product.category?.name || 'Tech'}
-                        </span>
-                        <span className="absolute top-3 right-3 bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded shadow-xs">
-                          {product.warrantyPeriodMonths}M Warranty
-                        </span>
-                      </Link>
-
-                      {/* Content */}
-                      <div className="p-4 border-t border-slate-100 space-y-2">
-                        <div className="text-[10px] text-slate-400 font-mono uppercase">
-                          SKU: {product.sku}
-                        </div>
-                        <Link href={`/product/${product.slug}`} className="block">
-                          <h4 className="font-bold text-slate-900 text-sm leading-snug line-clamp-2 group-hover:text-brand-600 transition-colors">
-                            {product.name}
-                          </h4>
-                        </Link>
-                        <p className="text-xs text-slate-500 line-clamp-2">
-                          {product.shortDescription}
-                        </p>
-
-                        <div className="pt-2 flex items-baseline gap-2">
-                          <span className="text-base font-extrabold text-slate-950">
-                            ৳{(product.discountPrice ?? product.price).toLocaleString()}
-                          </span>
-                          {product.discountPrice && (
-                            <span className="text-xs text-slate-400 line-through">
-                              ৳{product.price.toLocaleString()}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Bottom CTA Actions */}
-                    <div className="p-4 pt-0 grid grid-cols-2 gap-2">
-                      <Link
-                        href={`/product/${product.slug}`}
-                        className="btn-secondary text-xs py-2 text-center"
-                      >
-                        Details
-                      </Link>
-                      <button
-                        onClick={(e) => handleAddToCart(product, e)}
-                        className="btn-primary text-xs py-2 flex items-center justify-center gap-1.5"
-                      >
-                        <ShoppingCart className="w-3.5 h-3.5" />
-                        Add to Cart
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+              {products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onAddToCart={(p, e) => handleAddToCart(p, e)}
+                />
+              ))}
             </div>
           )}
         </div>
