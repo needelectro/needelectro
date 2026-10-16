@@ -24,18 +24,44 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const orders = await prisma.order.findMany({
-      where: whereClause,
-      include: {
-        items: {
-          include: { product: true },
-        },
-        deliveryAddress: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    const { searchParams } = new URL(req.url);
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '50', 10)));
 
-    return NextResponse.json({ success: true, orders });
+    const [total, orders] = await Promise.all([
+      prisma.order.count({ where: whereClause }),
+      prisma.order.findMany({
+        where: whereClause,
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          items: {
+            include: { product: true },
+          },
+          subOrders: {
+            include: { seller: true },
+          },
+          deliveryAddress: true,
+          customer: {
+            include: {
+              user: { select: { name: true, email: true, phone: true } },
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+    ]);
+
+    return NextResponse.json({
+      success: true,
+      orders,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     console.error('Fetch orders error:', error);
     return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });
@@ -108,12 +134,16 @@ export async function POST(req: NextRequest) {
       addressId = createdAddr.id;
     }
 
-    // Calculate subtotal securely on the server side
+    // Calculate subtotal securely on the server side & aggregate seller items
     let subtotal = 0;
     const orderItemsData: any[] = [];
+    const sellerItemsMap: Map<string, { items: any[]; subtotal: number; commissionRate: number }> = new Map();
 
     for (const item of items) {
-      const product = await prisma.product.findUnique({ where: { id: item.productId } });
+      const product = await prisma.product.findUnique({
+        where: { id: item.productId },
+        include: { seller: true },
+      });
       if (!product) continue;
       const unitPrice = product.discountPrice ?? product.price;
       const qty = item.quantity || 1;
@@ -126,6 +156,19 @@ export async function POST(req: NextRequest) {
         unitPrice,
         totalPrice,
       });
+
+      if (product.sellerId && product.seller) {
+        if (!sellerItemsMap.has(product.sellerId)) {
+          sellerItemsMap.set(product.sellerId, {
+            items: [],
+            subtotal: 0,
+            commissionRate: product.seller.commissionRate ?? 8.0,
+          });
+        }
+        const group = sellerItemsMap.get(product.sellerId)!;
+        group.items.push(product.id);
+        group.subtotal += totalPrice;
+      }
 
       // Decrement stock
       await prisma.product.update({
@@ -141,6 +184,22 @@ export async function POST(req: NextRequest) {
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const orderNumber = `ORD${dateStr}${randomSuffix}`;
+
+    // Prepare suborders for multi-seller fulfillment
+    const subOrdersCreate = Array.from(sellerItemsMap.entries()).map(([sellerId, group], idx) => {
+      const commissionAmount = parseFloat(((group.subtotal * group.commissionRate) / 100).toFixed(2));
+      const sellerEarnings = group.subtotal - commissionAmount;
+      return {
+        subOrderNumber: `${orderNumber}-S${idx + 1}`,
+        sellerId,
+        subtotal: group.subtotal,
+        commissionRate: group.commissionRate,
+        commissionAmount,
+        sellerEarnings,
+        status: 'PLACED',
+        payoutStatus: 'PENDING',
+      };
+    });
 
     const order = await prisma.order.create({
       data: {
@@ -158,10 +217,14 @@ export async function POST(req: NextRequest) {
         items: {
           create: orderItemsData,
         },
+        subOrders: subOrdersCreate.length > 0 ? {
+          create: subOrdersCreate,
+        } : undefined,
       },
       include: {
         items: { include: { product: true } },
         deliveryAddress: true,
+        subOrders: { include: { seller: true } },
       },
     });
 
@@ -173,7 +236,12 @@ export async function POST(req: NextRequest) {
         action: 'ORDER_PLACED',
         entity: 'ORDER',
         entityId: order.id,
-        newData: JSON.stringify({ orderNumber: order.orderNumber, totalAmount: order.totalAmount, paymentMethod }),
+        newData: JSON.stringify({
+          orderNumber: order.orderNumber,
+          totalAmount: order.totalAmount,
+          paymentMethod,
+          subOrdersCount: subOrdersCreate.length,
+        }),
       },
     });
 

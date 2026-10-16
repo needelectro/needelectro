@@ -1,32 +1,48 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAdminAuth } from "@/lib/apiAuth";
 
 export async function GET(req: NextRequest) {
   try {
-    // Collect order payments
-    const orders = await prisma.order.findMany({
-      include: {
-        customer: {
-          include: {
-            user: { select: { name: true, phone: true } },
-          },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    const auth = requireAdminAuth(req, 'finance:read');
+    if (!auth.authorized) return auth.response!;
 
-    // Collect service bookings payments
-    const bookings = await prisma.booking.findMany({
-      include: {
-        customer: {
-          include: {
-            user: { select: { name: true, phone: true } },
-          },
-        },
-        service: { select: { name: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    const { searchParams } = new URL(req.url);
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '50', 10)));
+    const type = searchParams.get('type'); // 'PRODUCT_ORDER' | 'SERVICE_BOOKING' | null
+
+    const fetchOrders = !type || type === 'PRODUCT_ORDER';
+    const fetchBookings = !type || type === 'SERVICE_BOOKING';
+
+    const [orders, bookings] = await Promise.all([
+      fetchOrders
+        ? prisma.order.findMany({
+            take: limit,
+            include: {
+              customer: {
+                include: {
+                  user: { select: { name: true, phone: true } },
+                },
+              },
+            },
+            orderBy: { createdAt: "desc" },
+          })
+        : Promise.resolve([]),
+      fetchBookings
+        ? prisma.booking.findMany({
+            take: limit,
+            include: {
+              customer: {
+                include: {
+                  user: { select: { name: true, phone: true } },
+                },
+              },
+              service: { select: { name: true } },
+            },
+            orderBy: { createdAt: "desc" },
+          })
+        : Promise.resolve([]),
+    ]);
 
     const transactions = [
       ...orders.map((o: any) => ({
@@ -53,7 +69,9 @@ export async function GET(req: NextRequest) {
         transactionRef: null,
         date: b.createdAt,
       })),
-    ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    ]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, limit);
 
     return NextResponse.json({ success: true, transactions });
   } catch (error: any) {

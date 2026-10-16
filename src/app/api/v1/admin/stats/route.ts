@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import prisma from '@/lib/db';
-import { verifyToken } from '@/lib/auth';
+import { requireAdminAuth } from '@/lib/apiAuth';
 
 interface CachedStats {
   data: any;
@@ -13,13 +12,8 @@ const STATS_CACHE_TTL_MS = 20000; // 20s server memory cache
 
 export async function GET(req: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get('need_electro_token')?.value;
-    const session = token ? verifyToken(token) : null;
-
-    if (!session || (session.role !== 'SUPER_ADMIN' && session.role !== 'ADMIN')) {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
-    }
+    const auth = requireAdminAuth(req, 'dashboard:view');
+    if (!auth.authorized) return auth.response!;
 
     const { searchParams } = new URL(req.url);
     const forceRefresh = searchParams.get('force') === 'true';

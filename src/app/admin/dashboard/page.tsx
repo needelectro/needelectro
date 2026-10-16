@@ -12,6 +12,7 @@ import {
   GraduationCap, Building2, Store, MessageSquare, Send, X, Lock, Phone, Mail
 } from 'lucide-react';
 import { fastFetch, invalidateFastCache } from '@/lib/fastFetch';
+import { isStaffOrAdmin } from '@/lib/permissions';
 
 type AdminTab = 'overview' | 'bookings' | 'orders' | 'technicians' | 'customers' | 'support';
 
@@ -78,7 +79,7 @@ export default function AdminDashboard() {
       router.push('/admin/login');
       return;
     }
-    if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
+    if (!isStaffOrAdmin(user)) {
       router.push('/admin/login?error=unauthorized');
       return;
     }
@@ -90,49 +91,50 @@ export default function AdminDashboard() {
     if (!stats) setLoading(true);
 
     try {
-      // Parallel fast-fetch all dashboard collections with 8s individual timeout safeguards
-      const [sRes, bRes, oRes, tRes, cRes, suRes] = await Promise.allSettled([
-        fastFetch('/api/v1/admin/stats', { forceRefresh, ttlMs: 30000, timeoutMs: 8000 }),
-        fastFetch('/api/v1/bookings?limit=50', { forceRefresh, ttlMs: 30000, timeoutMs: 8000 }),
-        fastFetch('/api/v1/orders?limit=50', { forceRefresh, ttlMs: 30000, timeoutMs: 8000 }),
-        fastFetch('/api/v1/admin/technicians', { forceRefresh, ttlMs: 30000, timeoutMs: 8000 }),
-        fastFetch('/api/v1/auth/users?limit=50', { forceRefresh, ttlMs: 30000, timeoutMs: 8000 }),
-        fastFetch('/api/v1/admin/support', { forceRefresh, ttlMs: 30000, timeoutMs: 8000 }),
-      ]);
-
-      if (sRes.status === 'fulfilled' && sRes.value) {
-        const sData = sRes.value;
+      // 1. High-priority instant paint: Fetch stats + recent activity first
+      const sData = await fastFetch('/api/v1/admin/stats', { forceRefresh, ttlMs: 20000, timeoutMs: 6000 });
+      if (sData) {
         setStats(sData.stats || sData);
         if (sData.recentBookings && Array.isArray(sData.recentBookings)) {
-          setBookings((prev) => (prev.length === 0 ? sData.recentBookings : prev));
+          setBookings(sData.recentBookings);
         }
         if (sData.recentOrders && Array.isArray(sData.recentOrders)) {
-          setOrders((prev) => (prev.length === 0 ? sData.recentOrders : prev));
+          setOrders(sData.recentOrders);
         }
       } else {
         setStats((prev: any) => prev || DEFAULT_STATS);
       }
+      setLoading(false);
 
-      if (bRes.status === 'fulfilled' && bRes.value?.bookings) {
-        setBookings(Array.isArray(bRes.value.bookings) ? bRes.value.bookings : []);
-      }
-      if (oRes.status === 'fulfilled' && oRes.value?.orders) {
-        setOrders(Array.isArray(oRes.value.orders) ? oRes.value.orders : []);
-      }
-      if (tRes.status === 'fulfilled' && tRes.value?.technicians) {
-        setTechnicians(Array.isArray(tRes.value.technicians) ? tRes.value.technicians : []);
-      }
-      if (cRes.status === 'fulfilled' && cRes.value?.users) {
-        setCustomers(Array.isArray(cRes.value.users) ? cRes.value.users : []);
-      }
-      if (suRes.status === 'fulfilled' && suRes.value?.tickets) {
-        setTickets(Array.isArray(suRes.value.tickets) ? suRes.value.tickets : []);
-      }
+      // 2. Secondary lazy paint: fetch tab collections concurrently in background
+      Promise.allSettled([
+        fastFetch('/api/v1/bookings?limit=25', { forceRefresh, ttlMs: 30000, timeoutMs: 8000 }),
+        fastFetch('/api/v1/orders?limit=25', { forceRefresh, ttlMs: 30000, timeoutMs: 8000 }),
+        fastFetch('/api/v1/admin/technicians?limit=25', { forceRefresh, ttlMs: 30000, timeoutMs: 8000 }),
+        fastFetch('/api/v1/admin/customers?limit=25', { forceRefresh, ttlMs: 30000, timeoutMs: 8000 }),
+        fastFetch('/api/v1/admin/support?limit=25', { forceRefresh, ttlMs: 30000, timeoutMs: 8000 }),
+      ]).then(([bRes, oRes, tRes, cRes, suRes]) => {
+        if (bRes.status === 'fulfilled' && bRes.value?.bookings) {
+          setBookings(Array.isArray(bRes.value.bookings) ? bRes.value.bookings : []);
+        }
+        if (oRes.status === 'fulfilled' && oRes.value?.orders) {
+          setOrders(Array.isArray(oRes.value.orders) ? oRes.value.orders : []);
+        }
+        if (tRes.status === 'fulfilled' && tRes.value?.technicians) {
+          setTechnicians(Array.isArray(tRes.value.technicians) ? tRes.value.technicians : []);
+        }
+        if (cRes.status === 'fulfilled' && cRes.value?.customers) {
+          setCustomers(Array.isArray(cRes.value.customers) ? cRes.value.customers : []);
+        }
+        if (suRes.status === 'fulfilled' && suRes.value?.tickets) {
+          setTickets(Array.isArray(suRes.value.tickets) ? suRes.value.tickets : []);
+        }
+      });
     } catch (err) {
       console.error('Dashboard loadData error:', err);
       setStats((prev: any) => prev || DEFAULT_STATS);
-    } finally {
       setLoading(false);
+    } finally {
       setIsRefreshing(false);
     }
   };

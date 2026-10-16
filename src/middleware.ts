@@ -1,31 +1,79 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-function decodeJwtPayload(token: string): any {
+const STAFF_ROLES = new Set([
+  'SUPER_ADMIN',
+  'ADMIN',
+  'OPERATIONS_MANAGER',
+  'INVENTORY_MANAGER',
+  'SALES_MANAGER',
+  'ACCOUNTANT',
+  'SERVICE_MANAGER',
+  'TECHNICIAN_MANAGER',
+  'SUPPORT_AGENT',
+  'CONTENT_MANAGER',
+]);
+
+/**
+ * Cryptographically verifies HS256 JWT in Edge Runtime using Web Crypto API
+ */
+async function verifyJwtInEdge(token: string): Promise<any> {
   try {
     const parts = token.split('.');
-    if (parts.length < 2) return null;
-    const base64Url = parts[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    if (parts.length !== 3) return null;
+    const [headerB64, payloadB64, signatureB64] = parts;
+    const secret = process.env.JWT_SECRET || 'need_electro_default_secret_key_2026';
+
+    const enc = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      enc.encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['verify']
+    );
+
+    // base64url decode signature
+    const signatureStr = signatureB64.replace(/-/g, '+').replace(/_/g, '/');
+    const signaturePad = signatureStr.padEnd(signatureStr.length + (4 - (signatureStr.length % 4)) % 4, '=');
+    const binarySig = atob(signaturePad);
+    const sigBytes = new Uint8Array(binarySig.length);
+    for (let i = 0; i < binarySig.length; i++) {
+      sigBytes[i] = binarySig.charCodeAt(i);
+    }
+
+    const data = enc.encode(`${headerB64}.${payloadB64}`);
+    const isValid = await crypto.subtle.verify('HMAC', key, sigBytes, data);
+    if (!isValid) return null;
+
+    // decode payload
+    const payloadStr = payloadB64.replace(/-/g, '+').replace(/_/g, '/');
+    const payloadPad = payloadStr.padEnd(payloadStr.length + (4 - (payloadStr.length % 4)) % 4, '=');
     const jsonPayload = decodeURIComponent(
-      atob(base64)
+      atob(payloadPad)
         .split('')
         .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
         .join('')
     );
-    return JSON.parse(jsonPayload);
+    const parsed = JSON.parse(jsonPayload);
+
+    // Expiration check
+    if (parsed.exp && parsed.exp * 1000 < Date.now()) {
+      return null;
+    }
+
+    return parsed;
   } catch {
     return null;
   }
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Ignore static assets, APIs, and Next.js internal files
+  // Ignore static assets, icons, brand images, and Next.js internal files
   if (
     pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
     pathname.startsWith('/brand') ||
     pathname.startsWith('/icons') ||
     pathname.startsWith('/images') ||
@@ -35,37 +83,27 @@ export function middleware(request: NextRequest) {
   }
 
   const token = request.cookies.get('need_electro_token')?.value;
-  const user = token ? decodeJwtPayload(token) : null;
-  const isAdmin = user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN');
+  const user = token ? await verifyJwtInEdge(token) : null;
+  const isStaff = user && user.status === 'ACTIVE' && STAFF_ROLES.has(user.role);
 
-  // 1. If on /admin/login:
+  // 1. Admin login route handling
   if (pathname === '/admin/login') {
-    // If already logged in as admin, redirect to admin dashboard
-    if (isAdmin) {
+    if (isStaff) {
       return NextResponse.redirect(new URL('/admin/dashboard', request.url));
     }
-    // Allow non-authenticated users to view admin login
     return NextResponse.next();
   }
 
-  // 2. If logged in as ADMIN:
-  // Admin is strictly restricted to /admin routes.
-  // If admin tries to visit any public/customer route, redirect them back to /admin/dashboard
-  if (isAdmin) {
-    if (!pathname.startsWith('/admin')) {
-      const adminUrl = new URL('/admin/dashboard', request.url);
-      return NextResponse.redirect(adminUrl);
-    }
-    return NextResponse.next();
-  }
-
-  // 3. If NOT an admin, prevent access to /admin routes and send to /admin/login
+  // 2. Protect all /admin routes
   if (pathname.startsWith('/admin')) {
-    const loginUrl = new URL('/admin/login', request.url);
-    if (pathname !== '/admin') {
-      loginUrl.searchParams.set('redirect', pathname);
+    if (!isStaff) {
+      const loginUrl = new URL('/admin/login', request.url);
+      if (pathname !== '/admin') {
+        loginUrl.searchParams.set('redirect', pathname);
+      }
+      return NextResponse.redirect(loginUrl);
     }
-    return NextResponse.redirect(loginUrl);
+    return NextResponse.next();
   }
 
   return NextResponse.next();

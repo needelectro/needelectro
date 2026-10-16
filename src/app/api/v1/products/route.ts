@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
+import { requireAdminAuth, recordAuditLog } from '@/lib/apiAuth';
 
 // Cached categories and brands to avoid redundant DB roundtrips
 let cachedCategories: { data: any[]; timestamp: number } | null = null;
@@ -14,6 +15,8 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('search');
     const featured = searchParams.get('featured') === 'true';
     const condition = searchParams.get('condition'); // NEW or REFURBISHED
+    const includeAll = searchParams.get('includeAll') === 'true';
+    const sellerId = searchParams.get('sellerId');
     const pageParam = parseInt(searchParams.get('page') || '1', 10);
     const limitParam = searchParams.get('limit');
     
@@ -22,9 +25,14 @@ export async function GET(req: NextRequest) {
     const take = limitParam === 'all' ? undefined : Math.min(100, Math.max(1, parseInt(limitParam || '50', 10)));
     const skip = take !== undefined ? (page - 1) * take : undefined;
 
-    const whereClause: any = {
-      isActive: true,
-    };
+    const whereClause: any = {};
+    if (!includeAll) {
+      whereClause.isActive = true;
+      whereClause.approvalStatus = 'APPROVED';
+    }
+    if (sellerId) {
+      whereClause.sellerId = sellerId;
+    }
 
     if (categorySlug && categorySlug !== 'all') {
       whereClause.category = { slug: categorySlug };
@@ -74,6 +82,9 @@ export async function GET(req: NextRequest) {
           createdAt: true,
           category: { select: { id: true, name: true, slug: true } },
           brand: { select: { id: true, name: true, slug: true } },
+          sellerId: true,
+          approvalStatus: true,
+          seller: { select: { id: true, businessName: true, slug: true } },
         },
         orderBy: [{ isFeatured: 'desc' }, { createdAt: 'desc' }],
         take,
@@ -131,6 +142,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = requireAdminAuth(req, 'products:write');
+    if (!auth.authorized) return auth.response!;
+
     const body = await req.json();
     const {
       name,
@@ -143,6 +157,8 @@ export async function POST(req: NextRequest) {
       warrantyMonths = 0,
       shortDescription = '',
       condition = 'NEW',
+      sellerId = null,
+      approvalStatus = 'APPROVED',
     } = body;
 
     if (!name || !price) {
@@ -197,6 +213,8 @@ export async function POST(req: NextRequest) {
         condition,
         images: '/logo.png',
         isActive: true,
+        sellerId: sellerId || null,
+        approvalStatus: approvalStatus || 'APPROVED',
       },
     });
 
@@ -209,6 +227,9 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
+    const auth = requireAdminAuth(req, 'products:write');
+    if (!auth.authorized) return auth.response!;
+
     const body = await req.json();
     const { id, ...updates } = body;
 
@@ -240,6 +261,8 @@ export async function PATCH(req: NextRequest) {
     if (updates.isActive !== undefined) dataToUpdate.isActive = Boolean(updates.isActive);
     if (updates.categoryId !== undefined) dataToUpdate.categoryId = updates.categoryId;
     if (updates.brandId !== undefined) dataToUpdate.brandId = updates.brandId;
+    if (updates.sellerId !== undefined) dataToUpdate.sellerId = updates.sellerId || null;
+    if (updates.approvalStatus !== undefined) dataToUpdate.approvalStatus = updates.approvalStatus;
     if (updates.specifications !== undefined) {
       dataToUpdate.specifications = typeof updates.specifications === 'string'
         ? updates.specifications
@@ -252,19 +275,20 @@ export async function PATCH(req: NextRequest) {
       include: {
         category: true,
         brand: true,
+        seller: true,
       },
     });
 
     // Record audit log
     try {
-      await prisma.auditLog.create({
-        data: {
-          action: 'UPDATE_PRODUCT',
-          entity: 'Product',
-          entityId: id,
-          previousData: JSON.stringify({ price: currentProduct.price, stock: currentProduct.stock, isActive: currentProduct.isActive }),
-          newData: JSON.stringify(dataToUpdate),
-        },
+      await recordAuditLog({
+        userId: auth.session?.id,
+        userRole: auth.session?.role,
+        action: 'UPDATE_PRODUCT',
+        entity: 'Product',
+        entityId: id,
+        previousData: { price: currentProduct.price, stock: currentProduct.stock, isActive: currentProduct.isActive, approvalStatus: currentProduct.approvalStatus },
+        newData: dataToUpdate,
       });
     } catch (auditErr) {
       console.warn('Audit log write error:', auditErr);
@@ -279,6 +303,9 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    const auth = requireAdminAuth(req, 'products:write');
+    if (!auth.authorized) return auth.response!;
+
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
     const permanent = searchParams.get('permanent') === 'true';

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export interface TicketMessage {
+interface TicketMessage {
   id: string;
   sender: "CUSTOMER" | "ADMIN" | "INTERNAL_NOTE";
   senderName: string;
@@ -9,7 +9,7 @@ export interface TicketMessage {
   createdAt: string;
 }
 
-export function parseTicketConversation(raw: string | null): TicketMessage[] {
+function parseTicketConversation(raw: string | null): TicketMessage[] {
   if (!raw) return [];
   try {
     const parsed = JSON.parse(raw);

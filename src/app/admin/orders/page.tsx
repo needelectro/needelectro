@@ -332,6 +332,34 @@ export default function AdminOrdersPage() {
                 </tbody>
               </table>
 
+              {/* Multi-Seller Fulfillment Breakdown */}
+              {selectedOrder.subOrders && selectedOrder.subOrders.length > 0 && (
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
+                  <div className="text-[10px] font-black uppercase text-brand-700 tracking-wider">
+                    Merchant Sub-Orders & Commission Allocation
+                  </div>
+                  <div className="divide-y divide-slate-200/60">
+                    {selectedOrder.subOrders.map((so: any, sIdx: number) => (
+                      <div key={sIdx} className="py-2 flex items-center justify-between text-xs">
+                        <div>
+                          <span className="font-bold text-slate-900">{so.subOrderNumber}</span>
+                          <span className="text-slate-400"> &bull; </span>
+                          <span className="text-slate-700 font-medium">{so.seller?.businessName || 'Merchant'}</span>
+                          <span className={`ml-2 text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded ${STATUS_COLORS[so.status] || 'bg-slate-100 text-slate-700'}`}>
+                            {so.status}
+                          </span>
+                        </div>
+                        <div className="text-right space-x-2">
+                          <span className="text-slate-500">Subtotal: ৳{so.subtotal?.toLocaleString()}</span>
+                          <span className="text-emerald-700 font-bold">Commission ({so.commissionRate}%): ৳{so.commissionAmount?.toLocaleString()}</span>
+                          <span className="text-slate-900 font-extrabold">Payable: ৳{so.sellerEarnings?.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Totals */}
               <div className="flex justify-end text-xs">
                 <div className="w-64 space-y-1.5">

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/context/AuthContext';
+import { isStaffOrAdmin } from '@/lib/permissions';
 import {
   Store,
   ArrowLeft,
@@ -31,7 +32,7 @@ export default function AdminSellersPage() {
 
   useEffect(() => {
     if (!user) { router.push('/admin/login'); return; }
-    if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
+    if (!isStaffOrAdmin(user)) {
       router.push('/admin/login?error=unauthorized');
       return;
     }

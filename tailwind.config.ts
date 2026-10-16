@@ -15,12 +15,18 @@ const config: Config = {
           200: "#BFDBFE",
           300: "#93C5FD",
           400: "#60A5FA",
-          500: "#087FE5",
+          500: "#008CFF", // Official Electric Blue
           600: "#0267C1",
           700: "#034FA0",
-          800: "#07417E",
+          800: "#002B5B", // Official Dark Navy
           900: "#0C3768",
           950: "#082142",
+        },
+        need: {
+          blue: "#008CFF",
+          navy: "#002B5B",
+          gray: "#F4F6F8",
+          white: "#FFFFFF",
         },
         surface: {
           light: "#F5F8FC",
