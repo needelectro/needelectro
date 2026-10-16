@@ -436,31 +436,82 @@ export default function Header() {
                 </button>
 
                 {moreMenuOpen && (
-                  <div className="absolute top-full mt-2 right-0 w-56 bg-white/96 backdrop-blur-xl border border-white/90 rounded-2xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2">
-                    {[
-                      { href: '/booking', label: 'Book a Service', icon: CalendarCheck, color: 'text-brand-600' },
-                      { href: '/technician/dashboard', label: 'Technician Portal', icon: Wrench, color: 'text-amber-600' },
-                      { href: '/customer/dashboard?tab=bookings', label: 'My Bookings', icon: ClipboardList, color: 'text-indigo-600' },
-                      { href: '/parts', label: 'Parts & Materials', icon: ShoppingBag, color: 'text-purple-600' },
-                      { href: '/warranty', label: 'Service Warranty Check', icon: ShieldCheck, color: 'text-emerald-500' },
-                      { href: '/technicians', label: 'Verified Technicians', icon: Users, color: 'text-sky-500' },
-                      { href: '/locations', label: '64 Districts Coverage', icon: MapPin, color: 'text-teal-500' },
-                      { href: '/training', label: 'Training Academy', icon: GraduationCap, color: 'text-amber-500' },
-                      { href: '/software', label: 'Software & ERP', icon: Layers, color: 'text-brand-500' },
-                      { href: '/branches', label: 'Branch Network', icon: Building2, color: 'text-sky-600' },
-                      { href: '/about', label: 'About Us', icon: Store, color: 'text-slate-500' },
-                    ].map(({ href, label, icon: Icon, color }) => (
-                      <Link
-                        key={href}
-                        href={href}
-                        onClick={() => setMoreMenuOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600 transition"
-                      >
-                        <Icon className={`w-4 h-4 ${color} shrink-0`} />
-                        <span>{label}</span>
-                      </Link>
-                    ))}
-                  </div>
+                  <>
+                    {/* Click-outside backdrop */}
+                    <div
+                      className="fixed inset-0 z-40 bg-transparent"
+                      onClick={() => setMoreMenuOpen(false)}
+                      aria-hidden="true"
+                    />
+
+                    {/* Dropdown Menu Container */}
+                    <div className="absolute top-full mt-3 right-0 w-[500px] max-w-[calc(100vw-2rem)] bg-white border border-slate-200 rounded-2xl shadow-2xl shadow-slate-900/15 p-4 z-50 animate-in fade-in slide-in-from-top-2">
+                      <div className="grid grid-cols-2 gap-3">
+                        {/* Section 1 */}
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-2 pb-2">
+                            Services &amp; Portal
+                          </p>
+                          <div className="space-y-1">
+                            {[
+                              { href: '/booking', label: 'Book a Service', desc: 'Request on-site technician', icon: CalendarCheck, color: 'text-brand-600', bg: 'bg-brand-50' },
+                              { href: '/technician/dashboard', label: 'Technician Portal', desc: 'Workspace & live job queue', icon: Wrench, color: 'text-amber-600', bg: 'bg-amber-50' },
+                              { href: '/customer/dashboard?tab=bookings', label: 'My Bookings', desc: 'Track orders & service visits', icon: ClipboardList, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                              { href: '/warranty', label: 'Service Warranty Check', desc: '30-day workmanship claim', icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                              { href: '/technicians', label: 'Verified Technicians', desc: 'Certified expert directory', icon: Users, color: 'text-sky-600', bg: 'bg-sky-50' },
+                            ].map(({ href, label, desc, icon: Icon, color, bg }) => (
+                              <Link
+                                key={href}
+                                href={href}
+                                onClick={() => setMoreMenuOpen(false)}
+                                className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 transition group"
+                              >
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${bg}`}>
+                                  <Icon className={`w-4 h-4 ${color}`} />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-xs font-bold text-slate-800 group-hover:text-brand-600 transition truncate">{label}</p>
+                                  <p className="text-[10px] text-slate-400 truncate">{desc}</p>
+                                </div>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Section 2 */}
+                        <div className="border-l border-slate-100 pl-3">
+                          <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-2 pb-2">
+                            Ecosystem &amp; Network
+                          </p>
+                          <div className="space-y-1">
+                            {[
+                              { href: '/parts', label: 'Parts & Materials', desc: 'Genuine electrical components', icon: ShoppingBag, color: 'text-purple-600', bg: 'bg-purple-50' },
+                              { href: '/locations', label: '64 Districts Coverage', desc: 'Nationwide coverage hubs', icon: MapPin, color: 'text-rose-600', bg: 'bg-rose-50' },
+                              { href: '/training', label: 'Training Academy', desc: 'Professional certification', icon: GraduationCap, color: 'text-amber-600', bg: 'bg-amber-50' },
+                              { href: '/software', label: 'Software & ERP', desc: 'Enterprise management', icon: Layers, color: 'text-brand-600', bg: 'bg-brand-50' },
+                              { href: '/branches', label: 'Branch Network', desc: 'Physical outlets & support', icon: Building2, color: 'text-cyan-600', bg: 'bg-cyan-50' },
+                              { href: '/about', label: 'About Us', desc: 'Mission, team & vision', icon: Store, color: 'text-slate-600', bg: 'bg-slate-100' },
+                            ].map(({ href, label, desc, icon: Icon, color, bg }) => (
+                              <Link
+                                key={href}
+                                href={href}
+                                onClick={() => setMoreMenuOpen(false)}
+                                className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 transition group"
+                              >
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${bg}`}>
+                                  <Icon className={`w-4 h-4 ${color}`} />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-xs font-bold text-slate-800 group-hover:text-brand-600 transition truncate">{label}</p>
+                                  <p className="text-[10px] text-slate-400 truncate">{desc}</p>
+                                </div>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </>
                 )}
               </div>
             </nav>
@@ -521,36 +572,43 @@ export default function Header() {
                       <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${accountMenuOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {accountMenuOpen && (
-                      <div className="absolute right-0 mt-2 w-56 bg-white/90 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/80 py-2 z-50 animate-in fade-in zoom-in-95">
-                        <div className="px-4 py-2 border-b border-slate-100/80">
-                          <p className="text-xs text-slate-500">Signed in as</p>
-                          <p className="text-sm font-bold text-slate-900 truncate">{user.name}</p>
-                          <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-brand-500/10 text-brand-600 border border-brand-500/20">
-                            {user.role}
-                          </span>
+                      <>
+                        <div
+                          className="fixed inset-0 z-40 bg-transparent"
+                          onClick={() => setAccountMenuOpen(false)}
+                          aria-hidden="true"
+                        />
+                        <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl shadow-slate-900/15 border border-slate-200 py-2 z-50 animate-in fade-in zoom-in-95">
+                          <div className="px-4 py-2 border-b border-slate-100">
+                            <p className="text-xs text-slate-500">Signed in as</p>
+                            <p className="text-sm font-bold text-slate-900 truncate">{user.name}</p>
+                            <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-brand-50 text-brand-600 border border-brand-200">
+                              {user.role}
+                            </span>
+                          </div>
+                          {user.role === 'CUSTOMER' && (
+                            <Link href="/customer/dashboard" onClick={() => setAccountMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brand-600 transition">
+                              <LayoutDashboard className="w-4 h-4 text-brand-500" /> Customer Portal
+                            </Link>
+                          )}
+                          {user.role === 'TECHNICIAN' && (
+                            <Link href="/technician/dashboard" onClick={() => setAccountMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-emerald-600 transition">
+                              <LayoutDashboard className="w-4 h-4 text-emerald-500" /> Technician Workspace
+                            </Link>
+                          )}
+                          {(user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') && (
+                            <Link href="/admin" onClick={() => setAccountMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-amber-600 transition">
+                              <LayoutDashboard className="w-4 h-4 text-amber-500" /> Admin Console
+                            </Link>
+                          )}
+                          <button
+                            onClick={() => { logout(); setAccountMenuOpen(false); }}
+                            className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50 text-left border-t border-slate-100 mt-1 transition"
+                          >
+                            <LogOut className="w-4 h-4" /> Sign Out
+                          </button>
                         </div>
-                        {user.role === 'CUSTOMER' && (
-                          <Link href="/customer/dashboard" onClick={() => setAccountMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-white/80 hover:text-brand-600 transition">
-                            <LayoutDashboard className="w-4 h-4 text-brand-500" /> Customer Portal
-                          </Link>
-                        )}
-                        {user.role === 'TECHNICIAN' && (
-                          <Link href="/technician/dashboard" onClick={() => setAccountMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-white/80 hover:text-emerald-600 transition">
-                            <LayoutDashboard className="w-4 h-4 text-emerald-500" /> Technician Workspace
-                          </Link>
-                        )}
-                        {(user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') && (
-                          <Link href="/admin" onClick={() => setAccountMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-white/80 hover:text-amber-600 transition">
-                            <LayoutDashboard className="w-4 h-4 text-amber-500" /> Admin Console
-                          </Link>
-                        )}
-                        <button
-                          onClick={() => { logout(); setAccountMenuOpen(false); }}
-                          className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50/80 text-left border-t border-slate-100/80 mt-1 transition"
-                        >
-                          <LogOut className="w-4 h-4" /> Sign Out
-                        </button>
-                      </div>
+                      </>
                     )}
                   </>
                 ) : (
