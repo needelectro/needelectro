@@ -27,6 +27,25 @@ export async function GET(
         timeline: {
           orderBy: { timestamp: 'asc' },
         },
+        quotes: true,
+        jobAssignments: {
+          include: {
+            technician: {
+              include: { user: { select: { name: true, phone: true } } },
+            },
+          },
+          orderBy: { offeredAt: 'desc' },
+        },
+        invoice: {
+          include: {
+            payments: true,
+            warranty: true,
+          },
+        },
+        warranty: true,
+        bookingParts: {
+          include: { part: true },
+        },
         reviews: true,
       },
     });
@@ -37,6 +56,7 @@ export async function GET(
 
     return NextResponse.json({ success: true, booking });
   } catch (error) {
+    console.error('Fetch booking by id error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -55,86 +75,224 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { status, note, paymentStatus } = await req.json();
+    const body = await req.json();
+    const {
+      status,
+      note,
+      paymentStatus,
+      technicianId,
+      technicianNotes,
+      customerNotes,
+      beforePhotos,
+      afterPhotos,
+    } = body;
 
     const booking = await prisma.booking.findUnique({
       where: { id },
-      include: { technician: true },
+      include: {
+        technician: true,
+        service: true,
+        bookingParts: true,
+        invoice: true,
+      },
     });
 
     if (!booking) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
     }
 
-    // Update status & record timeline
     const updated = await prisma.$transaction(async (tx: any) => {
       const updateData: any = {};
       if (status) updateData.status = status;
       if (paymentStatus) updateData.paymentStatus = paymentStatus;
-      if (status === 'COMPLETED') updateData.completedAt = new Date();
+      if (technicianId) updateData.technicianId = technicianId;
+      if (technicianNotes !== undefined) updateData.technicianNotes = technicianNotes;
+      if (customerNotes !== undefined) updateData.customerNotes = customerNotes;
+      if (beforePhotos !== undefined) updateData.beforePhotos = beforePhotos;
+      if (afterPhotos !== undefined) updateData.afterPhotos = afterPhotos;
+
+      const isCompleted = status === 'COMPLETED' || status === 'WORK_COMPLETED';
+      if (isCompleted) {
+        updateData.completedAt = new Date();
+        updateData.status = 'COMPLETED';
+      }
 
       const res = await tx.booking.update({
         where: { id },
         data: updateData,
+        include: {
+          service: true,
+          technician: { include: { user: true } },
+          customer: { include: { user: true } },
+          bookingParts: true,
+          invoice: true,
+          warranty: true,
+        },
       });
 
-      if (status) {
+      // Add timeline event
+      if (status || note) {
         await tx.bookingTimeline.create({
           data: {
             bookingId: id,
-            status,
+            status: isCompleted ? 'COMPLETED' : status || booking.status,
             actorId: session.id,
             actorRole: session.role,
-            note: note || `Status updated to ${status} by ${session.name}.`,
+            note: note || `Status updated to ${isCompleted ? 'COMPLETED' : status} by ${session.name}.`,
           },
         });
       }
 
-      // If work is completed, automatically calculate and record technician earnings & credit wallet!
-      if (status === 'COMPLETED' && booking.technicianId) {
-        const existingEarning = await tx.technicianEarnings.findFirst({
+      // If technician is assigned, create/update job assignment
+      const assignedTechId = technicianId || booking.technicianId;
+      if (assignedTechId && (status === 'ASSIGNED' || technicianId)) {
+        const existingAssignment = await tx.jobAssignment.findFirst({
+          where: { bookingId: id, technicianId: assignedTechId },
+        });
+
+        if (!existingAssignment) {
+          await tx.jobAssignment.create({
+            data: {
+              bookingId: id,
+              technicianId: assignedTechId,
+              status: 'ACCEPTED',
+              respondedAt: new Date(),
+              notes: note || 'Dispatched and confirmed',
+            },
+          });
+        }
+      }
+
+      // If job is completed, generate ServiceInvoice, ServiceWarranty, and Technician Earnings
+      if (isCompleted) {
+        const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+
+        // 1. ServiceInvoice
+        let invoice = await tx.serviceInvoice.findUnique({
           where: { bookingId: id },
         });
 
-        if (!existingEarning) {
-          const serviceAmount = booking.totalAmount;
-          const commissionRate = 15.0; // 15% platform fee
-          const platformFee = Math.round((serviceAmount * commissionRate) / 100);
-          const technicianAmount = serviceAmount - platformFee;
+        const totalPartsCost = res.bookingParts?.reduce((acc: number, p: any) => acc + (p.totalPrice || 0), 0) || 0;
+        const laborCost = Math.max(0, res.totalAmount - totalPartsCost);
 
-          await tx.technicianEarnings.create({
+        if (!invoice) {
+          invoice = await tx.serviceInvoice.create({
             data: {
-              technicianId: booking.technicianId,
+              invoiceNumber: `INV-SRV-${dateStr}${randomSuffix}`,
               bookingId: id,
-              serviceAmount,
-              platformFee,
-              commissionRate,
-              technicianAmount,
-              status: 'AVAILABLE',
+              laborAmount: laborCost,
+              partsAmount: totalPartsCost,
+              totalAmount: res.totalAmount,
+              paymentStatus: res.paymentStatus === 'PAID' ? 'PAID' : 'UNPAID',
+              paymentMethod: res.paymentMethod || 'CASH_ON_DELIVERY',
+              paidAt: res.paymentStatus === 'PAID' ? new Date() : null,
             },
+          });
+        }
+
+        // 2. ServiceWarranty (automatic 30-day workmanship warranty)
+        const existingWarranty = await tx.serviceWarranty.findUnique({
+          where: { bookingId: id },
+        });
+
+        if (!existingWarranty) {
+          const startDate = new Date();
+          const expiryDate = new Date(startDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+          await tx.serviceWarranty.create({
+            data: {
+              warrantyNumber: `WR-${dateStr}${randomSuffix}`,
+              invoiceId: invoice.id,
+              bookingId: id,
+              serviceTitle: res.service?.title || 'NEED ELECTRO Technical Service',
+              warrantyPeriodDays: 30,
+              startDate,
+              expiryDate,
+              terms: 'Covers workmanship, electrical safety, and technical execution for 30 calendar days across Bangladesh.',
+              status: 'ACTIVE',
+            },
+          });
+        }
+
+        // 3. 85/15 Technician Earnings & Wallet Credit
+        const activeTechId = assignedTechId || res.technicianId;
+        if (activeTechId) {
+          const existingEarning = await tx.technicianEarnings.findFirst({
+            where: { bookingId: id },
           });
 
-          // Update technician profile wallet balance & total completed jobs
-          const tech = await tx.technicianProfile.update({
-            where: { id: booking.technicianId },
-            data: {
-              walletBalance: { increment: technicianAmount },
-              totalCompletedJobs: { increment: 1 },
-            },
+          if (!existingEarning) {
+            const serviceAmount = res.totalAmount;
+            const commissionRate = 15.0; // 15% platform fee
+            const platformFee = Math.round((serviceAmount * commissionRate) / 100);
+            const technicianAmount = serviceAmount - platformFee;
+
+            await tx.technicianEarnings.create({
+              data: {
+                technicianId: activeTechId,
+                bookingId: id,
+                serviceAmount,
+                platformFee,
+                commissionRate,
+                technicianAmount,
+                status: 'AVAILABLE',
+              },
+            });
+
+            // Update technician profile wallet balance & total completed jobs
+            const tech = await tx.technicianProfile.update({
+              where: { id: activeTechId },
+              data: {
+                walletBalance: { increment: technicianAmount },
+                totalCompletedJobs: { increment: 1 },
+              },
+            });
+
+            // Record wallet transaction
+            await tx.walletTransaction.create({
+              data: {
+                technicianId: activeTechId,
+                type: 'JOB_EARNING',
+                amount: technicianAmount,
+                balanceAfter: tech.walletBalance,
+                description: `Earnings from completed job ${res.bookingNumber}`,
+                referenceId: res.bookingNumber,
+                status: 'COMPLETED',
+              },
+            });
+          }
+        }
+      }
+
+      // Handle payment status PAID
+      if (paymentStatus === 'PAID') {
+        const inv = await tx.serviceInvoice.findUnique({ where: { bookingId: id } });
+        if (inv) {
+          await tx.serviceInvoice.update({
+            where: { id: inv.id },
+            data: { paymentStatus: 'PAID', paidAt: new Date() },
           });
 
-          // Record wallet transaction
-          await tx.walletTransaction.create({
-            data: {
-              technicianId: booking.technicianId,
-              type: 'JOB_EARNING',
-              amount: technicianAmount,
-              balanceAfter: tech.walletBalance,
-              description: `Earnings from completed job ${booking.bookingNumber}`,
-              referenceId: booking.bookingNumber,
-              status: 'COMPLETED',
-            },
+          const existingPay = await tx.servicePayment.findFirst({
+            where: { bookingId: id, status: 'PAID' },
           });
+
+          if (!existingPay) {
+            const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+            const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+            await tx.servicePayment.create({
+              data: {
+                paymentNumber: `PAY-${dateStr}${randomSuffix}`,
+                invoiceId: inv.id,
+                bookingId: id,
+                amount: res.totalAmount,
+                paymentType: 'FINAL',
+                paymentMethod: res.paymentMethod || 'CASH_ON_DELIVERY',
+                status: 'PAID',
+                paidAt: new Date(),
+              },
+            });
+          }
         }
       }
 

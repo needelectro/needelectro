@@ -1,26 +1,42 @@
-# NEED ELECTRO - Electrical & Technological Solutions Platform
+# NEED ELECTRO — Service-First Electrical & Technology Services Marketplace
 
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-blue?style=flat&logo=react)](https://react.dev/)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-38bdf8?style=flat&logo=tailwind-css)](https://tailwindcss.com/)
 [![Prisma](https://img.shields.io/badge/Prisma-6-2D3748?style=flat&logo=prisma)](https://www.prisma.io/)
 
-**NEED ELECTRO** is a comprehensive electrical and technological solutions ecosystem in Bangladesh, combining on-demand professional technician services, an electronics e-commerce store, real-time booking and order tracking, warranty management, and administrative control.
+**NEED ELECTRO** is Bangladesh's certified service-first electrical and technological marketplace. We connect residential, commercial, and industrial clients with trade-tested, background-verified electricians, AC technicians, CCTV installers, and appliance repair experts across all 64 districts.
 
 Sister concern of **Amdads Group**.
 
 ---
 
-## ⚡ Key Features
+## ⚡ Core Architecture & Capabilities
 
-- **Service Booking System**: Multi-step booking for AC repair, electrical wiring, home appliance diagnostics, CCTV installation, and industrial electrical setups.
-- **E-Commerce Store**: Product catalog with category filtering, cart management, instant checkout, and bKash / Nagad / Rocket / Cash-on-Delivery payment flows.
-- **Technician Network**: Independent technician onboarding, document verification, job alerts, status updates, and payout management.
-- **Role-Based Portals**:
-  - **Customer Portal**: Booking history, orders, warranty claims, and profile settings.
-  - **Technician Portal**: Active assignments, job status workflows, and earnings.
-  - **Admin Control Center**: Operations dashboard for orders, bookings, verification approvals, technician allocation, and inventory management.
-- **Progressive Web App (PWA)**: Installable on Android, iOS, and desktop with offline support and push notification capabilities.
+### 1. Service-First Focus
+- **Hero & Information Architecture**: Primary navigation and mobile app experience prioritize **Home**, **Services**, **Book a Service**, **My Bookings**, **Technician Portal**, **Admin Dispatch Board**, and **Support**.
+- **Secondary Parts & Materials**: E-commerce products are de-emphasized into a dedicated spare parts & materials catalog at `/parts`, controlled via `FEATURE_FLAGS.ENABLE_SHOP` (reads `NEXT_PUBLIC_ENABLE_SHOP="true"`).
+
+### 2. End-to-End Service Booking Lifecycle
+```
+DRAFT → REQUESTED → QUOTED → CONFIRMED → ASSIGNED → EN_ROUTE → ARRIVED → IN_PROGRESS → COMPLETED → PAID → CLOSED
+(Also handles: CANCELLED, DISPUTED, REFUNDED)
+```
+- **Instant Estimation & Quotes**: Immediate quotation with itemized labor and preliminary estimates upon booking creation.
+- **Dynamic Dispatch**: Admin dispatch board and automated marketplace matching for local verified technicians.
+- **Parts Recording**: Technicians add replacement parts and materials directly during job execution.
+- **Service Invoicing**: Real-time generation of `ServiceInvoice` combining labor and verified parts costs.
+- **30-Day Workmanship Warranty**: Automatic `ServiceWarranty` created upon job completion with nationwide warranty tracking via invoice and booking number.
+- **Verified Customer Reviews**: Ratings and reviews strictly permitted only on completed bookings, directly updating technician trust scores.
+
+### 3. Technician Economics
+- **85% Revenue Share**: 85% of labor amount credited directly to technician digital wallet upon job completion.
+- **15% Platform Commission**: Automated platform fee accounting and transparent wallet transaction logs.
+- **Technician Portal**: Job acceptance board, status updates, photo evidence, and earnings withdrawal requests.
+
+### 4. Nationwide Coverage
+- **64 Districts & Thanas**: Structured coverage across all 8 administrative divisions of Bangladesh.
+- **Local SEO & Schema.org**: Dedicated location landing pages (`/services/[slug]/[location]`) with `LocalBusiness`, `Service`, and `AggregateRating` JSON-LD schemas.
 
 ---
 
@@ -31,6 +47,7 @@ Sister concern of **Amdads Group**.
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/) & [Lucide React](https://lucide.dev/)
 - **Database & ORM**: [Prisma ORM](https://www.prisma.io/) with SQLite (local development) / PostgreSQL (production)
 - **Authentication**: JWT token-based authentication with bcrypt password hashing
+- **PWA**: Offline technician job caching and push notifications
 
 ---
 
@@ -45,8 +62,8 @@ Sister concern of **Amdads Group**.
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/needelectro/need-electro.git
-   cd need-electro
+   git clone https://github.com/needelectro/needelectro.git
+   cd needelectro
    ```
 
 2. **Install dependencies**:
@@ -59,15 +76,23 @@ Sister concern of **Amdads Group**.
    ```bash
    cp .env.example .env
    ```
-   Update the configuration parameters as needed.
-
-4. **Initialize Database**:
+   To toggle public standalone e-commerce catalog:
    ```bash
-   npm run db:push
-   npm run db:seed
+   NEXT_PUBLIC_ENABLE_SHOP=false  # Service-first mode (default)
    ```
 
-5. **Start Development Server**:
+4. **Initialize Database & Seed**:
+   ```bash
+   npm run db:push
+   node prisma/seed.mjs
+   ```
+
+5. **Run Automated Test Suite**:
+   ```bash
+   node --test tests/*.test.mjs
+   ```
+
+6. **Start Development Server**:
    ```bash
    npm run dev
    ```
@@ -78,32 +103,27 @@ Sister concern of **Amdads Group**.
 ## 📁 Project Structure
 
 ```text
-├── prisma/               # Prisma schema and seed scripts
-├── public/               # Static assets, icons, manifest.json
+├── prisma/
+│   ├── schema.prisma       # Service-first data model (Booking, Quote, Warranty, Parts, etc.)
+│   ├── migrations/         # Non-destructive SQL migration scripts
+│   └── seed.mjs            # Production service-first demo seed data
 ├── src/
-│   ├── app/              # Next.js App Router pages and API routes
-│   │   ├── (auth)/       # Authentication pages (login, register)
-│   │   ├── (main)/       # Public storefront, services, cart, checkout
-│   │   ├── admin/        # Administrator management portal
-│   │   ├── customer/     # Customer dashboard
-│   │   ├── technician/   # Technician workspace
-│   │   └── api/          # RESTful backend API routes
-│   ├── components/       # Reusable UI and layout components
-│   └── lib/              # Database client, auth utilities, and helpers
-├── architecture.md       # Technical architecture specification
-├── design.md             # UI/UX design guidelines
-├── phases.md             # Project roadmap and implementation phases
-├── prd.md                # Product Requirements Document
-└── rules.md              # Engineering rules and coding standards
+│   ├── app/
+│   │   ├── api/v1/         # REST APIs (bookings, quotes, parts, payments, warranty)
+│   │   ├── booking/        # Multi-step service booking wizard
+│   │   ├── services/       # Service catalog & SEO location pages
+│   │   ├── parts/          # Secondary spare parts & materials catalog
+│   │   ├── customer/       # Customer portal & bookings tracking
+│   │   ├── technician/     # Technician job board & wallet earnings
+│   │   └── admin/          # Admin dispatch board & operations center
+│   ├── components/         # Reusable responsive UI components
+│   └── lib/                # Feature flags, auth, database client, national data
+└── tests/                  # 37 automated test suites (lifecycle, economics, IA)
 ```
 
 ---
 
-## 🏢 Business & Contact Information
+## 📄 License
 
-- **Headquarters & Diagnostic Hub**: Kusumbag Point, Moulvibazar Sadar, Moulvibazar 3200, Bangladesh
-- **Nationwide Coverage**: Insured courier delivery & certified technician dispatch across all 64 districts in Bangladesh
-- **Hotline & WhatsApp**: +880 1733 983752
-- **Email**: needelectro23@gmail.com
-- **Official Website**: [www.needelectro.store](https://www.needelectro.store)
-
+Proprietary © NEED ELECTRO. All rights reserved.
+Part of **Amdads Group**.

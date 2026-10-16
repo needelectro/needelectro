@@ -32,7 +32,11 @@ import {
   Camera,
   Wifi,
   ArrowRight,
+  CalendarCheck,
+  ClipboardList,
+  LifeBuoy,
 } from 'lucide-react';
+import { isShopEnabled } from '@/lib/featureFlags';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -341,17 +345,17 @@ export default function Header() {
             <nav className="flex-1 px-3 py-3 space-y-0.5">
               {[
                 { href: '/', label: 'Home', icon: Home, color: 'text-brand-500 bg-brand-50' },
-                { href: '/services', label: 'Services & Booking', icon: Zap, color: 'text-amber-500 bg-amber-50' },
-                { href: '/shop', label: 'Shop Marketplace', icon: ShoppingBag, color: 'text-purple-500 bg-purple-50' },
-                { href: '/categories', label: 'All Categories', icon: Layers, color: 'text-sky-500 bg-sky-50' },
-                { href: '/warranty', label: 'Warranty Check', icon: ShieldCheck, color: 'text-emerald-500 bg-emerald-50' },
-                { href: '/technicians', label: 'Verified Technicians', icon: Users, color: 'text-indigo-500 bg-indigo-50' },
-                { href: '/training', label: 'Skills Academy', icon: GraduationCap, color: 'text-rose-500 bg-rose-50' },
-                { href: '/branches', label: 'Branch Network', icon: Building2, color: 'text-slate-500 bg-slate-100' },
-                { href: '/locations', label: '64 Districts Coverage', icon: MapPin, color: 'text-teal-500 bg-teal-50' },
-                { href: '/software', label: 'Software & ERP', icon: Layers, color: 'text-violet-500 bg-violet-50' },
-                { href: '/about', label: 'About Us', icon: Store, color: 'text-slate-400 bg-slate-50' },
-                { href: '/contact', label: 'Contact & Support', icon: PhoneCall, color: 'text-brand-400 bg-brand-50' },
+                { href: '/services', label: 'Services', icon: Zap, color: 'text-amber-500 bg-amber-50' },
+                { href: '/booking', label: 'Book a Service', icon: CalendarCheck, color: 'text-brand-600 bg-brand-50' },
+                { href: '/customer/dashboard?tab=bookings', label: 'My Bookings', icon: ClipboardList, color: 'text-indigo-500 bg-indigo-50' },
+                { href: '/technician/dashboard', label: 'Technician Portal', icon: Wrench, color: 'text-amber-600 bg-amber-50' },
+                { href: '/admin', label: 'Admin Control Center', icon: LayoutDashboard, color: 'text-slate-700 bg-slate-100' },
+                { href: '/support', label: 'Support & Hotline', icon: LifeBuoy, color: 'text-sky-500 bg-sky-50' },
+                { href: '/parts', label: 'Parts & Materials', icon: ShoppingBag, color: 'text-purple-500 bg-purple-50' },
+                { href: '/warranty', label: 'Service Warranty', icon: ShieldCheck, color: 'text-emerald-500 bg-emerald-50' },
+                { href: '/technicians', label: 'Verified Technicians', icon: Users, color: 'text-teal-500 bg-teal-50' },
+                { href: '/locations', label: '64 Districts Coverage', icon: MapPin, color: 'text-rose-500 bg-rose-50' },
+                { href: '/training', label: 'Skills Academy', icon: GraduationCap, color: 'text-blue-500 bg-blue-50' },
               ].map(({ href, label, icon: Icon, color }) => {
                 const isActive = pathname === href || (href !== '/' && pathname?.startsWith(href));
                 return (
@@ -394,17 +398,19 @@ export default function Header() {
             <BrandLogo priority size="md" />
 
             {/* Desktop Navigation Links */}
-            <nav className="hidden lg:flex items-center gap-2 font-medium">
+            <nav className="hidden lg:flex items-center gap-1.5 font-medium">
               {[
                 { href: '/', label: 'Home', icon: Home, active: pathname === '/' },
                 { href: '/services', label: 'Services', icon: Zap, active: pathname?.startsWith('/services') },
-                { href: '/shop', label: 'Shop', icon: ShoppingBag, active: pathname?.startsWith('/shop') || pathname?.startsWith('/product') },
-                { href: '/warranty', label: 'Warranty', icon: ShieldCheck, active: pathname?.startsWith('/warranty') },
+                { href: '/booking', label: 'Book a Service', icon: CalendarCheck, active: pathname?.startsWith('/booking') },
+                { href: user ? '/customer/dashboard?tab=bookings' : '/customer/login?redirect=/customer/dashboard?tab=bookings', label: 'My Bookings', icon: ClipboardList, active: pathname?.includes('tab=bookings') },
+                { href: '/technician/dashboard', label: 'Technician Portal', icon: Wrench, active: pathname?.startsWith('/technician') },
+                { href: '/support', label: 'Support', icon: LifeBuoy, active: pathname?.startsWith('/support') },
               ].map(({ href, label, icon: Icon, active }) => (
                 <Link
                   key={href}
                   href={href}
-                  className={`group flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 border ${
+                  className={`group flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 border ${
                     active
                       ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white border-white/25 shadow-md shadow-brand-500/25 scale-[1.02]'
                       : 'bg-white/65 hover:bg-white/95 text-slate-700 hover:text-brand-600 border-white/85 hover:border-brand-200/80 backdrop-blur-md shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-md hover:-translate-y-0.5 active:scale-95'
@@ -432,10 +438,12 @@ export default function Header() {
                 </button>
 
                 {moreMenuOpen && (
-                  <div className="absolute top-full mt-2 right-0 w-52 bg-white/96 backdrop-blur-xl border border-white/90 rounded-2xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2">
+                  <div className="absolute top-full mt-2 right-0 w-56 bg-white/96 backdrop-blur-xl border border-white/90 rounded-2xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2">
                     {[
-                      { href: '/technicians', label: 'Technicians', icon: Users, color: 'text-sky-500' },
-                      { href: '/locations', label: 'Locations', icon: MapPin, color: 'text-emerald-500' },
+                      { href: '/parts', label: 'Parts & Materials', icon: ShoppingBag, color: 'text-purple-600' },
+                      { href: '/warranty', label: 'Service Warranty Check', icon: ShieldCheck, color: 'text-emerald-500' },
+                      { href: '/technicians', label: 'Verified Technicians', icon: Users, color: 'text-sky-500' },
+                      { href: '/locations', label: '64 Districts Coverage', icon: MapPin, color: 'text-teal-500' },
                       { href: '/training', label: 'Training Academy', icon: GraduationCap, color: 'text-amber-500' },
                       { href: '/software', label: 'Software & ERP', icon: Layers, color: 'text-brand-500' },
                       { href: '/branches', label: 'Branch Network', icon: Building2, color: 'text-sky-600' },

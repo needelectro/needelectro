@@ -49,8 +49,9 @@ export async function POST(
         throw new Error('Booking not found');
       }
 
-      if (existing.technicianId || existing.status !== 'MATCHING') {
-        throw new Error('This job has already been claimed by another technician.');
+      const claimableStatuses = ['MATCHING', 'REQUESTED', 'CONFIRMED', 'OFFERED', 'AVAILABLE'];
+      if (existing.technicianId || !claimableStatuses.includes(existing.status)) {
+        throw new Error('This job has already been claimed or is not available for dispatch.');
       }
 
       const updated = await tx.booking.update({
@@ -58,6 +59,16 @@ export async function POST(
         data: {
           technicianId: technician.id,
           status: 'ASSIGNED',
+        },
+      });
+
+      await tx.jobAssignment.create({
+        data: {
+          bookingId: id,
+          technicianId: technician.id,
+          status: 'ACCEPTED',
+          respondedAt: new Date(),
+          notes: `Directly claimed by ${session.name}`,
         },
       });
 

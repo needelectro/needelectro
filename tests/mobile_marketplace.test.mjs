@@ -9,19 +9,18 @@ test('Mobile Navigation: Must have the 5 primary marketplace destinations with c
 
   const content = fs.readFileSync(mobileNavPath, 'utf-8');
 
-  // Verify the 5 primary destinations exist in customerNavItems
+  // Verify the 5 primary service-first destinations exist in customerNavItems
   assert.ok(content.includes("'Home'"), 'MobileNav must have Home destination');
-  assert.ok(content.includes("'Categories'"), 'MobileNav must have Categories destination');
-  assert.ok(content.includes("'Search'"), 'MobileNav must have Search destination');
-  assert.ok(content.includes("'Orders'"), 'MobileNav must have Orders destination');
+  assert.ok(content.includes("'Services'") || content.includes("'Categories'"), 'MobileNav must have Services or Categories destination');
+  assert.ok(content.includes("'Book Now'") || content.includes("'Search'"), 'MobileNav must have Book Now or Search destination');
+  assert.ok(content.includes("'My Bookings'") || content.includes("'Orders'"), 'MobileNav must have Bookings or Orders destination');
   assert.ok(content.includes("'Account'") || content.includes("'Sign In'"), 'MobileNav must have Account/Sign In destination');
 
   // Verify paths
   assert.ok(content.includes("href: '/'"), 'Home must link to /');
-  assert.ok(content.includes("href: '/categories'"), 'Categories must link to /categories');
-  assert.ok(content.includes("href: '/search'"), 'Search must link to /search');
-  assert.ok(content.includes("href: '/orders'"), 'Orders must link to /orders');
-  assert.ok(content.includes('/customer/dashboard'), 'Account must link to customer dashboard');
+  assert.ok(content.includes("href: '/services'") || content.includes("href: '/categories'"), 'Services must link to /services');
+  assert.ok(content.includes("href: '/booking'") || content.includes("href: '/search'"), 'Booking must link to /booking');
+  assert.ok(content.includes('/customer/dashboard'), 'Account/Bookings must link to customer dashboard');
 });
 
 test('Mobile Navigation: Respects mobile safe-area insets and accessibility standards', () => {

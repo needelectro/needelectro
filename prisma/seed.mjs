@@ -470,12 +470,216 @@ async function main() {
     },
   });
 
-  await prisma.bookingTimeline.create({
-    data: {
-      bookingId: booking2.id,
-      status: 'MATCHING',
-      actorRole: 'SYSTEM',
-      note: 'Job broadcasted to verified technicians in Moulvibazar.',
+  // 9. Service Areas & Nationwide Hubs
+  const areaMoulvibazar = await prisma.serviceArea.upsert({
+    where: { id: 'sa-moulvibazar-sadar' },
+    update: {},
+    create: {
+      id: 'sa-moulvibazar-sadar',
+      district: 'Moulvibazar',
+      thana: 'Moulvibazar Sadar',
+      area: 'Kusumbag Point',
+      isActive: true,
+      serviceRadiusKm: 25,
+    },
+  });
+
+  const areaDhaka = await prisma.serviceArea.upsert({
+    where: { id: 'sa-dhaka-gulshan' },
+    update: {},
+    create: {
+      id: 'sa-dhaka-gulshan',
+      district: 'Dhaka',
+      thana: 'Gulshan',
+      area: 'Gulshan-2 & Banani',
+      isActive: true,
+      serviceRadiusKm: 30,
+    },
+  });
+
+  // 10. Spare Parts & Materials Catalog
+  const partBreaker = await prisma.part.upsert({
+    where: { sku: 'SCH-CB-16A' },
+    update: {},
+    create: {
+      sku: 'SCH-CB-16A',
+      name: 'Schneider Electric 16A Miniature Circuit Breaker (MCB)',
+      category: 'ELECTRICAL_MATERIALS',
+      price: 380.0,
+      costPrice: 290.0,
+      stock: 150,
+      unit: 'piece',
+      isAvailable: true,
+    },
+  });
+
+  const partCable = await prisma.part.upsert({
+    where: { sku: 'BRB-CU-15RM' },
+    update: {},
+    create: {
+      sku: 'BRB-CU-15RM',
+      name: 'BRB 1.5 RM Copper Fire-Retardant House Wiring Cable',
+      category: 'ELECTRICAL_MATERIALS',
+      price: 68.0,
+      costPrice: 52.0,
+      stock: 500,
+      unit: 'meter',
+      isAvailable: true,
+    },
+  });
+
+  const partBNC = await prisma.part.upsert({
+    where: { sku: 'DH-BNC-CON' },
+    update: {},
+    create: {
+      sku: 'DH-BNC-CON',
+      name: 'Dahua Pure Copper Gold-Plated BNC Video Connector',
+      category: 'CCTV_ACCESSORIES',
+      price: 35.0,
+      costPrice: 20.0,
+      stock: 300,
+      unit: 'piece',
+      isAvailable: true,
+    },
+  });
+
+  // Booking 3: Full Completed Lifecycle with Quote, Parts, Invoice, Warranty & Review
+  const booking3 = await prisma.booking.upsert({
+    where: { bookingNumber: 'NE202610030003' },
+    update: {},
+    create: {
+      bookingNumber: 'NE202610030003',
+      customerId: customerProfile.id,
+      technicianId: techProfile1.id,
+      serviceId: srvHouseWiring.id,
+      problemDescription: 'Main circuit breaker replacement and load balancing for ground floor commercial office.',
+      addressId: customerAddress.id,
+      thana: 'Moulvibazar Sadar',
+      preferredDate: '2026-10-08',
+      preferredTimeSlot: '11:00 AM - 01:00 PM',
+      urgency: 'NORMAL',
+      status: 'PAID',
+      totalAmount: 1880.0, // 1500 labor + 380 breaker
+      paymentStatus: 'PAID',
+      paymentMethod: 'BKASH',
+      customerNotes: 'Completed smoothly with official 30-day warranty.',
+      completedAt: new Date('2026-10-08T14:30:00Z'),
+    },
+  });
+
+  // Quote for Booking 3
+  await prisma.quote.upsert({
+    where: { quoteNumber: 'QT202610030003' },
+    update: {},
+    create: {
+      quoteNumber: 'QT202610030003',
+      bookingId: booking3.id,
+      laborCost: 1500.0,
+      partsCost: 380.0,
+      discount: 0.0,
+      totalAmount: 1880.0,
+      notes: 'Schneider 16A MCB supplied directly by NEED ELECTRO technician.',
+      validUntil: new Date('2026-10-15T00:00:00Z'),
+      status: 'ACCEPTED',
+    },
+  });
+
+  // Job Assignment for Booking 3
+  await prisma.jobAssignment.upsert({
+    where: { id: 'ja-booking3' },
+    update: {},
+    create: {
+      id: 'ja-booking3',
+      bookingId: booking3.id,
+      technicianId: techProfile1.id,
+      status: 'COMPLETED',
+      offeredAt: new Date('2026-10-08T09:00:00Z'),
+      respondedAt: new Date('2026-10-08T09:05:00Z'),
+      notes: 'Accepted within 5 minutes and executed to safety code.',
+    },
+  });
+
+  // Parts used in Booking 3
+  await prisma.bookingPart.upsert({
+    where: { id: 'bp-booking3-breaker' },
+    update: {},
+    create: {
+      id: 'bp-booking3-breaker',
+      bookingId: booking3.id,
+      partId: partBreaker.id,
+      quantity: 1,
+      unitPrice: 380.0,
+      totalPrice: 380.0,
+      addedBy: 'TECHNICIAN',
+    },
+  });
+
+  // Invoice for Booking 3
+  const invoice3 = await prisma.serviceInvoice.upsert({
+    where: { invoiceNumber: 'INV-SRV-20261003001' },
+    update: {},
+    create: {
+      invoiceNumber: 'INV-SRV-20261003001',
+      bookingId: booking3.id,
+      laborAmount: 1500.0,
+      partsAmount: 380.0,
+      totalAmount: 1880.0,
+      paymentStatus: 'PAID',
+      paymentMethod: 'BKASH',
+      paidAt: new Date('2026-10-08T14:35:00Z'),
+    },
+  });
+
+  // Service Payment for Booking 3
+  await prisma.servicePayment.upsert({
+    where: { paymentNumber: 'PAY-20261003001' },
+    update: {},
+    create: {
+      paymentNumber: 'PAY-20261003001',
+      invoiceId: invoice3.id,
+      bookingId: booking3.id,
+      amount: 1880.0,
+      paymentType: 'FINAL',
+      paymentMethod: 'BKASH',
+      trxId: 'BKASH9X7A221',
+      status: 'PAID',
+      paidAt: new Date('2026-10-08T14:35:00Z'),
+    },
+  });
+
+  // Service Warranty for Booking 3 (30 days)
+  await prisma.serviceWarranty.upsert({
+    where: { warrantyNumber: 'WR-20261003001' },
+    update: {},
+    create: {
+      warrantyNumber: 'WR-20261003001',
+      invoiceId: invoice3.id,
+      bookingId: booking3.id,
+      serviceTitle: 'Complete House Electrical Wiring & Breaker Panel',
+      warrantyPeriodDays: 30,
+      startDate: new Date('2026-10-08T14:30:00Z'),
+      expiryDate: new Date('2026-11-07T14:30:00Z'),
+      terms: 'Covers workmanship, terminal joints, and installation safety for 30 calendar days.',
+      status: 'ACTIVE',
+    },
+  });
+
+  // Customer Review for Booking 3
+  await prisma.review.upsert({
+    where: { id: 'rev-booking3' },
+    update: {},
+    create: {
+      id: 'rev-booking3',
+      customerId: customerProfile.id,
+      bookingId: booking3.id,
+      technicianId: techProfile1.id,
+      rating: 5,
+      ratingProfessionalism: 5,
+      ratingQuality: 5,
+      ratingPunctuality: 5,
+      ratingBehavior: 5,
+      comment: 'Md. Abul Kalam arrived promptly with proper safety shoes and tester. Replaced the MCB neatly and tested our ground voltage. Highly recommended!',
+      isApproved: true,
     },
   });
 

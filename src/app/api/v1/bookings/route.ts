@@ -16,9 +16,9 @@ export async function GET(req: NextRequest) {
     let whereClause: any = {};
 
     if (availableJobs) {
-      // Jobs waiting for technician matching
+      // Jobs waiting for technician matching/dispatch
       whereClause = {
-        status: 'MATCHING',
+        status: { in: ['MATCHING', 'REQUESTED', 'CONFIRMED', 'OFFERED', 'AVAILABLE'] },
         technicianId: null,
       };
     } else if (session) {
@@ -40,8 +40,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (status) {
-      whereClause.status = status;
+    if (status && status !== 'ALL') {
+      if (status === 'AVAILABLE') {
+        whereClause.status = { in: ['MATCHING', 'REQUESTED', 'CONFIRMED', 'OFFERED', 'AVAILABLE'] };
+        whereClause.technicianId = null;
+      } else {
+        whereClause.status = status;
+      }
     }
 
     const bookings = await prisma.booking.findMany({
@@ -56,9 +61,13 @@ export async function GET(req: NextRequest) {
         },
         customer: {
           include: {
-            user: { select: { name: true, phone: true } },
+            user: { select: { name: true, phone: true, email: true } },
           },
         },
+        quotes: true,
+        invoice: true,
+        warranty: true,
+        bookingParts: true,
         timeline: {
           orderBy: { timestamp: 'asc' },
         },
@@ -89,6 +98,11 @@ export async function POST(req: NextRequest) {
       paymentMethod = 'CASH_ON_DELIVERY',
       customerNotes,
       address, // either addressId or new address object
+      thana,
+      mediaUrls,
+      estimatedBudget,
+      advancePaid = 0.0,
+      status: requestedStatus,
     } = body;
 
     if (!serviceId || !problemDescription || !preferredDate || !preferredTimeSlot) {
@@ -127,61 +141,91 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Handle Address
-    let addressId = typeof address === 'string' ? address : null;
-    if (!addressId && typeof address === 'object') {
+    // Handle Address (accept either address or location parameter)
+    const targetAddress = address || body.location;
+    let addressId = typeof targetAddress === 'string' ? targetAddress : null;
+    let resolvedThana = thana;
+    if (!addressId && typeof targetAddress === 'object' && targetAddress) {
       const createdAddr = await prisma.address.create({
         data: {
           customerId: customerProfileId,
-          recipientName: address.recipientName || 'Customer',
-          phone: address.phone || '01733983752',
-          division: address.division || 'Sylhet',
-          district: address.district || 'Moulvibazar',
-          upazila: address.upazila || 'Moulvibazar Sadar',
-          area: address.area || 'Kusumbag',
-          addressLine: address.addressLine || 'Main Road',
-          landmark: address.landmark,
+          recipientName: targetAddress.recipientName || 'Customer',
+          phone: targetAddress.phone || body.customerPhone || '01733983752',
+          division: targetAddress.division || 'Sylhet',
+          district: targetAddress.district || 'Moulvibazar',
+          upazila: targetAddress.upazila || targetAddress.thana || 'Moulvibazar Sadar',
+          area: targetAddress.area || 'Kusumbag',
+          addressLine: targetAddress.addressLine || 'Main Road',
+          landmark: targetAddress.landmark,
         },
       });
       addressId = createdAddr.id;
+      if (!resolvedThana) resolvedThana = createdAddr.upazila;
     }
 
     // Fetch service price
     const service = await prisma.service.findUnique({ where: { id: serviceId } });
-    const totalAmount = service ? service.basePrice : 500.0;
+    const totalAmount = service ? service.basePrice : (estimatedBudget || 500.0);
 
     // Generate unique booking number: NE + YYYYMMDD + Random 4 digits
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const bookingNumber = `NE${dateStr}${randomSuffix}`;
 
-    const booking = await prisma.booking.create({
-      data: {
-        bookingNumber,
-        customerId: customerProfileId,
-        serviceId,
-        problemDescription,
-        preferredDate,
-        preferredTimeSlot,
-        urgency,
-        status: 'MATCHING',
-        paymentMethod,
-        totalAmount,
-        customerNotes,
-        addressId,
-        timeline: {
-          create: {
-            status: 'RECEIVED',
-            actorRole: 'CUSTOMER',
-            note: 'Service booking request created and verified.',
+    const bookingStatus = requestedStatus || 'REQUESTED';
+
+    const booking = await prisma.$transaction(async (tx) => {
+      const createdBooking = await tx.booking.create({
+        data: {
+          bookingNumber,
+          customerId: customerProfileId,
+          serviceId,
+          problemDescription,
+          preferredDate,
+          preferredTimeSlot,
+          urgency,
+          status: bookingStatus,
+          paymentMethod,
+          totalAmount,
+          customerNotes,
+          addressId,
+          thana: resolvedThana,
+          mediaUrls: Array.isArray(mediaUrls) ? mediaUrls.join(',') : mediaUrls,
+          estimatedBudget: estimatedBudget ? Number(estimatedBudget) : totalAmount,
+          advancePaid: Number(advancePaid) || 0.0,
+          timeline: {
+            create: {
+              status: 'REQUESTED',
+              actorRole: 'CUSTOMER',
+              actorId: session.id,
+              note: 'Service booking request created with instant estimate.',
+            },
           },
         },
-      },
-      include: {
-        service: true,
-        address: true,
-        timeline: true,
-      },
+        include: {
+          service: true,
+          address: true,
+          timeline: true,
+        },
+      });
+
+      // Auto-generate initial formal Quote
+      const validUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+      await tx.quote.create({
+        data: {
+          quoteNumber: `QT${dateStr}${randomSuffix}`,
+          bookingId: createdBooking.id,
+          laborCost: totalAmount,
+          partsCost: 0.0,
+          discount: 0.0,
+          totalAmount: totalAmount,
+          notes: `Official preliminary estimate for ${service?.name || 'Service'}. Parts cost determined on-site if needed.`,
+          validUntil,
+          status: 'PENDING',
+        },
+      });
+
+      return createdBooking;
     });
 
     return NextResponse.json({ success: true, booking });

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/lib/context/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   LayoutDashboard, ShoppingBag, Wrench, Shield, LifeBuoy, LogOut,
   User, ChevronRight, Package, Clock, CheckCircle2, AlertCircle,
@@ -41,10 +41,18 @@ interface AddressItem {
   createdAt: string;
 }
 
-export default function CustomerDashboard() {
+function CustomerDashboardContent() {
   const { user, logout, refreshUser } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabKey>('overview');
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab') as TabKey | null;
+  const [activeTab, setActiveTab] = useState<TabKey>(tabParam || 'overview');
+
+  useEffect(() => {
+    if (tabParam && ['overview', 'bookings', 'orders', 'warranty', 'support', 'profile'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
   const [bookings, setBookings] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [warranties, setWarranties] = useState<any[]>([]);
@@ -421,11 +429,11 @@ export default function CustomerDashboard() {
               Book a Service
             </Link>
             <Link
-              href="/shop"
+              href="/parts"
               className="flex items-center gap-2 text-xs font-bold text-slate-700 hover:text-brand-600 py-1.5 transition"
             >
               <ShoppingBag className="w-3.5 h-3.5 text-brand-500" />
-              Shop Products
+              Spare Parts & Materials
             </Link>
             <Link
               href="/warranty"
@@ -1420,5 +1428,13 @@ export default function CustomerDashboard() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function CustomerDashboard() {
+  return (
+    <React.Suspense fallback={<div className="min-h-screen bg-slate-50 flex items-center justify-center text-xs text-slate-400">Loading customer portal...</div>}>
+      <CustomerDashboardContent />
+    </React.Suspense>
   );
 }

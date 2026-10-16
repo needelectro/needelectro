@@ -11,7 +11,10 @@ import {
   Package, 
   User, 
   Briefcase, 
-  Wallet
+  Wallet,
+  Zap,
+  CalendarCheck,
+  ClipboardList
 } from 'lucide-react';
 
 export default function MobileNav() {
@@ -26,7 +29,7 @@ export default function MobileNav() {
 
   const isTechnician = user?.role === 'TECHNICIAN';
 
-  // Navigation items for Marketplace Customer / Guest
+  // Navigation items for Service Marketplace Customer / Guest
   const customerNavItems = [
     {
       label: 'Home',
@@ -35,22 +38,22 @@ export default function MobileNav() {
       isActive: pathname === '/',
     },
     {
-      label: 'Categories',
-      href: '/categories',
-      icon: LayoutGrid,
-      isActive: pathname === '/categories' || pathname?.startsWith('/shop'),
+      label: 'Services',
+      href: '/services',
+      icon: Zap,
+      isActive: pathname?.startsWith('/services'),
     },
     {
-      label: 'Search',
-      href: '/search',
-      icon: Search,
-      isActive: pathname?.startsWith('/search'),
+      label: 'Book Now',
+      href: '/booking',
+      icon: CalendarCheck,
+      isActive: pathname?.startsWith('/booking'),
     },
     {
-      label: 'Orders',
-      href: '/orders',
-      icon: Package,
-      isActive: pathname?.startsWith('/orders'),
+      label: 'My Bookings',
+      href: user ? '/customer/dashboard?tab=bookings' : '/customer/login?redirect=/customer/dashboard?tab=bookings',
+      icon: ClipboardList,
+      isActive: pathname?.includes('tab=bookings'),
     },
     {
       label: user ? 'Account' : 'Sign In',

@@ -99,6 +99,10 @@ model TechnicianProfile {
   walletTransactions    WalletTransaction[]
   reviewsReceived       Review[]
   payoutRequests        PayoutRequest[]
+  skillsList            TechnicianSkill[]
+  serviceAreasList      TechnicianServiceArea[]
+  availabilitySlots     AvailabilitySlot[]
+  jobAssignments        JobAssignment[]
 }
 
 model ServiceCategory {
@@ -113,6 +117,58 @@ model ServiceCategory {
   createdAt   DateTime  @default(now())
 
   services    Service[]
+}
+
+model ServiceArea {
+  id          String    @id @default(cuid())
+  division    String    @default("Sylhet")
+  district    String
+  thana       String
+  areaName    String
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+
+  @@index([district, thana])
+}
+
+model TechnicianSkill {
+  id              String            @id @default(cuid())
+  technicianId    String
+  technician      TechnicianProfile @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+  skillName       String
+  category        String?           @default("ELECTRICAL")
+  experienceYears Int               @default(1)
+  certificateUrl  String?
+  createdAt       DateTime          @default(now())
+
+  @@index([technicianId])
+}
+
+model TechnicianServiceArea {
+  id           String            @id @default(cuid())
+  technicianId String
+  technician   TechnicianProfile @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+  division     String            @default("Sylhet")
+  district     String
+  thana        String
+  area         String?
+  createdAt    DateTime          @default(now())
+
+  @@index([technicianId])
+  @@index([district, thana])
+}
+
+model AvailabilitySlot {
+  id           String            @id @default(cuid())
+  technicianId String
+  technician   TechnicianProfile @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+  dayOfWeek    Int               // 0 = Sunday, 1 = Monday ... 6 = Saturday
+  startTime    String            @default("09:00")
+  endTime      String            @default("18:00")
+  isAvailable  Boolean           @default(true)
+  createdAt    DateTime          @default(now())
+
+  @@index([technicianId])
 }
 
 model Service {
@@ -150,17 +206,23 @@ model Booking {
   problemDescription String
   addressId          String?
   address            Address?             @relation(fields: [addressId], references: [id])
+  thana              String?
   preferredDate      String
   preferredTimeSlot  String
   urgency            String               @default("NORMAL") // NORMAL, EMERGENCY
-  status             String               @default("RECEIVED") 
-  // RECEIVED -> MATCHING -> ASSIGNED -> ON_THE_WAY -> ARRIVED -> IN_PROGRESS -> COMPLETED -> CUSTOMER_CONFIRMED -> PAID -> CLOSED -> CANCELLED
+  status             String               @default("REQUESTED") 
+  // DRAFT -> REQUESTED -> QUOTED -> CONFIRMED -> ASSIGNED -> EN_ROUTE -> ARRIVED -> IN_PROGRESS -> COMPLETED -> PAID -> CLOSED
+  // Also: CANCELLED, DISPUTED, REFUNDED
   customerNotes      String?
   technicianNotes    String?
+  estimatedBudget    Float?
+  advancePaid        Float                @default(0.0)
   totalAmount        Float                @default(0.0)
   paymentStatus      String               @default("PENDING") // PENDING, PAID, REFUNDED
-  paymentMethod      String               @default("CASH_ON_DELIVERY") // BKASH, NAGAD, CARD, BANK_TRANSFER, CASH_ON_DELIVERY
+  paymentMethod      String               @default("CASH_ON_DELIVERY") // BKASH, NAGAD, ROCKET, CARD, CASH_ON_DELIVERY
   mediaUrls          String?              // Comma-separated photo/video urls
+  beforePhotos       String?              // Comma-separated or JSON
+  afterPhotos        String?              // Comma-separated or JSON
   completedAt        DateTime?
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
@@ -169,6 +231,135 @@ model Booking {
   reviews            Review[]
   earnings           TechnicianEarnings[]
   disputes           Dispute[]
+  quotes             Quote[]
+  jobAssignments     JobAssignment[]
+  invoice            ServiceInvoice?
+  payments           ServicePayment[]
+  warranty           ServiceWarranty?
+  bookingParts       BookingPart[]
+
+  @@index([status])
+  @@index([customerId])
+  @@index([technicianId])
+}
+
+model Quote {
+  id          String   @id @default(cuid())
+  quoteNumber String   @unique // QT202610170001
+  bookingId   String
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  laborCost   Float    @default(0.0)
+  partsCost   Float    @default(0.0)
+  discount    Float    @default(0.0)
+  totalAmount Float    @default(0.0)
+  notes       String?
+  validUntil  DateTime
+  status      String   @default("PENDING") // PENDING, ACCEPTED, REJECTED, EXPIRED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([bookingId])
+}
+
+model JobAssignment {
+  id           String            @id @default(cuid())
+  bookingId    String
+  booking      Booking           @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  technicianId String
+  technician   TechnicianProfile @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+  status       String            @default("OFFERED") // OFFERED, ACCEPTED, REJECTED, CANCELLED, COMPLETED
+  offeredAt    DateTime          @default(now())
+  respondedAt  DateTime?
+  notes        String?
+
+  @@index([bookingId])
+  @@index([technicianId])
+}
+
+model ServiceInvoice {
+  id             String          @id @default(cuid())
+  invoiceNumber  String          @unique // INV-SRV-20261017001
+  bookingId      String          @unique
+  booking        Booking         @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  laborAmount    Float           @default(0.0)
+  partsAmount    Float           @default(0.0)
+  taxAmount      Float           @default(0.0)
+  discountAmount Float           @default(0.0)
+  totalAmount    Float           @default(0.0)
+  paymentStatus  String          @default("UNPAID") // UNPAID, PARTIALLY_PAID, PAID, REFUNDED
+  paymentMethod  String          @default("CASH_ON_DELIVERY")
+  paidAt         DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  payments       ServicePayment[]
+  warranty       ServiceWarranty?
+}
+
+model ServicePayment {
+  id            String          @id @default(cuid())
+  paymentNumber String          @unique // PAY-20261017001
+  invoiceId     String
+  invoice       ServiceInvoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  bookingId     String
+  booking       Booking         @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  amount        Float
+  paymentType   String          @default("FINAL") // ADVANCE, FINAL, REFUND
+  paymentMethod String          @default("CASH_ON_DELIVERY") // BKASH, NAGAD, ROCKET, CARD, CASH_ON_DELIVERY
+  trxId         String?
+  status        String          @default("PENDING") // PENDING, VERIFYING, PAID, FAILED, REFUNDED
+  paidAt        DateTime?
+  createdAt     DateTime        @default(now())
+
+  @@index([bookingId])
+}
+
+model ServiceWarranty {
+  id                 String          @id @default(cuid())
+  warrantyNumber     String          @unique // WR-20261017001
+  invoiceId          String?         @unique
+  invoice            ServiceInvoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  bookingId          String          @unique
+  booking            Booking         @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  serviceTitle       String
+  warrantyPeriodDays Int             @default(30)
+  startDate          DateTime        @default(now())
+  expiryDate         DateTime
+  terms              String          @default("Covers workmanship and installation defects for 30 days.")
+  status             String          @default("ACTIVE") // ACTIVE, EXPIRED, CLAIMED
+  createdAt          DateTime        @default(now())
+}
+
+model Part {
+  id          String        @id @default(cuid())
+  sku         String        @unique
+  name        String
+  category    String        @default("ELECTRICAL_MATERIALS")
+  price       Float         @default(0.0)
+  costPrice   Float         @default(0.0)
+  stock       Int           @default(100)
+  unit        String        @default("piece") // piece, meter, box, roll
+  isAvailable Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  bookingParts BookingPart[]
+}
+
+model BookingPart {
+  id         String   @id @default(cuid())
+  bookingId  String
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  partId     String
+  part       Part     @relation(fields: [partId], references: [id])
+  quantity   Int      @default(1)
+  unitPrice  Float
+  totalPrice Float
+  addedBy    String?  // TECHNICIAN, ADMIN
+  createdAt  DateTime @default(now())
+
+  @@index([bookingId])
+  @@index([partId])
 }
 
 model BookingTimeline {
