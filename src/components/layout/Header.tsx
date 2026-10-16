@@ -402,9 +402,7 @@ export default function Header() {
               {[
                 { href: '/', label: 'Home', icon: Home, active: pathname === '/' },
                 { href: '/services', label: 'Services', icon: Zap, active: pathname?.startsWith('/services') },
-                { href: '/booking', label: 'Book a Service', icon: CalendarCheck, active: pathname?.startsWith('/booking') },
                 { href: '/shop', label: 'Shop', icon: ShoppingBag, active: pathname?.startsWith('/shop') },
-                { href: '/technician/dashboard', label: 'Technician Portal', icon: Wrench, active: pathname?.startsWith('/technician') },
                 { href: '/support', label: 'Support', icon: LifeBuoy, active: pathname?.startsWith('/support') },
               ].map(({ href, label, icon: Icon, active }) => (
                 <Link
@@ -440,6 +438,8 @@ export default function Header() {
                 {moreMenuOpen && (
                   <div className="absolute top-full mt-2 right-0 w-56 bg-white/96 backdrop-blur-xl border border-white/90 rounded-2xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2">
                     {[
+                      { href: '/booking', label: 'Book a Service', icon: CalendarCheck, color: 'text-brand-600' },
+                      { href: '/technician/dashboard', label: 'Technician Portal', icon: Wrench, color: 'text-amber-600' },
                       { href: '/customer/dashboard?tab=bookings', label: 'My Bookings', icon: ClipboardList, color: 'text-indigo-600' },
                       { href: '/parts', label: 'Parts & Materials', icon: ShoppingBag, color: 'text-purple-600' },
                       { href: '/warranty', label: 'Service Warranty Check', icon: ShieldCheck, color: 'text-emerald-500' },
