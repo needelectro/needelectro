@@ -298,26 +298,26 @@ export default function ServicesPage() {
         </div>
       )}
 
-      {/* BOOKING MODAL - Frosted Glass Sheen */}
+      {/* BOOKING MODAL */}
       {bookingModalOpen && selectedService && (
         <div 
-          className="fixed inset-0 z-[100] bg-slate-950/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain"
+          className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain"
           onClick={(e) => {
             if (e.target === e.currentTarget) setBookingModalOpen(false);
           }}
         >
-          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl border border-white/90 relative animate-in zoom-in-95 my-auto overflow-hidden">
+          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-200/90 relative animate-in fade-in zoom-in-95 my-auto overflow-hidden">
             {/* Header (Always Visible at Top) */}
-            <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-100 bg-slate-50/80 backdrop-blur-md shrink-0">
+            <div className="flex items-center justify-between px-5 sm:px-6 py-3.5 border-b border-slate-100 bg-white shrink-0 z-10">
               <div className="flex items-center gap-3 min-w-0 pr-2">
-                <div className="w-10 h-10 rounded-xl bg-brand-500 text-white flex items-center justify-center font-bold shrink-0 shadow-xs">
+                <div className="w-10 h-10 rounded-2xl bg-brand-500 text-white flex items-center justify-center font-bold shrink-0 shadow-sm shadow-brand-500/25">
                   <Zap className="w-5 h-5 fill-white" />
                 </div>
                 <div className="min-w-0">
                   <h3 className="font-extrabold text-slate-900 text-sm sm:text-base leading-tight truncate">
                     {bookingSuccess ? 'Booking Confirmed' : selectedService.name}
                   </h3>
-                  <p className="text-xs text-brand-600 font-semibold truncate">
+                  <p className="text-xs text-brand-600 font-semibold truncate mt-0.5">
                     {bookingSuccess 
                       ? `Ref: ${bookingSuccess.bookingNumber}` 
                       : `Estimated: ৳${selectedService.basePrice} (${selectedService.priceType})`}
@@ -335,52 +335,53 @@ export default function ServicesPage() {
               </button>
             </div>
 
-            {/* Scrollable Content Body */}
-            <div className="overflow-y-auto p-5 sm:p-6 overscroll-contain flex-1">
-              {bookingSuccess ? (
-                <div className="text-center py-4 space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-600 border border-emerald-500/30 flex items-center justify-center mx-auto shadow-xs">
-                    <CheckCircle2 className="w-10 h-10" />
-                  </div>
-                  <h3 className="text-2xl font-black text-slate-950">Booking Confirmed!</h3>
-                  <p className="text-xs text-slate-600 max-w-sm mx-auto">
-                    Your booking reference is <strong className="text-brand-600 text-sm font-mono">{bookingSuccess.bookingNumber}</strong>. We are broadcasting to verified technicians in your area.
-                  </p>
-                  <div className="glass-card p-4 rounded-2xl text-xs text-left space-y-1.5">
-                    <p><strong>Service:</strong> {selectedService.name}</p>
-                    <p><strong>Scheduled:</strong> {bookingSuccess.preferredDate} ({bookingSuccess.preferredTimeSlot})</p>
-                    <p><strong>Estimated Amount:</strong> ৳{bookingSuccess.totalAmount}</p>
-                  </div>
-                  <div className="pt-2 flex gap-3">
-                    <Link
-                      href="/customer/dashboard"
-                      className="btn-primary flex-1 text-xs py-2.5 text-center"
-                    >
-                      Track in Dashboard
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => setBookingModalOpen(false)}
-                      className="btn-secondary flex-1 text-xs py-2.5"
-                    >
-                      Done
-                    </button>
-                  </div>
+            {bookingSuccess ? (
+              <div className="p-6 text-center space-y-4 overflow-y-auto flex-1">
+                <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-xs">
+                  <CheckCircle2 className="w-10 h-10" />
                 </div>
-              ) : (
-                <form onSubmit={handleCreateBooking} className="space-y-4">
+                <h3 className="text-2xl font-black text-slate-950">Booking Confirmed!</h3>
+                <p className="text-xs text-slate-600 max-w-sm mx-auto">
+                  Your booking reference is <strong className="text-brand-600 text-sm font-mono">{bookingSuccess.bookingNumber}</strong>. We are broadcasting to verified technicians in your area.
+                </p>
+                <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-2xl text-xs text-left space-y-1.5 text-slate-700">
+                  <p><strong>Service:</strong> {selectedService.name}</p>
+                  <p><strong>Scheduled:</strong> {bookingSuccess.preferredDate} ({bookingSuccess.preferredTimeSlot})</p>
+                  <p><strong>Estimated Amount:</strong> ৳{bookingSuccess.totalAmount}</p>
+                  <p><strong>Contact Phone:</strong> {phone}</p>
+                </div>
+                <div className="pt-2 flex gap-3">
+                  <Link
+                    href="/customer/dashboard?tab=bookings"
+                    className="btn-primary flex-1 text-xs py-2.5 text-center"
+                  >
+                    Track in Dashboard
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => setBookingModalOpen(false)}
+                    className="btn-secondary flex-1 text-xs py-2.5"
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleCreateBooking} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+                {/* Scrollable Form Body */}
+                <div className="overflow-y-auto p-5 space-y-3.5 flex-1">
                   {/* Problem Description */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
                       Describe the Issue or Job Requirements *
                     </label>
                     <textarea
-                      rows={3}
+                      rows={2}
                       required
-                      placeholder="e.g. 2nd floor wiring trip, need short circuit check and earthing voltage inspection..."
+                      placeholder="e.g. 2nd floor wiring trip, need short circuit check, sparking or new fitting..."
                       value={problemDescription}
                       onChange={(e) => setProblemDescription(e.target.value)}
-                      className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500"
+                      className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-brand-500"
                     />
                   </div>
 
@@ -393,7 +394,7 @@ export default function ServicesPage() {
                         required
                         value={preferredDate}
                         onChange={(e) => setPreferredDate(e.target.value)}
-                        className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+                        className="w-full text-xs p-2 bg-slate-50 border border-slate-200 rounded-xl"
                       />
                     </div>
                     <div>
@@ -401,7 +402,7 @@ export default function ServicesPage() {
                       <select
                         value={preferredTimeSlot}
                         onChange={(e) => setPreferredTimeSlot(e.target.value)}
-                        className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+                        className="w-full text-xs p-2 bg-slate-50 border border-slate-200 rounded-xl"
                       >
                         <option>09:00 AM - 12:00 PM</option>
                         <option>12:00 PM - 03:00 PM</option>
@@ -422,7 +423,7 @@ export default function ServicesPage() {
                         placeholder="e.g. Rahim Ahmed"
                         value={customerName}
                         onChange={(e) => setCustomerName(e.target.value)}
-                        className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+                        className="w-full text-xs p-2 bg-slate-50 border border-slate-200 rounded-xl"
                       />
                     </div>
                     <div>
@@ -433,51 +434,61 @@ export default function ServicesPage() {
                         placeholder="01XXXXXXXXX"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono"
+                        className="w-full text-xs p-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs"
                       />
                     </div>
                   </div>
 
                   {/* Area & Address */}
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Service Area (Moulvibazar) *</label>
-                    <select
-                      value={addressArea}
-                      onChange={(e) => setAddressArea(e.target.value)}
-                      className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
-                    >
-                      <option>Kusumbag Point</option>
-                      <option>Moulvibazar Sadar</option>
-                      <option>Court Road</option>
-                      <option>Sreemangal Road</option>
-                      <option>Shamshernagar Road</option>
-                      <option>Rajnagar</option>
-                    </select>
-                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Service Area (Moulvibazar) *</label>
+                      <select
+                        value={addressArea}
+                        onChange={(e) => setAddressArea(e.target.value)}
+                        className="w-full text-xs p-2 bg-slate-50 border border-slate-200 rounded-xl"
+                      >
+                        <option>Kusumbag Point</option>
+                        <option>Moulvibazar Sadar</option>
+                        <option>Court Road</option>
+                        <option>Sreemangal Road</option>
+                        <option>Shamshernagar Road</option>
+                        <option>Rajnagar</option>
+                      </select>
+                    </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Street Address / Landmark</label>
-                    <input
-                      type="text"
-                      placeholder="House/Holding #, Road #, Near Mosque or Market"
-                      value={addressLine}
-                      onChange={(e) => setAddressLine(e.target.value)}
-                      className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
-                    />
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Street Address / Landmark</label>
+                      <input
+                        type="text"
+                        placeholder="House #, Road #, Landmark"
+                        value={addressLine}
+                        onChange={(e) => setAddressLine(e.target.value)}
+                        className="w-full text-xs p-2 bg-slate-50 border border-slate-200 rounded-xl"
+                      />
+                    </div>
                   </div>
+                </div>
 
-                  <div className="pt-2">
-                    <button
-                      type="submit"
-                      disabled={bookingSubmitting}
-                      className="btn-primary w-full py-3 text-xs font-bold shadow-md"
-                    >
-                      {bookingSubmitting ? 'Confirming Booking...' : 'Confirm & Request Technician'}
-                    </button>
-                  </div>
-                </form>
-              )}
-            </div>
+                {/* Sticky Modal Footer (Always Visible Without Scrolling) */}
+                <div className="p-4 border-t border-slate-100 bg-slate-50/95 backdrop-blur-sm shrink-0 flex items-center justify-between gap-3 z-10">
+                  <button
+                    type="button"
+                    onClick={() => setBookingModalOpen(false)}
+                    className="btn-secondary text-xs py-2.5 px-4"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={bookingSubmitting}
+                    className="btn-primary flex-1 text-xs py-2.5 px-6 shadow-md shadow-brand-500/25 justify-center font-bold"
+                  >
+                    {bookingSubmitting ? 'Confirming Booking...' : 'Confirm & Request Technician'}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

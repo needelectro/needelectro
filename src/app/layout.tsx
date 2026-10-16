@@ -178,7 +178,7 @@ export default function RootLayout({
           <CartProvider>
             <AdminGuard>
               <Header />
-              <main className="flex-1 pb-24 md:pb-0 relative z-0 min-w-0 w-full">{children}</main>
+              <main className="flex-1 pb-24 md:pb-0 relative min-w-0 w-full">{children}</main>
               <Footer />
               <MobileNav />
               <PwaInstallPrompt />
