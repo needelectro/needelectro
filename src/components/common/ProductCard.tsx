@@ -5,12 +5,8 @@ import Link from 'next/link';
 import { 
   ShoppingCart, 
   ShieldCheck, 
-  Truck, 
   Check, 
-  CheckCircle2, 
-  Heart,
-  Star,
-  Eye
+  Heart 
 } from 'lucide-react';
 import { useCart } from '@/lib/context/CartContext';
 
@@ -90,7 +86,6 @@ export default function ProductCard({ product, onAddToCart, className = '' }: Pr
     : 0;
 
   const isOutOfStock = typeof product.stock === 'number' && product.stock <= 0;
-  const isLowStock = typeof product.stock === 'number' && product.stock > 0 && product.stock <= 3;
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -110,15 +105,15 @@ export default function ProductCard({ product, onAddToCart, className = '' }: Pr
 
   return (
     <div
-      className={`card-premium overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${
-        product.isFeatured ? 'border-brand-300 bg-brand-50/10' : ''
+      className={`relative rounded-3xl border border-[#cde4fd] bg-[#f0f6fe] overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:shadow-lg hover:border-brand-400 ${
+        product.isFeatured ? 'ring-2 ring-brand-400/50' : ''
       } ${className}`}
     >
       <div>
-        {/* Square Image container with zoom effect, badges and wishlist button */}
+        {/* Top White Square Image Container */}
         <Link 
           href={`/product/${product.slug}`} 
-          className="block relative aspect-square w-full bg-slate-50/90 overflow-hidden p-3 border-b border-slate-100/80"
+          className="block relative aspect-square w-full bg-white overflow-hidden p-4 rounded-t-3xl flex items-center justify-center"
         >
           <img
             src={img || '/brand/needelectro-icon.png'}
@@ -128,71 +123,63 @@ export default function ProductCard({ product, onAddToCart, className = '' }: Pr
             className="w-full h-full object-contain mx-auto group-hover:scale-105 transition-transform duration-300"
           />
 
-          {/* Top-Left Category / Brand Pill */}
-          <span className="absolute top-2 left-2 bg-white/95 backdrop-blur-md text-slate-800 text-[9px] font-bold px-2 py-0.5 rounded-full shadow-xs border border-slate-200/50">
-            {product.category?.name || product.brand?.name || 'Hardware'}
+          {/* Top-Left Category Badge */}
+          <span className="absolute top-3 left-3 bg-white text-slate-800 text-[11px] font-semibold px-3 py-1 rounded-full border border-slate-200/80 shadow-xs">
+            {product.category?.name || product.brand?.name || 'Laptops & Computers'}
           </span>
 
           {/* Top-Right Wishlist Heart Button */}
           <button
             onClick={toggleWishlist}
             type="button"
-            className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-white shadow-xs transition"
+            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white border border-slate-200/80 flex items-center justify-center text-slate-400 hover:text-red-500 shadow-xs transition"
             aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
           >
-            <Heart className={`w-3.5 h-3.5 ${isWishlisted ? 'fill-red-500 text-red-500' : ''}`} />
+            <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-slate-400'}`} />
           </button>
 
           {/* Genuine Discount Badge */}
           {hasDiscount && discountPercent > 0 && (
-            <span className="absolute bottom-2 left-2 bg-red-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-xs">
+            <span className="absolute bottom-2 left-3 bg-red-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-xs">
               -{discountPercent}% OFF
             </span>
           )}
 
           {/* Stock Availability Pill */}
-          {isOutOfStock ? (
-            <span className="absolute bottom-2 right-2 bg-slate-800/90 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
+          {isOutOfStock && (
+            <span className="absolute bottom-2 right-3 bg-slate-900/90 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
               Out of Stock
             </span>
-          ) : isLowStock ? (
-            <span className="absolute bottom-2 right-2 bg-amber-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
-              Only {product.stock} left
-            </span>
-          ) : null}
+          )}
         </Link>
 
-        {/* Content Body */}
-        <div className="p-3 sm:p-3.5 space-y-1.5">
-          {/* Brand & Stock Status Line */}
-          <div className="flex items-center justify-between text-[10px]">
-            <span className="font-bold text-brand-600 uppercase tracking-tight">
-              {product.brand?.name || 'Genuine Stock'}
+        {/* Bottom Pastel Light Blue Content Area */}
+        <div className="p-3.5 sm:p-4 bg-[#f0f6fe] space-y-2">
+          {/* Row 1: Brand & Warranty */}
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-bold text-[#087fe5] uppercase tracking-wide">
+              {product.brand?.name || 'GENUINE'}
             </span>
-            {product.warrantyPeriodMonths ? (
-              <span className="text-emerald-700 font-semibold flex items-center gap-0.5">
-                <ShieldCheck className="w-2.5 h-2.5" />
-                {product.warrantyPeriodMonths}M Warranty
-              </span>
-            ) : (
-              <span className="text-slate-400">Verified</span>
-            )}
+            <span className="text-emerald-700 font-semibold flex items-center gap-1 text-[11px] sm:text-xs">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              {product.warrantyPeriodMonths ? `${product.warrantyPeriodMonths}M Warranty` : '12M Warranty'}
+            </span>
           </div>
 
-          {/* Product Title */}
+          {/* Row 2: Product Title */}
           <Link href={`/product/${product.slug}`} className="block">
-            <h3 className="font-bold text-slate-900 text-xs sm:text-sm leading-tight line-clamp-2 group-hover:text-brand-600 transition-colors">
+            <h3 className="font-bold text-slate-900 text-sm sm:text-base leading-snug line-clamp-1 group-hover:text-brand-600 transition-colors">
               {product.name}
             </h3>
           </Link>
 
-          {/* Pricing Row */}
-          <div className="pt-1 flex items-baseline gap-1.5 flex-wrap">
-            <strong className="text-sm sm:text-base font-black text-slate-950">
+          {/* Row 3: Pricing */}
+          <div className="pt-0.5 flex items-baseline gap-2">
+            <strong className="text-base sm:text-xl font-black text-slate-950">
               ৳{effectivePrice.toLocaleString('en-BD')}
             </strong>
             {hasDiscount && (
-              <span className="text-[10px] sm:text-[11px] text-slate-400 line-through">
+              <span className="text-xs text-slate-400 line-through">
                 ৳{product.price.toLocaleString('en-BD')}
               </span>
             )}
@@ -200,35 +187,35 @@ export default function ProductCard({ product, onAddToCart, className = '' }: Pr
         </div>
       </div>
 
-      {/* Action Buttons: Touch-Friendly 2-column or Details + Quick Add */}
-      <div className="p-3 pt-0 grid grid-cols-2 gap-1.5">
+      {/* Row 4: Two Side-By-Side Action Buttons: Details + Add */}
+      <div className="p-3.5 sm:p-4 pt-0 bg-[#f0f6fe] grid grid-cols-2 gap-2">
         <Link
           href={`/product/${product.slug}`}
-          className="btn-secondary text-[11px] py-1.5 px-2 text-center rounded-xl hover:border-brand-400 hover:text-brand-600 transition flex items-center justify-center font-bold"
+          className="w-full py-2 px-3 rounded-full bg-white hover:bg-slate-50 text-slate-800 border border-slate-200/80 font-bold text-xs sm:text-sm text-center shadow-xs transition-colors flex items-center justify-center"
         >
           Details
         </Link>
         <button
           onClick={handleAdd}
           disabled={isOutOfStock}
-          className={`text-[11px] py-1.5 px-2 rounded-xl flex items-center justify-center gap-1 transition-all shadow-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed ${
+          className={`w-full py-2 px-3 rounded-full font-bold text-xs sm:text-sm text-center shadow-xs transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed ${
             justAdded
-              ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+              ? 'bg-emerald-600 text-white'
               : isOutOfStock
-              ? 'bg-slate-200 text-slate-500'
-              : 'btn-primary'
+              ? 'bg-slate-300 text-slate-600'
+              : 'bg-[#087fe5] hover:bg-[#066ac0] text-white active:scale-95'
           }`}
         >
           {justAdded ? (
             <>
-              <Check className="w-3.5 h-3.5" />
+              <Check className="w-4 h-4" />
               <span>Added!</span>
             </>
           ) : isOutOfStock ? (
             <span>Sold Out</span>
           ) : (
             <>
-              <ShoppingCart className="w-3.5 h-3.5 shrink-0" />
+              <ShoppingCart className="w-4 h-4 shrink-0" />
               <span>Add</span>
             </>
           )}

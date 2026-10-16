@@ -25,6 +25,7 @@ import {
   HardDrive
 } from 'lucide-react';
 import { fastFetch } from '@/lib/fastFetch';
+import ProductCard from '@/components/common/ProductCard';
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<'all' | 'electrical' | 'cctv' | 'computer'>('all');
@@ -180,57 +181,10 @@ export default function HomePage() {
               ))}
             </div>
           ) : featuredProducts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {featuredProducts.map((p) => {
-                const img = Array.isArray(p.images) && p.images.length > 0 
-                  ? p.images[0] 
-                  : (typeof p.images === 'string' ? p.images.split(',')[0] : 'https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=800');
-                return (
-                  <div key={p.id} className="card-premium overflow-hidden group flex flex-col justify-between">
-                    <div>
-                      <div className="relative h-48 w-full bg-white/50 backdrop-blur-md p-4 flex items-center justify-center">
-                        <img
-                          src={img}
-                          alt={p.name}
-                          loading="lazy"
-                          decoding="async"
-                          className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform"
-                        />
-                        {p.brand?.name && (
-                          <span className="absolute top-3 left-3 bg-white/80 backdrop-blur-md text-brand-700 border border-white/90 text-[10px] font-bold px-2 py-0.5 rounded-lg shadow-2xs">
-                            {p.brand.name}
-                          </span>
-                        )}
-                        {p.warrantyPeriodMonths && (
-                          <span className="absolute top-3 right-3 bg-emerald-500/15 backdrop-blur-md text-emerald-700 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded-lg">
-                            {p.warrantyPeriodMonths} Mo Warranty
-                          </span>
-                        )}
-                      </div>
-                      <div className="p-4 border-t border-white/60">
-                        <h4 className="font-bold text-slate-900 text-sm line-clamp-1 group-hover:text-brand-600 transition-colors">
-                          {p.name}
-                        </h4>
-                        <p className="text-[11px] text-slate-500 mt-1 line-clamp-1">{p.shortDescription || p.category?.name || 'Verified Equipment'}</p>
-                        <div className="mt-3 flex items-baseline gap-2">
-                          <span className="text-base font-extrabold text-slate-900">৳{p.discountPrice || p.price}</span>
-                          {p.discountPrice && p.discountPrice < p.price && (
-                            <span className="text-xs text-slate-400 line-through">৳{p.price}</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-4 pt-0">
-                      <Link
-                        href={`/product/${p.slug}`}
-                        className="btn-secondary w-full text-xs py-2 hover:border-brand-500 hover:text-brand-600"
-                      >
-                        View Details
-                      </Link>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+              {featuredProducts.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
             </div>
           ) : (
             <div className="glass-card p-8 sm:p-10 rounded-3xl border border-white/80 shadow-glass relative overflow-hidden">
