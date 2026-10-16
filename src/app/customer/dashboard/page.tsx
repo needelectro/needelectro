@@ -10,7 +10,7 @@ import {
   User, ChevronRight, Package, Clock, CheckCircle2, AlertCircle,
   Star, Bell, Settings, ArrowRight, Zap, MapPin, Lock, Eye, EyeOff,
   Plus, Trash2, Check, Phone, Mail, Sparkles, Building, Home, Briefcase,
-  Edit2, Save, X
+  Edit2, Save, X, Printer, ShieldCheck
 } from 'lucide-react';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -51,6 +51,8 @@ export default function CustomerDashboard() {
   const [tickets, setTickets] = useState<any[]>([]);
   const [addresses, setAddresses] = useState<AddressItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
   // Profile Form States
   const [name, setName] = useState('');
@@ -1161,36 +1163,206 @@ export default function CustomerDashboard() {
             </div>
           )}
 
-          {/* ORDERS TAB */}
+          {/* ORDERS TAB (WITH INVOICE & WARRANTY VERIFICATION) */}
           {!loading && activeTab === 'orders' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-black text-slate-900">My Orders</h2>
+                <div>
+                  <h2 className="text-lg font-black text-slate-900">My Orders &amp; Invoices</h2>
+                  <p className="text-xs text-slate-500">Track shipments, verify digital warranties, and print official invoices</p>
+                </div>
                 <Link href="/shop" className="btn-primary text-xs py-2">Shop Products</Link>
               </div>
+
               {orders.length === 0 ? (
                 <div className="bg-white rounded-3xl border border-slate-100 p-10 text-center text-sm text-slate-500 space-y-3">
                   <Package className="w-10 h-10 text-slate-300 mx-auto" />
-                  <p>No orders yet.</p>
-                  <Link href="/shop" className="btn-primary text-xs py-2">Shop Now</Link>
+                  <p>No orders placed yet.</p>
+                  <Link href="/shop" className="btn-primary text-xs py-2">Browse Catalog</Link>
                 </div>
               ) : orders.map((o) => (
                 <div key={o.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-3">
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-50 pb-3">
                     <div>
-                      <p className="font-mono font-black text-brand-600 text-xs">{o.orderNumber}</p>
-                      <p className="text-xs text-slate-500 mt-0.5">{new Date(o.createdAt).toLocaleDateString('en-BD', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-mono font-black text-brand-600 text-sm">{o.orderNumber}</p>
+                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase ${STATUS_COLORS[o.status] || 'bg-slate-100 text-slate-600'}`}>
+                          {o.status?.replace(/_/g, ' ')}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Placed on {new Date(o.createdAt).toLocaleDateString('en-BD', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </p>
                     </div>
-                    <span className={`text-[10px] font-black px-2.5 py-1 rounded-full uppercase shrink-0 ${STATUS_COLORS[o.status] || 'bg-slate-100 text-slate-600'}`}>
-                      {o.status?.replace(/_/g, ' ')}
-                    </span>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          setSelectedOrder(o);
+                          setShowInvoiceModal(true);
+                        }}
+                        className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
+                      >
+                        <Printer className="w-3.5 h-3.5 text-brand-600" />
+                        View &amp; Print Invoice
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-500">{o.items?.length || 0} item(s)</span>
-                    <span className="font-black text-slate-900">৳{o.totalAmount?.toLocaleString()}</span>
+
+                  {/* Item List Snippet */}
+                  <div className="space-y-1.5">
+                    {o.items?.map((item: any, idx: number) => (
+                      <div key={idx} className="flex items-center justify-between text-xs text-slate-700">
+                        <span className="line-clamp-1 flex-1 pr-2">
+                          • {item.product?.name || 'Technology Hardware'} &times; {item.quantity}
+                        </span>
+                        <span className="font-bold text-slate-900 shrink-0">
+                          ৳{(item.totalPrice || item.unitPrice * item.quantity).toLocaleString()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-slate-50 text-xs">
+                    <span className="text-slate-500">
+                      Destination: {o.deliveryAddress?.district ? `${o.deliveryAddress.area || o.deliveryAddress.upazila}, ${o.deliveryAddress.district}` : 'Bangladesh'}
+                    </span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-slate-500">Payment: <strong>{o.paymentMethod?.replace(/_/g, ' ')}</strong></span>
+                      <span className="font-black text-slate-900 text-sm">Total: ৳{o.totalAmount?.toLocaleString()}</span>
+                    </div>
                   </div>
                 </div>
               ))}
+
+              {/* OFFICIAL TAX INVOICE MODAL */}
+              {showInvoiceModal && selectedOrder && (
+                <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+                  <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+                    {/* Header */}
+                    <div className="flex items-start justify-between border-b border-slate-200 pb-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <Image src="/logo.png" alt="NEED ELECTRO" width={120} height={40} className="h-7 w-auto object-contain" />
+                          <span className="text-[10px] font-bold uppercase tracking-wider bg-brand-50 text-brand-700 px-2 py-0.5 rounded">
+                            Official Tax Invoice
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-1">
+                          NEED ELECTRO &bull; AMDADS GROUP &bull; Hotline: 01733 983752
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setShowInvoiceModal(false)}
+                        className="text-slate-400 hover:text-slate-700 p-1 rounded-lg"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {/* Invoice Body (Printable) */}
+                    <div className="space-y-4 text-xs text-slate-800">
+                      <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl">
+                        <div>
+                          <p className="font-bold text-slate-500 uppercase text-[10px]">Invoice Details</p>
+                          <p className="font-mono font-black text-brand-600 text-sm mt-0.5">{selectedOrder.orderNumber}</p>
+                          <p className="text-slate-500">
+                            Date: {new Date(selectedOrder.createdAt).toLocaleDateString('en-BD', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </p>
+                          <p className="text-slate-500">Status: <strong className="text-emerald-600">{selectedOrder.status}</strong></p>
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-500 uppercase text-[10px]">Customer / Delivery To</p>
+                          <p className="font-bold text-slate-900 mt-0.5">{selectedOrder.deliveryAddress?.recipientName || user.name}</p>
+                          <p className="text-slate-600">{selectedOrder.deliveryAddress?.phone || user.phone}</p>
+                          <p className="text-slate-600">{selectedOrder.deliveryAddress?.addressLine}</p>
+                          <p className="text-slate-600">
+                            {selectedOrder.deliveryAddress?.upazila}, {selectedOrder.deliveryAddress?.district}, {selectedOrder.deliveryAddress?.division}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Items Table */}
+                      <table className="w-full text-left text-xs border border-slate-200 rounded-xl overflow-hidden">
+                        <thead className="bg-slate-100 text-slate-700 font-bold">
+                          <tr>
+                            <th className="p-2.5">Item Description</th>
+                            <th className="p-2.5 text-center">Qty</th>
+                            <th className="p-2.5 text-right">Unit Price</th>
+                            <th className="p-2.5 text-right">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {selectedOrder.items?.map((item: any, i: number) => (
+                            <tr key={i}>
+                              <td className="p-2.5 font-semibold text-slate-900">
+                                {item.product?.name || 'Hardware Product'}
+                                {item.serialNumber && (
+                                  <span className="block font-mono text-[10px] text-brand-600">
+                                    Serial: {item.serialNumber}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="p-2.5 text-center">{item.quantity}</td>
+                              <td className="p-2.5 text-right font-mono">৳{item.unitPrice?.toLocaleString()}</td>
+                              <td className="p-2.5 text-right font-mono font-bold">৳{(item.totalPrice || item.unitPrice * item.quantity).toLocaleString()}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot className="bg-slate-50 font-semibold border-t border-slate-200">
+                          <tr>
+                            <td colSpan={3} className="p-2.5 text-right text-slate-600">Subtotal</td>
+                            <td className="p-2.5 text-right font-mono">৳{selectedOrder.subtotal?.toLocaleString()}</td>
+                          </tr>
+                          <tr>
+                            <td colSpan={3} className="p-2.5 text-right text-slate-600">Delivery Charge ({selectedOrder.deliveryAddress?.district || 'Bangladesh'})</td>
+                            <td className="p-2.5 text-right font-mono">
+                              {selectedOrder.deliveryCharge === 0 ? 'FREE' : `৳${selectedOrder.deliveryCharge}`}
+                            </td>
+                          </tr>
+                          {selectedOrder.discount > 0 && (
+                            <tr>
+                              <td colSpan={3} className="p-2.5 text-right text-emerald-600">Discount</td>
+                              <td className="p-2.5 text-right font-mono text-emerald-600">-৳{selectedOrder.discount?.toLocaleString()}</td>
+                            </tr>
+                          )}
+                          <tr className="border-t border-slate-300 font-black text-sm">
+                            <td colSpan={3} className="p-2.5 text-right text-slate-900">Total Amount</td>
+                            <td className="p-2.5 text-right font-mono text-brand-600">৳{selectedOrder.totalAmount?.toLocaleString()}</td>
+                          </tr>
+                        </tfoot>
+                      </table>
+
+                      <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl text-[11px] text-amber-900 space-y-1">
+                        <p className="font-bold flex items-center gap-1.5">
+                          <ShieldCheck className="w-4 h-4 text-amber-700" />
+                          Official Digital Warranty Notice:
+                        </p>
+                        <p>
+                          Keep this invoice and matching product serial numbers for official warranty service. You can submit warranty claims directly in your account.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-3 pt-2 border-t border-slate-200">
+                      <button
+                        onClick={() => window.print()}
+                        className="btn-primary flex-1 text-xs py-2.5 flex items-center justify-center gap-2"
+                      >
+                        <Printer className="w-4 h-4" />
+                        Print Official Invoice
+                      </button>
+                      <button
+                        onClick={() => setShowInvoiceModal(false)}
+                        className="btn-secondary text-xs py-2.5 px-5"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

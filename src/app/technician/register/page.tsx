@@ -10,29 +10,30 @@ import {
   FileText, Briefcase
 } from 'lucide-react';
 import { useAuth } from '@/lib/context/AuthContext';
+import { BANGLADESH_DISTRICTS } from '@/lib/data/districts';
+
+const BANGLADESH_DIVISIONS = [
+  'Sylhet',
+  'Dhaka',
+  'Chattogram',
+  'Rajshahi',
+  'Khulna',
+  'Barishal',
+  'Rangpur',
+  'Mymensingh',
+];
 
 const SKILLS_LIST = [
   'Complete House Wiring',
-  'CCTV Installation & Security',
+  'Circuit Breaker & DB Board Setup',
+  'CCTV Installation & IP Camera Setup',
   'Laptop & PC Hardware Servicing',
   'IPS & Inverter Setup & Maintenance',
   'AC Servicing & Installation',
-  'Circuit Breaker & DB Board Setup',
   'Motor & Water Pump Setup',
   'Solar Panel Installation',
-  'Smart Home & IoT Wiring',
+  'Smart Home & IoT Automation',
   'Emergency 24/7 Troubleshooting',
-];
-
-const MOULVIBAZAR_AREAS = [
-  'Moulvibazar Sadar',
-  'Kusumbag',
-  'Sreemangal',
-  'Kamalganj',
-  'Rajnagar',
-  'Kulaura',
-  'Barlekha',
-  'Juri',
 ];
 
 export default function TechnicianRegisterPage() {
@@ -47,7 +48,10 @@ export default function TechnicianRegisterPage() {
     confirmPassword: '',
     experience: '3',
     nidNumber: '',
-    area: 'Moulvibazar Sadar',
+    division: 'Sylhet',
+    district: 'Moulvibazar',
+    serviceArea: 'Moulvibazar Sadar',
+    preferredRadiusKm: '15',
     selectedSkills: ['Complete House Wiring'] as string[],
     agreeTerms: true,
   });
@@ -55,6 +59,10 @@ export default function TechnicianRegisterPage() {
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const availableDistricts = BANGLADESH_DISTRICTS.filter(
+    (d) => d.division.toLowerCase() === form.division.toLowerCase()
+  );
 
   const toggleSkill = (skill: string) => {
     setForm((prev) => {
@@ -94,313 +102,308 @@ export default function TechnicianRegisterPage() {
     setLoading(true);
 
     const result = await register({
-      name: form.name,
-      phone: form.phone,
-      email: form.email,
+      name: form.name.trim(),
+      phone: form.phone.trim(),
+      email: form.email.trim(),
       password: form.password,
       role: 'TECHNICIAN',
-      experience: form.experience,
-      nidNumber: form.nidNumber,
-      serviceAreas: form.area,
-      skills: form.selectedSkills,
+      technicianProfile: {
+        skills: form.selectedSkills.join(', '),
+        experienceYears: parseInt(form.experience, 10) || 1,
+        nidNumber: form.nidNumber.trim(),
+        serviceAreas: `${form.serviceArea}, ${form.district}, ${form.division}`,
+        preferredRadiusKm: parseInt(form.preferredRadiusKm, 10) || 15,
+        verificationStatus: 'PENDING',
+      },
     });
 
     setLoading(false);
 
     if (result.success) {
-      router.push(result.redirectUrl || '/technician/dashboard');
+      router.push('/technician/dashboard?welcome=true');
     } else {
-      setError(result.error || 'Technician registration failed. Please check your inputs and try again.');
+      setError(result.error || 'Failed to complete registration. Please try again.');
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/40 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Background ambient lighting */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-amber-500/15 blur-[150px] pointer-events-none rounded-full" />
-      <div className="absolute -bottom-10 right-10 w-[450px] h-[350px] bg-brand-500/10 blur-[130px] pointer-events-none rounded-full" />
-
-      {/* Switcher Banner */}
-      <div className="max-w-2xl w-full mx-auto px-4 mb-4">
-        <div className="flex items-center justify-between p-2.5 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl text-xs text-slate-300 shadow-lg">
-          <span className="flex items-center gap-1.5 font-bold text-amber-400">
-            <Wrench className="w-4 h-4" />
-            Technician Career Application
-          </span>
-          <Link
-            href="/technician/login"
-            className="flex items-center gap-1 text-slate-300 hover:text-white font-semibold transition px-2 py-1 rounded-xl hover:bg-white/5"
-          >
-            Already registered? Technician Sign In &rarr;
-          </Link>
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 space-y-8">
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <div className="w-12 h-12 rounded-2xl bg-brand-500 text-white flex items-center justify-center mx-auto shadow-md shadow-brand-500/20">
+          <Wrench className="w-6 h-6" />
         </div>
+        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+          Join NEED ELECTRO Technician Network
+        </h1>
+        <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto">
+          Register your professional trade skills, receive direct job offers across Bangladesh, and build your digital earnings wallet.
+        </p>
       </div>
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-2xl px-4">
-        {/* Header */}
-        <div className="text-center space-y-3">
-          <Link href="/" className="inline-block group hover:scale-105 transition-transform" title="Return to Home">
-            <div className="px-5 py-3 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl shadow-amber-500/20 inline-flex items-center justify-center">
-              <Image
-                src="/brand/needelectro-logo-white.png"
-                alt="NEED ELECTRO"
-                width={190}
-                height={95}
-                className="h-10 sm:h-12 w-auto object-contain filter drop-shadow"
-                priority
-              />
-            </div>
-          </Link>
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[11px] font-bold mb-2">
-              <Award className="w-3.5 h-3.5 text-amber-400" />
-              Direct Technician Onboarding
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-              Join NEED ELECTRO as a Technician
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-400 mt-1">
-              Receive steady job dispatches, transparent payouts, and professional Amdads Group trade accreditation
-            </p>
-          </div>
+      {error && (
+        <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold">
+          {error}
         </div>
+      )}
 
-        {/* Form Card */}
-        <div className="mt-6 bg-white/10 backdrop-blur-2xl border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
-          {error && (
-            <div className="bg-red-500/15 border border-red-500/30 rounded-2xl px-4 py-3 text-xs text-red-300 font-medium animate-in fade-in">
-              {error}
-            </div>
-          )}
+      <form onSubmit={handleSubmit} className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 space-y-6 shadow-sm">
+        {/* Personal Details */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 pb-2 border-b border-slate-100 flex items-center gap-2">
+            <User className="w-4 h-4 text-brand-500" />
+            1. Personal &amp; Identity Details
+          </h3>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* 1. Personal Information */}
-            <div className="space-y-3">
-              <h3 className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                <User className="w-3.5 h-3.5" /> 1. Personal &amp; Contact Details
-              </h3>
-              
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-200">Full Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="e.g. Master Electrician Kabir Hossain"
-                  className="w-full px-4 py-3 text-sm bg-white/5 border border-white/15 rounded-2xl text-white placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-amber-500 focus:bg-white/10 transition"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-200">Mobile Phone (For Job Calls) *</label>
-                  <div className="relative">
-                    <Phone className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input
-                      type="tel"
-                      required
-                      value={form.phone}
-                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                      placeholder="01XXXXXXXXX"
-                      className="w-full pl-10 pr-4 py-3 text-sm bg-white/5 border border-white/15 rounded-2xl text-white placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-amber-500 focus:bg-white/10 transition"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-200">Email Address (Optional)</label>
-                  <div className="relative">
-                    <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input
-                      type="email"
-                      value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
-                      placeholder="tech@example.com"
-                      className="w-full pl-10 pr-4 py-3 text-sm bg-white/5 border border-white/15 rounded-2xl text-white placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-amber-500 focus:bg-white/10 transition"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 2. Trade & Experience */}
-            <div className="space-y-3 pt-2 border-t border-white/10">
-              <h3 className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Briefcase className="w-3.5 h-3.5" /> 2. Trade Skills &amp; Experience
-              </h3>
-
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-200">Select Your Trade Skills * (Tap to choose)</label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {SKILLS_LIST.map((skill) => {
-                    const isSelected = form.selectedSkills.includes(skill);
-                    return (
-                      <button
-                        key={skill}
-                        type="button"
-                        onClick={() => toggleSkill(skill)}
-                        className={`p-2.5 rounded-xl border text-left text-xs font-medium flex items-center justify-between transition ${
-                          isSelected
-                            ? 'bg-amber-500/20 border-amber-500/50 text-white'
-                            : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'
-                        }`}
-                      >
-                        <span>{skill}</span>
-                        {isSelected && <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-200">Years Experience</label>
-                  <select
-                    value={form.experience}
-                    onChange={(e) => setForm({ ...form, experience: e.target.value })}
-                    className="w-full px-3 py-3 text-sm bg-slate-900 border border-white/15 rounded-2xl text-white focus:outline-hidden focus:ring-2 focus:ring-amber-500 transition"
-                  >
-                    <option value="1">1 Year</option>
-                    <option value="2">2 Years</option>
-                    <option value="3">3 Years</option>
-                    <option value="5">5+ Years (Senior)</option>
-                    <option value="8">8+ Years (Master)</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-200">Working Area</label>
-                  <select
-                    value={form.area}
-                    onChange={(e) => setForm({ ...form, area: e.target.value })}
-                    className="w-full px-3 py-3 text-sm bg-slate-900 border border-white/15 rounded-2xl text-white focus:outline-hidden focus:ring-2 focus:ring-amber-500 transition"
-                  >
-                    {MOULVIBAZAR_AREAS.map((a) => (
-                      <option key={a} value={a}>
-                        {a}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-200">NID Card Number</label>
-                  <input
-                    type="text"
-                    value={form.nidNumber}
-                    onChange={(e) => setForm({ ...form, nidNumber: e.target.value })}
-                    placeholder="National ID"
-                    className="w-full px-3 py-3 text-sm bg-white/5 border border-white/15 rounded-2xl text-white placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-amber-500 transition"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* 3. Account Password */}
-            <div className="space-y-3 pt-2 border-t border-white/10">
-              <h3 className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5" /> 3. Set Portal Password
-              </h3>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-200">Password (min. 6 chars) *</label>
-                  <div className="relative">
-                    <input
-                      type={showPass ? 'text' : 'password'}
-                      required
-                      value={form.password}
-                      onChange={(e) => setForm({ ...form, password: e.target.value })}
-                      placeholder="Create password"
-                      className="w-full px-4 py-3 pr-10 text-sm bg-white/5 border border-white/15 rounded-2xl text-white placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-amber-500 transition"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPass(!showPass)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition"
-                    >
-                      {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-200">Confirm Password *</label>
-                  <input
-                    type={showPass ? 'text' : 'password'}
-                    required
-                    value={form.confirmPassword}
-                    onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-                    placeholder="Repeat password"
-                    className="w-full px-4 py-3 text-sm bg-white/5 border border-white/15 rounded-2xl text-white placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-amber-500 transition"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Terms */}
-            <div className="flex items-start gap-2.5 pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700">Full Name *</label>
               <input
-                type="checkbox"
-                id="techTerms"
-                checked={form.agreeTerms}
-                onChange={(e) => setForm({ ...form, agreeTerms: e.target.checked })}
-                className="mt-1 rounded-sm border-white/20 bg-white/5 text-amber-500 focus:ring-amber-500"
+                type="text"
+                required
+                value={form.name}
+                onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                placeholder="e.g. Md. Abul Kalam"
+                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500"
               />
-              <label htmlFor="techTerms" className="text-xs text-slate-400 leading-relaxed">
-                I agree to the{' '}
-                <Link href="/policies/technician" target="_blank" className="text-amber-400 underline hover:text-amber-300">
-                  Technician Policy &amp; Code of Conduct
-                </Link>
-                , and commit to professional electrical safety standards.
-              </label>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-4 px-4 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-bold text-sm shadow-xl shadow-amber-500/25 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-            >
-              {loading ? (
-                <span>Registering &amp; Opening Workspace...</span>
-              ) : (
-                <>
-                  <Wrench className="w-4 h-4" />
-                  Register &amp; Apply as Technician
-                </>
-              )}
-            </button>
-          </form>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700">Mobile Phone (Primary) *</label>
+              <input
+                type="tel"
+                required
+                value={form.phone}
+                onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+                placeholder="01XXXXXXXXX"
+                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 font-mono"
+              />
+            </div>
 
-          {/* Already registered */}
-          <div className="text-center pt-2 border-t border-white/10">
-            <p className="text-xs text-slate-400">
-              Already registered as a technician?{' '}
-              <Link href="/technician/login" className="text-amber-400 font-bold hover:text-amber-300 transition">
-                Sign In to Workspace &rarr;
-              </Link>
-            </p>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700">Email Address *</label>
+              <input
+                type="email"
+                required
+                value={form.email}
+                onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+                placeholder="technician@example.com"
+                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700">National ID (NID) Number *</label>
+              <input
+                type="text"
+                required
+                value={form.nidNumber}
+                onChange={(e) => setForm((p) => ({ ...p, nidNumber: e.target.value }))}
+                placeholder="10 or 17 digit NID number"
+                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 font-mono"
+              />
+            </div>
           </div>
         </div>
 
-        {/* Perks */}
-        <div className="mt-6 grid grid-cols-3 gap-3 text-center text-[10px] text-slate-400">
-          <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
-            <ShieldCheck className="w-4 h-4 text-amber-400 mx-auto mb-1" />
-            Verified Digital ID Badge
-          </div>
-          <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
-            Fast Daily Job Dispatches
-          </div>
-          <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
-            <Award className="w-4 h-4 text-brand-400 mx-auto mb-1" />
-            Academy Certifications
+        {/* Security & Password */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 pb-2 border-b border-slate-100 flex items-center gap-2">
+            <Lock className="w-4 h-4 text-brand-500" />
+            2. Account Password
+          </h3>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700">Create Password *</label>
+              <div className="relative">
+                <input
+                  type={showPass ? 'text' : 'password'}
+                  required
+                  value={form.password}
+                  onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
+                  placeholder="Min 6 characters"
+                  className="w-full text-xs p-2.5 pr-9 bg-slate-50 border border-slate-200 rounded-xl"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPass(!showPass)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700">Confirm Password *</label>
+              <input
+                type="password"
+                required
+                value={form.confirmPassword}
+                onChange={(e) => setForm((p) => ({ ...p, confirmPassword: e.target.value }))}
+                placeholder="Re-enter password"
+                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+              />
+            </div>
           </div>
         </div>
-      </div>
+
+        {/* Trade Skills & Experience */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 pb-2 border-b border-slate-100 flex items-center gap-2">
+            <Award className="w-4 h-4 text-brand-500" />
+            3. Skills &amp; Trade Experience
+          </h3>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-700">Primary Trade Skills (Select all that apply) *</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {SKILLS_LIST.map((skill) => {
+                const selected = form.selectedSkills.includes(skill);
+                return (
+                  <button
+                    type="button"
+                    key={skill}
+                    onClick={() => toggleSkill(skill)}
+                    className={`p-2.5 rounded-xl border text-left text-xs font-semibold flex items-center justify-between transition ${
+                      selected
+                        ? 'border-brand-500 bg-brand-50 text-brand-900'
+                        : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span>{skill}</span>
+                    {selected && <CheckCircle2 className="w-3.5 h-3.5 text-brand-600 shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700">Years of Experience</label>
+              <select
+                value={form.experience}
+                onChange={(e) => setForm((p) => ({ ...p, experience: e.target.value }))}
+                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+              >
+                <option value="1">1 Year</option>
+                <option value="2">2 Years</option>
+                <option value="3">3-5 Years</option>
+                <option value="6">6-10 Years</option>
+                <option value="11">10+ Years (Senior Master)</option>
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700">Travel Radius (KM)</label>
+              <select
+                value={form.preferredRadiusKm}
+                onChange={(e) => setForm((p) => ({ ...p, preferredRadiusKm: e.target.value }))}
+                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+              >
+                <option value="5">Within 5 KM</option>
+                <option value="10">Within 10 KM</option>
+                <option value="15">Within 15 KM</option>
+                <option value="25">Within 25 KM</option>
+                <option value="40">Entire District (Up to 40 KM)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* National Service Area */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 pb-2 border-b border-slate-100 flex items-center gap-2">
+            <MapPin className="w-4 h-4 text-brand-500" />
+            4. Service District &amp; Coverage
+          </h3>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700">Division *</label>
+              <select
+                value={form.division}
+                onChange={(e) => {
+                  const div = e.target.value;
+                  const firstDist = BANGLADESH_DISTRICTS.find((d) => d.division.toLowerCase() === div.toLowerCase());
+                  setForm((p) => ({
+                    ...p,
+                    division: div,
+                    district: firstDist ? firstDist.name : 'Dhaka',
+                    serviceArea: `${firstDist ? firstDist.name : 'Dhaka'} Sadar`,
+                  }));
+                }}
+                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+              >
+                {BANGLADESH_DIVISIONS.map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700">District *</label>
+              <select
+                value={form.district}
+                onChange={(e) => {
+                  const dist = e.target.value;
+                  setForm((p) => ({ ...p, district: dist, serviceArea: `${dist} Sadar` }));
+                }}
+                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+              >
+                {availableDistricts.map((d) => (
+                  <option key={d.id} value={d.name}>{d.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700">Thana / Upazila Base *</label>
+              <input
+                type="text"
+                required
+                value={form.serviceArea}
+                onChange={(e) => setForm((p) => ({ ...p, serviceArea: e.target.value }))}
+                placeholder="e.g. Moulvibazar Sadar, Mirpur"
+                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Terms */}
+        <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-600 space-y-2">
+          <label className="flex items-start gap-2.5 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.agreeTerms}
+              onChange={(e) => setForm((p) => ({ ...p, agreeTerms: e.target.checked }))}
+              className="mt-0.5 accent-brand-500"
+            />
+            <span>
+              I agree to the NEED ELECTRO Technician Code of Conduct, safety protocols, 85% revenue earnings model, and prompt customer service standards.
+            </span>
+          </label>
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="btn-primary w-full py-3 text-xs flex items-center justify-center gap-2 shadow-lg shadow-brand-500/25"
+        >
+          {loading ? 'Submitting Application...' : 'Register as Verified Technician'}
+          <ArrowRight className="w-4 h-4" />
+        </button>
+
+        <p className="text-center text-xs text-slate-500">
+          Already registered?{' '}
+          <Link href="/technician/login" className="text-brand-600 font-bold hover:underline">
+            Sign In to Technician Dashboard
+          </Link>
+        </p>
+      </form>
     </div>
   );
 }

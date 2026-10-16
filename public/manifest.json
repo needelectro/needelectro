@@ -1,11 +1,11 @@
 {
-  "name": "NEED ELECTRO - Trusted Electrical & Technological Solutions",
+  "name": "NEED ELECTRO - Trusted Electrical and Technological Solutions",
   "short_name": "NEED ELECTRO",
   "description": "Unified platform for electrical services, technology products, certified technicians, and warranties in Bangladesh.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F5F8FC",
-  "theme_color": "#087FE5",
+  "background_color": "#F4F6F8",
+  "theme_color": "#008CFF",
   "orientation": "portrait-primary",
   "icons": [
     {

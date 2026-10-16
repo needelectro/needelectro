@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/lib/context/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Wrench, MapPin, Clock, CheckCircle2, XCircle, DollarSign,
   Star, Wallet, BarChart2, LogOut, Bell, ChevronRight, Zap,
@@ -31,7 +31,15 @@ type TabKey = 'overview' | 'jobs' | 'earnings' | 'profile';
 export default function TechnicianDashboard() {
   const { user, logout } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabKey>('overview');
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab') as TabKey | null;
+  const [activeTab, setActiveTab] = useState<TabKey>(tabParam || 'overview');
+
+  useEffect(() => {
+    if (tabParam && ['overview', 'jobs', 'earnings', 'profile'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
   const [profile, setProfile] = useState<any>(null);
   const [jobs, setJobs] = useState<any[]>([]);
   const [availableJobs, setAvailableJobs] = useState<any[]>([]);

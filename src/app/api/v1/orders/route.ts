@@ -79,6 +79,7 @@ export async function POST(req: NextRequest) {
       items, // array of { productId, quantity }
       deliveryAddress, // either string id or object
       paymentMethod = 'CASH_ON_DELIVERY',
+      paymentTrxId,
       notes,
     } = body;
 
@@ -115,139 +116,196 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Duplicate transaction ID protection
+    if (paymentTrxId && paymentTrxId.trim()) {
+      const existingOrder = await prisma.order.findFirst({
+        where: { paymentTrxId: paymentTrxId.trim() },
+      });
+      if (existingOrder) {
+        return NextResponse.json(
+          { success: false, error: 'This Transaction ID has already been submitted for an existing order.' },
+          { status: 400 }
+        );
+      }
+    }
+
     // Resolve Address
     let addressId = typeof deliveryAddress === 'string' ? deliveryAddress : null;
+    let targetDistrict = 'Moulvibazar';
+    let targetDivision = 'Sylhet';
+
     if (!addressId && typeof deliveryAddress === 'object') {
+      targetDistrict = deliveryAddress.district || 'Moulvibazar';
+      targetDivision = deliveryAddress.division || 'Sylhet';
       const createdAddr = await prisma.address.create({
         data: {
           customerId: customerProfileId,
-          recipientName: deliveryAddress.recipientName || 'Customer',
-          phone: deliveryAddress.phone || '01733983752',
-          division: deliveryAddress.division || 'Sylhet',
-          district: deliveryAddress.district || 'Moulvibazar',
-          upazila: deliveryAddress.upazila || 'Moulvibazar Sadar',
-          area: deliveryAddress.area || 'Moulvibazar Sadar',
-          addressLine: deliveryAddress.addressLine || 'Moulvibazar, Bangladesh',
-          landmark: deliveryAddress.landmark,
+          recipientName: deliveryAddress.recipientName || session.name || 'Customer',
+          phone: deliveryAddress.phone || session.phone || '01733983752',
+          division: targetDivision,
+          district: targetDistrict,
+          upazila: deliveryAddress.upazila || `${targetDistrict} Sadar`,
+          area: deliveryAddress.area || deliveryAddress.upazila || targetDistrict,
+          addressLine: deliveryAddress.addressLine || `${targetDistrict}, Bangladesh`,
+          landmark: deliveryAddress.landmark || null,
         },
       });
       addressId = createdAddr.id;
+    } else if (addressId) {
+      const existingAddr = await prisma.address.findUnique({ where: { id: addressId } });
+      if (existingAddr) {
+        targetDistrict = existingAddr.district;
+        targetDivision = existingAddr.division;
+      }
     }
 
-    // Calculate subtotal securely on the server side & aggregate seller items
-    let subtotal = 0;
-    const orderItemsData: any[] = [];
-    const sellerItemsMap: Map<string, { items: any[]; subtotal: number; commissionRate: number }> = new Map();
+    // Dynamic Delivery Charge Calculation based on System Settings & Geography
+    const isLocalDistrict = targetDistrict.toLowerCase().includes('moulvibazar');
+    const settings = await prisma.systemSetting.findMany({
+      where: { key: { in: ['delivery_charge_inside', 'delivery_charge_outside'] } },
+    });
+    const insideRate = parseFloat(settings.find((s) => s.key === 'delivery_charge_inside')?.value || '60');
+    const outsideRate = parseFloat(settings.find((s) => s.key === 'delivery_charge_outside')?.value || '120');
 
-    for (const item of items) {
-      const product = await prisma.product.findUnique({
-        where: { id: item.productId },
-        include: { seller: true },
-      });
-      if (!product) continue;
-      const unitPrice = product.discountPrice ?? product.price;
-      const qty = item.quantity || 1;
-      const totalPrice = unitPrice * qty;
-      subtotal += totalPrice;
+    // Run inventory validation and order creation inside an atomic transaction
+    const result = await prisma.$transaction(async (tx) => {
+      let subtotal = 0;
+      const orderItemsData: any[] = [];
+      const sellerItemsMap: Map<string, { items: any[]; subtotal: number; commissionRate: number }> = new Map();
 
-      orderItemsData.push({
-        productId: product.id,
-        quantity: qty,
-        unitPrice,
-        totalPrice,
-      });
+      for (const item of items) {
+        const product = await tx.product.findUnique({
+          where: { id: item.productId },
+          include: { seller: true },
+        });
 
-      if (product.sellerId && product.seller) {
-        if (!sellerItemsMap.has(product.sellerId)) {
-          sellerItemsMap.set(product.sellerId, {
-            items: [],
-            subtotal: 0,
-            commissionRate: product.seller.commissionRate ?? 8.0,
-          });
+        if (!product) {
+          throw new Error(`Product not found: ${item.productId}`);
         }
-        const group = sellerItemsMap.get(product.sellerId)!;
-        group.items.push(product.id);
-        group.subtotal += totalPrice;
+
+        const qty = Math.max(1, item.quantity || 1);
+
+        // Anti-Overselling Guard: verify physical stock
+        if (product.stock < qty) {
+          throw new Error(
+            `Insufficient stock for "${product.name}". Requested ${qty}, but only ${product.stock} available.`
+          );
+        }
+
+        const unitPrice = product.discountPrice ?? product.price;
+        const totalPrice = unitPrice * qty;
+        subtotal += totalPrice;
+
+        orderItemsData.push({
+          productId: product.id,
+          quantity: qty,
+          unitPrice,
+          totalPrice,
+        });
+
+        if (product.sellerId && product.seller) {
+          if (!sellerItemsMap.has(product.sellerId)) {
+            sellerItemsMap.set(product.sellerId, {
+              items: [],
+              subtotal: 0,
+              commissionRate: product.seller.commissionRate ?? 8.0,
+            });
+          }
+          const group = sellerItemsMap.get(product.sellerId)!;
+          group.items.push(product.id);
+          group.subtotal += totalPrice;
+        }
+
+        // Decrement stock safely
+        await tx.product.update({
+          where: { id: product.id },
+          data: { stock: { decrement: qty } },
+        });
       }
 
-      // Decrement stock
-      await prisma.product.update({
-        where: { id: product.id },
-        data: { stock: { decrement: qty } },
+      // Delivery rule: Free delivery above ৳10,000 inside, ৳15,000 outside
+      const freeThreshold = isLocalDistrict ? 10000 : 15000;
+      const baseCharge = isLocalDistrict ? insideRate : outsideRate;
+      const deliveryCharge = subtotal >= freeThreshold ? 0 : baseCharge;
+      const discount = 0;
+      const totalAmount = subtotal + deliveryCharge - discount;
+
+      const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+      const orderNumber = `ORD${dateStr}${randomSuffix}`;
+
+      // Prepare suborders for multi-seller fulfillment
+      const subOrdersCreate = Array.from(sellerItemsMap.entries()).map(([sellerId, group], idx) => {
+        const commissionAmount = parseFloat(((group.subtotal * group.commissionRate) / 100).toFixed(2));
+        const sellerEarnings = group.subtotal - commissionAmount;
+        return {
+          subOrderNumber: `${orderNumber}-S${idx + 1}`,
+          sellerId,
+          subtotal: group.subtotal,
+          commissionRate: group.commissionRate,
+          commissionAmount,
+          sellerEarnings,
+          status: 'PLACED',
+          payoutStatus: 'PENDING',
+        };
       });
-    }
 
-    const deliveryCharge = subtotal > 10000 ? 0 : 60;
-    const discount = 0;
-    const totalAmount = subtotal + deliveryCharge - discount;
-
-    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-    const orderNumber = `ORD${dateStr}${randomSuffix}`;
-
-    // Prepare suborders for multi-seller fulfillment
-    const subOrdersCreate = Array.from(sellerItemsMap.entries()).map(([sellerId, group], idx) => {
-      const commissionAmount = parseFloat(((group.subtotal * group.commissionRate) / 100).toFixed(2));
-      const sellerEarnings = group.subtotal - commissionAmount;
-      return {
-        subOrderNumber: `${orderNumber}-S${idx + 1}`,
-        sellerId,
-        subtotal: group.subtotal,
-        commissionRate: group.commissionRate,
-        commissionAmount,
-        sellerEarnings,
-        status: 'PLACED',
-        payoutStatus: 'PENDING',
-      };
-    });
-
-    const order = await prisma.order.create({
-      data: {
-        orderNumber,
-        customerId: customerProfileId,
-        status: 'PLACED',
-        subtotal,
-        deliveryCharge,
-        discount,
-        totalAmount,
-        paymentMethod,
-        paymentStatus: 'PENDING',
-        deliveryAddressId: addressId,
-        notes,
-        items: {
-          create: orderItemsData,
-        },
-        subOrders: subOrdersCreate.length > 0 ? {
-          create: subOrdersCreate,
-        } : undefined,
-      },
-      include: {
-        items: { include: { product: true } },
-        deliveryAddress: true,
-        subOrders: { include: { seller: true } },
-      },
-    });
-
-    // Record financial audit log
-    await prisma.auditLog.create({
-      data: {
-        userId: session?.id || null,
-        userRole: session?.role || 'CUSTOMER',
-        action: 'ORDER_PLACED',
-        entity: 'ORDER',
-        entityId: order.id,
-        newData: JSON.stringify({
-          orderNumber: order.orderNumber,
-          totalAmount: order.totalAmount,
+      const newOrder = await tx.order.create({
+        data: {
+          orderNumber,
+          customerId: customerProfileId,
+          status: 'PLACED',
+          subtotal,
+          deliveryCharge,
+          discount,
+          totalAmount,
           paymentMethod,
-          subOrdersCount: subOrdersCreate.length,
-        }),
-      },
+          paymentStatus: paymentMethod === 'CASH_ON_DELIVERY' ? 'PENDING' : (paymentTrxId ? 'VERIFYING' : 'PENDING'),
+          paymentTrxId: paymentTrxId?.trim() || null,
+          deliveryAddressId: addressId,
+          notes,
+          items: {
+            create: orderItemsData,
+          },
+          subOrders: subOrdersCreate.length > 0 ? {
+            create: subOrdersCreate,
+          } : undefined,
+        },
+        include: {
+          items: { include: { product: true } },
+          deliveryAddress: true,
+          subOrders: { include: { seller: true } },
+        },
+      });
+
+      // Financial Audit Log
+      await tx.auditLog.create({
+        data: {
+          userId: session?.id || null,
+          userRole: session?.role || 'CUSTOMER',
+          action: 'ORDER_PLACED',
+          entity: 'ORDER',
+          entityId: newOrder.id,
+          newData: JSON.stringify({
+            orderNumber: newOrder.orderNumber,
+            totalAmount: newOrder.totalAmount,
+            deliveryCharge,
+            district: targetDistrict,
+            division: targetDivision,
+            paymentMethod,
+          }),
+        },
+      });
+
+      return newOrder;
     });
 
-    return NextResponse.json({ success: true, order });
-  } catch (error) {
+    return NextResponse.json({ success: true, order: result });
+  } catch (error: any) {
     console.error('Create order error:', error);
-    return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to create order' },
+      { status: 400 }
+    );
   }
 }

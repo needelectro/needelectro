@@ -4,30 +4,40 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   ChevronRight, Calendar, MapPin, Clock, Upload, AlertCircle,
-  CheckCircle2, Wrench, Camera, FileText, Phone
+  CheckCircle2, Wrench, Camera, FileText, Phone, X, ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '@/lib/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { BANGLADESH_DISTRICTS, DistrictData } from '@/lib/data/districts';
 
-const SERVICE_CATEGORIES = [
-  { id: 'ELECTRICAL', icon: '⚡', label: 'Electrical Work', desc: 'Wiring, circuits, panels' },
-  { id: 'INSTALLATION', icon: '🔧', label: 'Installation', desc: 'ACs, fans, fixtures, switches' },
-  { id: 'CCTV', icon: '📷', label: 'CCTV & Security', desc: 'Installation, repair, setup' },
-  { id: 'COMPUTER', icon: '💻', label: 'Computer Service', desc: 'Repair, setup, networking' },
-  { id: 'NETWORKING', icon: '🌐', label: 'Networking & WiFi', desc: 'Router, LAN, internet setup' },
-  { id: 'IPS_INVERTER', icon: '🔋', label: 'IPS / Inverter', desc: 'Setup, battery, maintenance' },
-  { id: 'SMART_HOME', icon: '🏠', label: 'Smart Home', desc: 'Automation, smart devices' },
-  { id: 'EMERGENCY', icon: '🚨', label: 'Emergency', desc: 'Urgent electrical issues' },
+const BANGLADESH_DIVISIONS = [
+  'Sylhet',
+  'Dhaka',
+  'Chattogram',
+  'Rajshahi',
+  'Khulna',
+  'Barishal',
+  'Rangpur',
+  'Mymensingh',
 ];
 
-const AREA_OPTIONS = [
-  'Kusumbag Point', 'Moulvibazar Sadar', 'Court Road Area', 'Chandbpur Bazaar',
-  'Sreemangal', 'Kamalganj', 'Rajnagar', 'Kulaura', 'Barlekha', 'Juri',
+const SERVICE_CATEGORIES = [
+  { id: 'ELECTRICAL', icon: '⚡', label: 'Electrical Work', desc: 'Wiring, circuits, panels, breakers' },
+  { id: 'INSTALLATION', icon: '🔧', label: 'Installation', desc: 'ACs, fans, lights, switches' },
+  { id: 'CCTV', icon: '📷', label: 'CCTV & Security', desc: 'HD/IP camera setup & maintenance' },
+  { id: 'COMPUTER', icon: '💻', label: 'Computer Service', desc: 'Hardware repair, diagnostics, OS' },
+  { id: 'NETWORKING', icon: '🌐', label: 'Networking & WiFi', desc: 'Router, switch, LAN setup' },
+  { id: 'IPS_INVERTER', icon: '🔋', label: 'IPS / Inverter', desc: 'Setup, battery bank, service' },
+  { id: 'SMART_HOME', icon: '🏠', label: 'Smart Home', desc: 'IoT switches, smart automation' },
+  { id: 'EMERGENCY', icon: '🚨', label: 'Emergency 24/7', desc: 'Short circuit, sparking, blackout' },
 ];
 
 const TIME_SLOTS = [
-  '9:00 AM – 11:00 AM', '11:00 AM – 1:00 PM',
-  '2:00 PM – 4:00 PM', '4:00 PM – 6:00 PM', '6:00 PM – 8:00 PM',
+  '9:00 AM – 11:00 AM',
+  '11:00 AM – 1:00 PM',
+  '2:00 PM – 4:00 PM',
+  '4:00 PM – 6:00 PM',
+  '6:00 PM – 8:00 PM',
 ];
 
 export default function BookingPage() {
@@ -38,20 +48,32 @@ export default function BookingPage() {
   const [loading, setLoading] = useState(false);
   const [services, setServices] = useState<any[]>([]);
   const [bookingResult, setBookingResult] = useState<any>(null);
+  const [attachedImages, setAttachedImages] = useState<string[]>([]);
 
   const [form, setForm] = useState({
-    categoryId: '',
+    categoryId: 'ELECTRICAL',
     serviceId: '',
     description: '',
     customerName: user?.name || '',
-    customerPhone: '',
+    customerPhone: user?.phone || '',
+    division: 'Sylhet',
+    district: 'Moulvibazar',
+    upazila: 'Moulvibazar Sadar',
     area: 'Kusumbag Point',
     addressLine: '',
     landmark: '',
-    preferredDate: '',
+    preferredDate: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
     preferredTimeSlot: TIME_SLOTS[0],
     urgency: 'NORMAL',
   });
+
+  const availableDistricts = BANGLADESH_DISTRICTS.filter(
+    (d) => d.division.toLowerCase() === form.division.toLowerCase()
+  );
+
+  const currentDistrictInfo: DistrictData | undefined = BANGLADESH_DISTRICTS.find(
+    (d) => d.name.toLowerCase() === form.district.toLowerCase()
+  );
 
   useEffect(() => {
     fetch('/api/v1/services')
@@ -60,8 +82,27 @@ export default function BookingPage() {
       .catch(() => {});
   }, []);
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    Array.from(files).slice(0, 3).forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setAttachedImages((prev) => [...prev, event.target!.result as string].slice(0, 4));
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setAttachedImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const filteredServices = form.categoryId
-    ? services.filter((s) => s.category === form.categoryId)
+    ? services.filter((s) => s.category?.slug?.includes(form.categoryId.toLowerCase()) || s.category?.name?.toUpperCase()?.includes(form.categoryId))
     : services;
 
   const selectedService = services.find((s) => s.id === form.serviceId);
@@ -77,10 +118,13 @@ export default function BookingPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          serviceId: form.serviceId,
-          description: form.description,
+          serviceId: form.serviceId || (services[0]?.id || ''),
+          problemDescription: form.description,
           customerPhone: form.customerPhone,
           location: {
+            division: form.division,
+            district: form.district,
+            upazila: form.upazila,
             area: form.area,
             addressLine: form.addressLine,
             landmark: form.landmark,
@@ -88,8 +132,10 @@ export default function BookingPage() {
           preferredDate: form.preferredDate,
           preferredTimeSlot: form.preferredTimeSlot,
           urgency: form.urgency,
+          mediaUrls: attachedImages.length > 0 ? attachedImages.join('|||') : null,
         }),
       });
+
       const data = await res.json();
       if (res.ok && data.success) {
         setBookingResult(data.booking);
@@ -98,18 +144,14 @@ export default function BookingPage() {
         alert(data.error || 'Could not create booking. Please try again.');
       }
     } catch {
-      alert('Network error. Please try again.');
+      alert('Network error while booking. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const minDate = tomorrow.toISOString().split('T')[0];
-
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-xs text-slate-500">
         <Link href="/" className="hover:text-brand-600">Home</Link>
@@ -119,238 +161,245 @@ export default function BookingPage() {
         <span className="text-slate-900 font-semibold">Book a Technician</span>
       </nav>
 
-      {/* Header */}
-      <div className="space-y-1">
-        <h1 className="text-2xl sm:text-3xl font-black text-slate-950">Book a Technician</h1>
-        <p className="text-sm text-slate-500">Verified professionals dispatched to your location, same or next day.</p>
-      </div>
-
-      {/* Customer Auth Notice */}
-      {!user && step !== 'done' && (
-        <div className="p-4 rounded-2xl bg-amber-50/90 border border-amber-200/90 text-amber-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs animate-in fade-in">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-            <div>
-              <h4 className="font-bold text-xs sm:text-sm">Customer Sign In Required to Finalize Booking</h4>
-              <p className="text-[11px] sm:text-xs text-amber-800 mt-0.5">
-                Sign in or create an account so you can track your technician, view job updates, and access your digital warranty.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <Link
-              href="/customer/login?redirect=/booking"
-              className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/customer/register?redirect=/booking"
-              className="px-3.5 py-1.5 rounded-xl bg-white border border-amber-300 hover:bg-amber-100/50 text-amber-900 font-semibold text-xs"
-            >
-              Register
-            </Link>
-          </div>
-        </div>
-      )}
-
-      {/* Progress Steps */}
+      {/* Progress Steps Header */}
       {step !== 'done' && (
-        <div className="flex items-center gap-2 text-[11px] font-bold overflow-x-auto pb-1">
+        <div className="flex items-center justify-between text-xs font-bold border-b border-slate-200 pb-4">
           {[
-            { key: 'service', label: 'Select Service' },
-            { key: 'details', label: 'Problem Details' },
-            { key: 'schedule', label: 'Schedule' },
-            { key: 'confirm', label: 'Confirm' },
-          ].map((s, i) => {
-            const steps = ['service', 'details', 'schedule', 'confirm'];
-            const isActive = step === s.key;
-            const isDone = steps.indexOf(step as string) > i;
-            return (
-              <React.Fragment key={s.key}>
-                <div className={`flex items-center gap-1.5 whitespace-nowrap ${isActive ? 'text-brand-600' : isDone ? 'text-emerald-600' : 'text-slate-400'}`}>
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] shrink-0 ${isActive ? 'bg-brand-500 text-white' : isDone ? 'bg-emerald-500 text-white' : 'bg-slate-200'}`}>
-                    {isDone ? '✓' : i + 1}
-                  </div>
-                  <span>{s.label}</span>
-                </div>
-                {i < 3 && <ChevronRight className="w-3 h-3 text-slate-300 shrink-0" />}
-              </React.Fragment>
-            );
-          })}
+            { id: 'service', label: '1. Service' },
+            { id: 'details', label: '2. Problem & Photos' },
+            { id: 'schedule', label: '3. Location & Time' },
+            { id: 'confirm', label: '4. Confirmation' },
+          ].map((s) => (
+            <span
+              key={s.id}
+              className={`${step === s.id ? 'text-brand-600 font-black' : 'text-slate-400'}`}
+            >
+              {s.label}
+            </span>
+          ))}
         </div>
       )}
 
-      {/* DONE STATE */}
+      {/* SUCCESS CONFIRMATION SCREEN */}
       {step === 'done' && bookingResult && (
-        <div className="max-w-lg mx-auto text-center py-8 space-y-6">
-          <div className="w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
-            <CheckCircle2 className="w-12 h-12" />
+        <div className="bg-white rounded-3xl border border-slate-200 p-8 text-center space-y-6 shadow-sm">
+          <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+            <CheckCircle2 className="w-10 h-10" />
           </div>
-          <div>
-            <h2 className="text-2xl font-black text-slate-950">Booking Confirmed!</h2>
-            <p className="text-sm text-slate-500 mt-1">Booking reference:</p>
-            <p className="text-xl font-mono font-black text-brand-600 mt-1">{bookingResult.bookingNumber || bookingResult.id}</p>
+          <div className="space-y-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
+              Booking Confirmed
+            </span>
+            <h2 className="text-2xl font-black text-slate-900 mt-2">Technician Request Registered!</h2>
+            <p className="text-xs text-slate-500">
+              Your service booking has been created and dispatched to verified technicians in your area.
+            </p>
+            <p className="text-lg font-mono font-black text-brand-600 mt-2">{bookingResult.bookingNumber}</p>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 text-xs text-left space-y-2">
-            <p><strong>Service:</strong> {selectedService?.name}</p>
-            <p><strong>Date:</strong> {form.preferredDate}</p>
-            <p><strong>Time:</strong> {form.preferredTimeSlot}</p>
-            <p><strong>Location:</strong> {form.addressLine}, {form.area}</p>
+
+          <div className="bg-slate-50 p-4 rounded-2xl text-xs text-left space-y-2 text-slate-700">
+            <p><strong>Service Area:</strong> {form.upazila}, {form.district}, {form.division}</p>
+            <p><strong>Scheduled Slot:</strong> {form.preferredDate} ({form.preferredTimeSlot})</p>
+            <p><strong>Urgency Level:</strong> {form.urgency}</p>
             <p className="text-slate-500 pt-1">
-              A verified technician will be assigned within 30 minutes during business hours. 
-              You will receive confirmation by phone. For urgent queries call <strong>01733-983752</strong>.
+              A certified technician will confirm dispatch within 30 minutes during working hours. For emergency assistance, call <strong>01733 983752</strong>.
             </p>
           </div>
-          <div className="flex gap-3">
-            <Link href="/customer/dashboard" className="btn-primary flex-1 text-xs py-3">Track Booking</Link>
-            <Link href="/services" className="btn-secondary flex-1 text-xs py-3">Book Another</Link>
+
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <Link href="/customer/dashboard" className="btn-primary flex-1 text-xs py-3 justify-center">
+              Track in Customer Dashboard
+            </Link>
+            <Link href="/services" className="btn-secondary flex-1 text-xs py-3 justify-center">
+              Explore More Services
+            </Link>
           </div>
         </div>
       )}
 
-      {/* STEP 1: Select Service Category */}
+      {/* STEP 1: SELECT CATEGORY & SERVICE */}
       {step === 'service' && (
         <div className="space-y-6">
           <div>
-            <h2 className="text-base font-black text-slate-900 mb-4">What type of service do you need?</h2>
+            <h2 className="text-lg font-black text-slate-900 mb-1">Select Service Category</h2>
+            <p className="text-xs text-slate-500 mb-4">Choose the technical trade required for your premises</p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {SERVICE_CATEGORIES.map((cat) => (
                 <button
                   key={cat.id}
-                  onClick={() => setForm((p) => ({ ...p, categoryId: cat.id, serviceId: '' }))}
+                  onClick={() => setForm((p) => ({ ...p, categoryId: cat.id }))}
                   className={`p-4 rounded-2xl border-2 text-left transition-all space-y-1.5 ${
                     form.categoryId === cat.id
-                      ? 'border-brand-500 bg-brand-50'
+                      ? 'border-brand-500 bg-brand-50 shadow-xs'
                       : 'border-slate-200 hover:border-slate-300 bg-white'
                   }`}
                 >
                   <span className="text-2xl">{cat.icon}</span>
                   <p className="text-xs font-black text-slate-900">{cat.label}</p>
-                  <p className="text-[10px] text-slate-500">{cat.desc}</p>
+                  <p className="text-[10px] text-slate-500 line-clamp-1">{cat.desc}</p>
                 </button>
               ))}
             </div>
           </div>
 
-          {form.categoryId && (
-            <div>
-              <h3 className="text-sm font-black text-slate-900 mb-3">
-                {filteredServices.length > 0 ? 'Choose specific service (optional):' : 'Specific Services:'}
-              </h3>
-              {filteredServices.length > 0 ? (
-                <div className="space-y-2">
-                  {filteredServices.slice(0, 6).map((svc) => (
-                    <label
-                      key={svc.id}
-                      className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition ${
-                        form.serviceId === svc.id ? 'border-brand-500 bg-brand-50' : 'border-slate-200 hover:bg-slate-50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="radio" name="serviceId" value={svc.id}
-                          checked={form.serviceId === svc.id}
-                          onChange={() => setForm((p) => ({ ...p, serviceId: svc.id }))}
-                          className="accent-brand-500"
-                        />
-                        <div>
-                          <p className="text-xs font-bold text-slate-900">{svc.name}</p>
-                          <p className="text-[10px] text-slate-500">{svc.shortDescription}</p>
-                        </div>
+          {services.length > 0 && (
+            <div className="space-y-2 pt-2">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">Specific Service Packages</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {services.map((svc) => (
+                  <label
+                    key={svc.id}
+                    className={`flex items-start justify-between p-3.5 rounded-2xl border cursor-pointer transition ${
+                      form.serviceId === svc.id ? 'border-brand-500 bg-brand-50/60 ring-1 ring-brand-500' : 'border-slate-200 bg-white hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <input
+                        type="radio"
+                        name="serviceId"
+                        value={svc.id}
+                        checked={form.serviceId === svc.id}
+                        onChange={() => setForm((p) => ({ ...p, serviceId: svc.id }))}
+                        className="mt-1 accent-brand-500"
+                      />
+                      <div>
+                        <p className="text-xs font-bold text-slate-900">{svc.name}</p>
+                        <p className="text-[11px] text-slate-500 line-clamp-1">{svc.shortDescription}</p>
                       </div>
-                      <span className="text-xs font-black text-brand-600">
-                        {svc.basePrice > 0 ? `৳${svc.basePrice}+` : 'Free Quote'}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-slate-500 bg-slate-50 p-3 rounded-xl">
-                  Describe your problem in the next step and our team will match you with the right technician.
-                </p>
-              )}
+                    </div>
+                    <span className="text-xs font-black text-brand-600 shrink-0 ml-2">
+                      {svc.basePrice > 0 ? `৳${svc.basePrice}+` : 'Free Quote'}
+                    </span>
+                  </label>
+                ))}
+              </div>
             </div>
           )}
 
-          <div className="flex justify-between items-center pt-4 border-t border-slate-100">
+          <div className="flex justify-between items-center pt-4 border-t border-slate-200">
             <div className="flex items-center gap-2 text-xs text-slate-500">
-              <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
-              Emergency? Call <strong className="text-slate-700">01733-983752</strong>
+              <Phone className="w-3.5 h-3.5 text-brand-500" />
+              Hotline: <strong className="text-slate-800">01733 983752</strong>
             </div>
             <button
               onClick={() => setStep('details')}
-              disabled={!form.categoryId}
-              className="btn-primary text-xs py-2.5 px-5"
+              className="btn-primary text-xs py-2.5 px-6"
             >
-              Continue
+              Continue to Details
             </button>
           </div>
         </div>
       )}
 
-      {/* STEP 2: Problem Details */}
+      {/* STEP 2: PROBLEM DETAILS & IMAGE UPLOAD */}
       {step === 'details' && (
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 sm:p-8 space-y-5">
-          <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
+        <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 space-y-5">
+          <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
             <div className="w-8 h-8 rounded-xl bg-brand-500 text-white flex items-center justify-center">
               <FileText className="w-4 h-4" />
             </div>
-            <h2 className="text-base font-extrabold text-slate-900">Describe the Problem</h2>
+            <div>
+              <h2 className="text-base font-extrabold text-slate-900">Describe the Problem &amp; Attach Photos</h2>
+              <p className="text-[11px] text-slate-500">Provide details to help our technicians bring the right tools and parts</p>
+            </div>
           </div>
 
           <div className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-700">Problem Description *</label>
               <textarea
-                required value={form.description}
-                onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+                required
                 rows={4}
-                placeholder="Describe the issue in detail — what is happening, when it started, which devices or circuits are affected..."
-                className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none resize-none"
+                value={form.description}
+                onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+                placeholder="What is happening? (e.g. circuit tripping, CCTV channel 3 offline, sparking in main switch...)"
+                className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl resize-none"
               />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">Your Name *</label>
-              <input
-                type="text" required value={form.customerName}
-                onChange={(e) => setForm((p) => ({ ...p, customerName: e.target.value }))}
-                placeholder="Full name"
-                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none"
-              />
-            </div>
+            {/* Photo Attachment (Req D) */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                <span>Upload Photos / Relevant Images (Optional, up to 4)</span>
+                <span className="text-[10px] text-slate-400 font-normal">JPG, PNG</span>
+              </label>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">Contact Phone *</label>
-              <input
-                type="tel" required value={form.customerPhone}
-                onChange={(e) => setForm((p) => ({ ...p, customerPhone: e.target.value }))}
-                placeholder="01XXXXXXXXX"
-                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">Urgency</label>
-              <div className="flex gap-2">
-                {[
-                  { value: 'NORMAL', label: 'Normal (1-2 days)', color: 'text-emerald-600 border-emerald-300 bg-emerald-50' },
-                  { value: 'URGENT', label: 'Urgent (Same day)', color: 'text-amber-600 border-amber-300 bg-amber-50' },
-                  { value: 'EMERGENCY', label: '🚨 Emergency', color: 'text-red-600 border-red-300 bg-red-50' },
-                ].map((u) => (
-                  <label key={u.value} className={`flex-1 text-center text-[10px] font-bold py-2 px-2 rounded-xl border cursor-pointer transition ${form.urgency === u.value ? u.color : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'}`}>
-                    <input type="radio" name="urgency" value={u.value} checked={form.urgency === u.value}
-                      onChange={() => setForm((p) => ({ ...p, urgency: u.value }))} className="sr-only" />
-                    {u.label}
-                  </label>
+              <div className="flex flex-wrap gap-3">
+                {attachedImages.map((img, i) => (
+                  <div key={i} className="relative w-20 h-20 rounded-xl border border-slate-200 overflow-hidden group">
+                    <img src={img} alt="Attached upload" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(i)}
+                      className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full opacity-90 hover:opacity-100"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
                 ))}
+
+                {attachedImages.length < 4 && (
+                  <label className="w-20 h-20 rounded-xl border-2 border-dashed border-slate-300 hover:border-brand-500 bg-slate-50 hover:bg-brand-50/50 flex flex-col items-center justify-center cursor-pointer transition">
+                    <Camera className="w-5 h-5 text-slate-400" />
+                    <span className="text-[9px] font-bold text-slate-500 mt-1">Add Photo</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                  </label>
+                )}
               </div>
             </div>
 
-            <div className="flex items-center gap-2 text-[10px] text-slate-400 bg-blue-50 rounded-xl p-3">
-              <Camera className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-              Photo upload available after booking is confirmed via WhatsApp or in-app.
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700">Contact Person Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={form.customerName}
+                  onChange={(e) => setForm((p) => ({ ...p, customerName: e.target.value }))}
+                  placeholder="Full Name"
+                  className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700">Contact Mobile Number *</label>
+                <input
+                  type="tel"
+                  required
+                  value={form.customerPhone}
+                  onChange={(e) => setForm((p) => ({ ...p, customerPhone: e.target.value }))}
+                  placeholder="01XXXXXXXXX"
+                  className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700">Urgency Level</label>
+              <div className="flex gap-2">
+                {[
+                  { value: 'NORMAL', label: 'Normal (Standard Schedule)', color: 'text-emerald-700 border-emerald-300 bg-emerald-50' },
+                  { value: 'URGENT', label: 'Urgent (Same Day)', color: 'text-amber-700 border-amber-300 bg-amber-50' },
+                  { value: 'EMERGENCY', label: '🚨 24/7 Emergency', color: 'text-red-700 border-red-300 bg-red-50' },
+                ].map((u) => (
+                  <button
+                    key={u.value}
+                    type="button"
+                    onClick={() => setForm((p) => ({ ...p, urgency: u.value }))}
+                    className={`flex-1 text-center text-xs font-bold py-2.5 px-2 rounded-xl border transition ${
+                      form.urgency === u.value ? u.color : 'border-slate-200 bg-white text-slate-500'
+                    }`}
+                  >
+                    {u.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -361,66 +410,121 @@ export default function BookingPage() {
               disabled={!form.description || !form.customerName || !form.customerPhone}
               className="btn-primary text-xs py-2.5 flex-1"
             >
-              Schedule Visit
+              Continue to Location &amp; Schedule
             </button>
           </div>
         </div>
       )}
 
-      {/* STEP 3: Schedule */}
+      {/* STEP 3: NATIONWIDE LOCATION & TIME */}
       {step === 'schedule' && (
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 sm:p-8 space-y-5">
-          <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
+        <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 space-y-5">
+          <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
             <div className="w-8 h-8 rounded-xl bg-brand-500 text-white flex items-center justify-center">
-              <Calendar className="w-4 h-4" />
+              <MapPin className="w-4 h-4" />
             </div>
-            <h2 className="text-base font-extrabold text-slate-900">Location &amp; Schedule</h2>
+            <div>
+              <h2 className="text-base font-extrabold text-slate-900">Service Address &amp; Appointment Slot</h2>
+              <p className="text-[11px] text-slate-500">Available across divisions and verified service zones</p>
+            </div>
           </div>
 
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700">Area / Locality *</label>
-                <select value={form.area} onChange={(e) => setForm((p) => ({ ...p, area: e.target.value }))}
-                  className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none">
-                  {AREA_OPTIONS.map((a) => <option key={a}>{a}</option>)}
-                </select>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700">Landmark (Optional)</label>
-                <input type="text" value={form.landmark}
-                  onChange={(e) => setForm((p) => ({ ...p, landmark: e.target.value }))}
-                  placeholder="e.g. Next to Jame Masjid"
-                  className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl" />
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700">Division *</label>
+              <select
+                value={form.division}
+                onChange={(e) => {
+                  const div = e.target.value;
+                  const firstDist = BANGLADESH_DISTRICTS.find((d) => d.division.toLowerCase() === div.toLowerCase());
+                  setForm((p) => ({
+                    ...p,
+                    division: div,
+                    district: firstDist ? firstDist.name : 'Dhaka',
+                    upazila: `${firstDist ? firstDist.name : 'Dhaka'} Sadar`,
+                  }));
+                }}
+                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+              >
+                {BANGLADESH_DIVISIONS.map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">Full Address *</label>
-              <input type="text" required value={form.addressLine}
+              <label className="text-xs font-bold text-slate-700">District *</label>
+              <select
+                value={form.district}
+                onChange={(e) => {
+                  const dist = e.target.value;
+                  setForm((p) => ({ ...p, district: dist, upazila: `${dist} Sadar` }));
+                }}
+                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+              >
+                {availableDistricts.map((d) => (
+                  <option key={d.id} value={d.name}>{d.name} ({d.nameBn})</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700">Thana / Upazila *</label>
+              <input
+                type="text"
+                required
+                value={form.upazila}
+                onChange={(e) => setForm((p) => ({ ...p, upazila: e.target.value }))}
+                placeholder="e.g. Moulvibazar Sadar, Sreemangal..."
+                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700">Area / Point</label>
+              <input
+                type="text"
+                value={form.area}
+                onChange={(e) => setForm((p) => ({ ...p, area: e.target.value }))}
+                placeholder="e.g. Kusumbag Point"
+                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+              />
+            </div>
+
+            <div className="sm:col-span-2 space-y-1.5">
+              <label className="text-xs font-bold text-slate-700">Building / Road Address *</label>
+              <input
+                type="text"
+                required
+                value={form.addressLine}
                 onChange={(e) => setForm((p) => ({ ...p, addressLine: e.target.value }))}
-                placeholder="House / Road / Building name..."
-                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+                placeholder="Building Name, Floor, House #, Road #..."
+                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+              />
             </div>
 
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-700">Preferred Date *</label>
-              <input type="date" required value={form.preferredDate} min={minDate}
+              <input
+                type="date"
+                required
+                value={form.preferredDate}
                 onChange={(e) => setForm((p) => ({ ...p, preferredDate: e.target.value }))}
-                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+              />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-700">Preferred Time Slot *</label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {TIME_SLOTS.map((slot) => (
-                  <label key={slot} className={`text-center text-[11px] font-bold py-2.5 px-2 rounded-xl border cursor-pointer transition ${form.preferredTimeSlot === slot ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}>
-                    <input type="radio" name="timeSlot" value={slot} checked={form.preferredTimeSlot === slot}
-                      onChange={() => setForm((p) => ({ ...p, preferredTimeSlot: slot }))} className="sr-only" />
-                    <Clock className="w-3.5 h-3.5 inline mr-1 opacity-60" />{slot}
-                  </label>
+              <select
+                value={form.preferredTimeSlot}
+                onChange={(e) => setForm((p) => ({ ...p, preferredTimeSlot: e.target.value }))}
+                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+              >
+                {TIME_SLOTS.map((t) => (
+                  <option key={t} value={t}>{t}</option>
                 ))}
-              </div>
+              </select>
             </div>
           </div>
 
@@ -428,7 +532,7 @@ export default function BookingPage() {
             <button onClick={() => setStep('details')} className="btn-secondary text-xs py-2.5 flex-1">Back</button>
             <button
               onClick={() => setStep('confirm')}
-              disabled={!form.preferredDate || !form.addressLine}
+              disabled={!form.addressLine || !form.upazila}
               className="btn-primary text-xs py-2.5 flex-1"
             >
               Review Booking
@@ -437,43 +541,33 @@ export default function BookingPage() {
         </div>
       )}
 
-      {/* STEP 4: Confirm */}
+      {/* STEP 4: REVIEW & SUBMIT */}
       {step === 'confirm' && (
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 sm:p-8 space-y-5">
-          <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
+        <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 space-y-5">
+          <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
             <div className="w-8 h-8 rounded-xl bg-brand-500 text-white flex items-center justify-center">
-              <CheckCircle2 className="w-4 h-4" />
+              <ShieldCheck className="w-4 h-4" />
             </div>
             <h2 className="text-base font-extrabold text-slate-900">Review &amp; Confirm Booking</h2>
           </div>
 
-          {!user && (
-            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-xs text-amber-800 space-y-2">
-              <p className="font-bold">⚠️ Sign In to Track Your Booking</p>
-              <p>You can proceed as a guest, but creating an account lets you track your booking, technician, and service history.</p>
-              <Link href="/customer/login?redirect=/booking" className="text-brand-600 font-bold hover:underline">
-                Sign In or Register →
-              </Link>
+          <div className="space-y-3 bg-slate-50 p-4 rounded-2xl text-xs text-slate-700">
+            <div>
+              <span className="font-bold text-slate-500 uppercase text-[10px]">Service &amp; Problem:</span>
+              <p className="font-bold text-slate-900 mt-0.5">{selectedService?.name || form.categoryId}</p>
+              <p className="text-slate-600 line-clamp-2">{form.description}</p>
+              {attachedImages.length > 0 && (
+                <p className="text-[11px] text-brand-600 font-semibold mt-1">
+                  📷 {attachedImages.length} photo(s) attached for technician review
+                </p>
+              )}
             </div>
-          )}
 
-          <div className="space-y-3 text-xs">
-            <div className="p-4 bg-slate-50 rounded-2xl space-y-2">
-              <p className="font-bold text-sm text-slate-900">Service Details</p>
-              <p><strong>Category:</strong> {SERVICE_CATEGORIES.find((c) => c.id === form.categoryId)?.label}</p>
-              {selectedService && <p><strong>Service:</strong> {selectedService.name}</p>}
-              <p><strong>Urgency:</strong> {form.urgency}</p>
-              <p><strong>Problem:</strong> {form.description}</p>
-            </div>
-            <div className="p-4 bg-slate-50 rounded-2xl space-y-2">
-              <p className="font-bold text-sm text-slate-900">Location &amp; Schedule</p>
-              <p><strong>{form.customerName}</strong> — {form.customerPhone}</p>
-              <p><MapPin className="inline w-3 h-3 mr-1" />{form.addressLine}, {form.area}, Moulvibazar</p>
-              <p><Calendar className="inline w-3 h-3 mr-1" />{form.preferredDate} at {form.preferredTimeSlot}</p>
-            </div>
-            <div className="p-3 bg-brand-50 rounded-xl text-[11px] text-brand-700 font-medium">
-              <strong>Pricing:</strong> The technician will provide a detailed quote on-site after inspection. 
-              Service call charges may apply for Emergency bookings.
+            <div className="border-t border-slate-200 pt-2">
+              <span className="font-bold text-slate-500 uppercase text-[10px]">Location &amp; Appointment:</span>
+              <p className="font-bold text-slate-900 mt-0.5">{form.addressLine}, {form.upazila}, {form.district}, {form.division}</p>
+              <p className="text-slate-600">Date: {form.preferredDate} ({form.preferredTimeSlot}) &bull; Urgency: {form.urgency}</p>
+              <p className="text-slate-600">Contact: {form.customerName} ({form.customerPhone})</p>
             </div>
           </div>
 
@@ -482,9 +576,9 @@ export default function BookingPage() {
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="btn-primary text-xs py-2.5 flex-1"
+              className="btn-primary text-xs py-2.5 flex-1 shadow-lg shadow-brand-500/25"
             >
-              {loading ? 'Submitting...' : 'Confirm Booking'}
+              {loading ? 'Submitting Booking...' : 'Confirm & Dispatch Technician'}
             </button>
           </div>
         </div>

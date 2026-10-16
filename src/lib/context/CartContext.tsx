@@ -16,6 +16,8 @@ interface CartContextType {
   couponCode: string;
   applyCoupon: (code: string) => boolean;
   itemCount: number;
+  deliveryDistrict: string;
+  setDeliveryDistrict: (district: string) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -24,12 +26,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [couponCode, setCouponCode] = useState('');
   const [discountPercent, setDiscountPercent] = useState(0);
+  const [deliveryDistrict, setDeliveryDistrict] = useState('Moulvibazar');
 
   useEffect(() => {
     try {
       const saved = localStorage.getItem('need_electro_cart');
       if (saved) {
         setItems(JSON.parse(saved));
+      }
+      const savedDistrict = localStorage.getItem('need_electro_delivery_district');
+      if (savedDistrict) {
+        setDeliveryDistrict(savedDistrict);
       }
     } catch {
       // fallback
@@ -43,6 +50,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       // ignore
     }
   }, [items]);
+
+  const handleSetDistrict = (district: string) => {
+    setDeliveryDistrict(district);
+    try {
+      localStorage.setItem('need_electro_delivery_district', district);
+    } catch {
+      // ignore
+    }
+  };
 
   const addToCart = (product: ProductItem, quantity = 1) => {
     setItems((prev) => {
@@ -101,7 +117,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, 0);
 
   const discount = Math.round(subtotal * discountPercent);
-  const deliveryCharge = items.length > 0 ? (subtotal > 10000 ? 0 : 60) : 0; // Free delivery over 10k BDT
+
+  // Dynamic regional delivery charge:
+  // Local (Moulvibazar): ৳60 (free over ৳10,000)
+  // Nationwide (Any other district): ৳120 (free over ৳15,000)
+  const isLocal = deliveryDistrict.toLowerCase().includes('moulvibazar');
+  const freeThreshold = isLocal ? 10000 : 15000;
+  const baseRate = isLocal ? 60 : 120;
+  const deliveryCharge = items.length > 0 ? (subtotal >= freeThreshold ? 0 : baseRate) : 0;
   const total = Math.max(0, subtotal - discount + deliveryCharge);
   const itemCount = items.reduce((acc, item) => acc + item.quantity, 0);
 
@@ -120,6 +143,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         couponCode,
         applyCoupon,
         itemCount,
+        deliveryDistrict,
+        setDeliveryDistrict: handleSetDistrict,
       }}
     >
       {children}

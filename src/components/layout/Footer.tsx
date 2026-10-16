@@ -78,6 +78,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/software" className="text-brand-400 hover:text-brand-300 transition font-medium">
+                  Software &amp; ERP Solutions
+                </Link>
+              </li>
+              <li>
                 <Link href="/training" className="text-amber-400 hover:text-amber-300 transition font-medium">
                   Skills Academy &amp; Courses
                 </Link>

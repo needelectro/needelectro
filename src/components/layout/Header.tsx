@@ -25,7 +25,8 @@ import {
   Store,
   MapPin,
   ShoppingBag,
-  Users
+  Users,
+  Layers
 } from 'lucide-react';
 
 export default function Header() {
@@ -194,6 +195,14 @@ export default function Header() {
                     >
                       <GraduationCap className="w-4 h-4 text-amber-500 shrink-0" />
                       <span>Training Academy</span>
+                    </Link>
+                    <Link
+                      href="/software"
+                      onClick={() => setMoreMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600 transition"
+                    >
+                      <Layers className="w-4 h-4 text-brand-500 shrink-0" />
+                      <span>Software &amp; ERP</span>
                     </Link>
                     <Link
                       href="/branches"
