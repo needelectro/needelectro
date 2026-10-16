@@ -134,9 +134,9 @@ export default function HomePage() {
   }).slice(0, 4);
 
   return (
-    <div className="flex flex-col space-y-16 sm:space-y-24">
+    <div className="flex flex-col space-y-10 sm:space-y-14">
       {/* 1. HERO SECTION */}
-      <section className="relative overflow-hidden pt-8 pb-16 md:pt-16 md:pb-24">
+      <section className="relative overflow-hidden pt-6 pb-6 md:pt-10 md:pb-8">
         {/* Hardware-accelerated radial light sources */}
         <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-[radial-gradient(ellipse_at_center,rgba(8,127,229,0.18)_0%,rgba(8,127,229,0)_70%)] pointer-events-none" />
         <div className="absolute -top-10 right-10 w-[400px] h-[400px] bg-[radial-gradient(ellipse_at_center,rgba(56,189,248,0.14)_0%,rgba(56,189,248,0)_70%)] pointer-events-none" />
@@ -241,7 +241,7 @@ export default function HomePage() {
       </section>
 
       {/* 2. VERIFIED SERVICES SHOWCASE (PLACED DIRECTLY ABOVE FEATURED PRODUCTS) */}
-      <section className="relative py-8 md:py-12 overflow-hidden">
+      <section className="relative pt-0 pb-0 overflow-hidden">
         {/* Hardware-accelerated radial glow */}
         <div className="absolute top-1/3 right-10 w-[500px] h-[350px] bg-[radial-gradient(ellipse_at_center,rgba(0,140,255,0.12)_0%,rgba(0,140,255,0)_70%)] pointer-events-none" />
 
@@ -386,7 +386,7 @@ export default function HomePage() {
       </section>
 
       {/* 3. FEATURED TECHNOLOGY PRODUCTS */}
-      <section className="relative py-16 overflow-hidden">
+      <section className="relative !mt-6 sm:!mt-8 pt-0 pb-8 overflow-hidden">
         {/* Hardware-accelerated radial glow */}
         <div className="absolute top-1/2 left-10 w-[500px] h-[350px] bg-[radial-gradient(ellipse_at_center,rgba(8,127,229,0.12)_0%,rgba(8,127,229,0)_70%)] pointer-events-none" />
         
