@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   ChevronRight, Calendar, MapPin, Clock,
   CheckCircle2, Wrench, Camera, FileText, Phone, X, ShieldCheck,
-  Zap, MessageCircle, AlertTriangle, ArrowRight, Sparkles, HelpCircle
+  Zap, MessageCircle, AlertTriangle, ArrowRight, Sparkles, UserCheck,
+  Building, Home, Info, Lock
 } from 'lucide-react';
 import { useAuth } from '@/lib/context/AuthContext';
 import { BANGLADESH_DISTRICTS, DistrictData } from '@/lib/data/districts';
@@ -52,7 +53,8 @@ const TIME_SLOTS = [
 ];
 
 function BookingFormInner() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
+  const router = useRouter();
   const searchParams = useSearchParams();
 
   const [loading, setLoading] = useState(false);
@@ -61,6 +63,15 @@ function BookingFormInner() {
   const [attachedImages, setAttachedImages] = useState<string[]>([]);
   const [bookingComplete, setBookingComplete] = useState(false);
 
+  // Saved addresses from customer profile
+  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+  const [loadingAddresses, setLoadingAddresses] = useState(false);
+
+  // Location mode: 'SAVED' vs 'CUSTOM' (Flexible location)
+  const [locationMode, setLocationMode] = useState<'SAVED' | 'CUSTOM'>('CUSTOM');
+  const [selectedAddressId, setSelectedAddressId] = useState<string>('');
+  const [saveToProfile, setSaveToProfile] = useState(false);
+
   const initialCat = searchParams.get('category')?.toUpperCase() || 'ELECTRICAL';
   const initialUrgency = searchParams.get('urgency')?.toUpperCase() === 'EMERGENCY' ? 'EMERGENCY' : 'NORMAL';
 
@@ -68,8 +79,9 @@ function BookingFormInner() {
     categoryId: initialCat,
     serviceId: searchParams.get('service') || '',
     description: '',
-    customerName: user?.name || '',
-    customerPhone: user?.phone || '',
+    // On-site contact info (auto-filled from user, but editable)
+    contactPersonName: '',
+    contactPhone: '',
     division: 'Sylhet',
     district: 'Moulvibazar',
     upazila: 'Moulvibazar Sadar',
@@ -81,17 +93,11 @@ function BookingFormInner() {
     urgency: initialUrgency,
   });
 
-  // Sync user info if signed in
-  useEffect(() => {
-    if (user) {
-      setForm((p) => ({
-        ...p,
-        customerName: p.customerName || user.name || '',
-        customerPhone: p.customerPhone || user.phone || '',
-      }));
-    }
-  }, [user]);
+  // Current redirect URL for auth
+  const currentQuery = searchParams.toString();
+  const redirectTarget = `/booking${currentQuery ? `?${currentQuery}` : ''}`;
 
+  // Fetch services catalog
   useEffect(() => {
     fetch('/api/v1/services')
       .then((r) => r.json())
@@ -105,6 +111,47 @@ function BookingFormInner() {
       })
       .catch(() => {});
   }, [searchParams]);
+
+  // Auto-populate user data and saved addresses when authenticated
+  useEffect(() => {
+    if (user) {
+      setForm((p) => ({
+        ...p,
+        contactPersonName: p.contactPersonName || user.name || '',
+        contactPhone: p.contactPhone || user.phone || '',
+      }));
+
+      // Fetch saved addresses
+      setLoadingAddresses(true);
+      fetch('/api/v1/customer/addresses')
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.success && Array.isArray(data.addresses) && data.addresses.length > 0) {
+            setSavedAddresses(data.addresses);
+            const defaultAddr = data.addresses.find((a: any) => a.isDefault) || data.addresses[0];
+            setSelectedAddressId(defaultAddr.id);
+            setLocationMode('SAVED');
+          } else {
+            setLocationMode('CUSTOM');
+          }
+        })
+        .catch(() => {
+          setLocationMode('CUSTOM');
+        })
+        .finally(() => {
+          setLoadingAddresses(false);
+        });
+    }
+  }, [user]);
+
+  // Selected district info (for coverage validation)
+  const currentDistrictName = locationMode === 'SAVED'
+    ? savedAddresses.find((a) => a.id === selectedAddressId)?.district || form.district
+    : form.district;
+
+  const currentDistrictInfo: DistrictData | undefined = BANGLADESH_DISTRICTS.find(
+    (d) => d.name.toLowerCase() === currentDistrictName.toLowerCase()
+  );
 
   const availableDistricts = BANGLADESH_DISTRICTS.filter(
     (d) => d.division.toLowerCase() === form.division.toLowerCase()
@@ -147,43 +194,68 @@ function BookingFormInner() {
     : services;
 
   const selectedService = services.find((s) => s.id === form.serviceId);
+  const activeSavedAddress = savedAddresses.find((a) => a.id === selectedAddressId);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!form.customerPhone.trim()) {
-      alert('Please enter your mobile phone number so our coordinator can contact you.');
+    // Check mandatory authentication
+    if (!user) {
+      router.push(`/customer/login?redirect=${encodeURIComponent(redirectTarget)}`);
       return;
     }
 
     if (!form.description.trim()) {
-      alert('Please briefly describe what problem needs fixing.');
+      alert('Please describe what problem needs fixing or servicing.');
       return;
+    }
+
+    if (locationMode === 'CUSTOM') {
+      if (!form.addressLine.trim() || !form.upazila.trim()) {
+        alert('Please provide the full road/building address and area for the technician.');
+        return;
+      }
+      if (!form.contactPhone.trim()) {
+        alert('Please provide a contact phone number at the service location.');
+        return;
+      }
     }
 
     setLoading(true);
     try {
+      const payload: any = {
+        serviceId: form.serviceId || (filteredServices[0]?.id || services[0]?.id || 'svc_general'),
+        problemDescription: form.description,
+        customerName: form.contactPersonName || user.name,
+        customerPhone: form.contactPhone || user.phone,
+        preferredDate: form.preferredDate,
+        preferredTimeSlot: form.preferredTimeSlot,
+        urgency: form.urgency,
+        mediaUrls: attachedImages.length > 0 ? attachedImages.join('|||') : null,
+      };
+
+      if (locationMode === 'SAVED' && selectedAddressId) {
+        // Use existing saved address without changing anything
+        payload.address = selectedAddressId;
+      } else {
+        // Use separate service location (one-time snapshot, or optionally saved)
+        payload.address = {
+          recipientName: form.contactPersonName || user.name,
+          phone: form.contactPhone || user.phone,
+          division: form.division,
+          district: form.district,
+          upazila: form.upazila,
+          area: form.area || form.upazila,
+          addressLine: form.addressLine,
+          landmark: form.landmark || null,
+        };
+        payload.saveToProfile = saveToProfile;
+      }
+
       const res = await fetch('/api/v1/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          serviceId: form.serviceId || (filteredServices[0]?.id || services[0]?.id || 'svc_general'),
-          problemDescription: form.description,
-          customerName: form.customerName || 'Valued Customer',
-          customerPhone: form.customerPhone,
-          location: {
-            division: form.division,
-            district: form.district,
-            upazila: form.upazila,
-            area: form.area,
-            addressLine: form.addressLine || `${form.area}, ${form.upazila}`,
-            landmark: form.landmark,
-          },
-          preferredDate: form.preferredDate,
-          preferredTimeSlot: form.preferredTimeSlot,
-          urgency: form.urgency,
-          mediaUrls: attachedImages.length > 0 ? attachedImages.join('|||') : null,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -192,10 +264,14 @@ function BookingFormInner() {
         setBookingComplete(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
-        alert(data.error || 'Could not register booking. Please try calling 01733 983752.');
+        if (data.requiresAuth) {
+          router.push(`/customer/login?redirect=${encodeURIComponent(redirectTarget)}`);
+          return;
+        }
+        alert(data.error || 'Could not register booking. Please contact 01733 983752.');
       }
     } catch {
-      alert('Network error while booking. You can also call us directly at 01733 983752.');
+      alert('Network error while booking. Please try again or call 01733 983752.');
     } finally {
       setLoading(false);
     }
@@ -212,7 +288,7 @@ function BookingFormInner() {
         <span className="text-slate-900 font-bold">Book a Service</span>
       </nav>
 
-      {/* SUCCESS CONFIRMATION SCREEN */}
+      {/* ═══ SUCCESS CONFIRMATION SCREEN ═══ */}
       {bookingComplete && bookingResult ? (
         <div className="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-10 text-center space-y-6 shadow-xl max-w-2xl mx-auto animate-in fade-in zoom-in-95">
           <div className="w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
@@ -227,10 +303,10 @@ function BookingFormInner() {
               Technician Request Registered!
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto">
-              Your service request has been queued for a certified technician in your area. Our coordinator will call you to confirm arrival.
+              Your service request is assigned to a verified technician. Our operations coordinator will call you to confirm arrival.
             </p>
             <div className="pt-2">
-              <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">Your Booking Tracking ID</span>
+              <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">Your Booking Reference Number</span>
               <p className="text-xl sm:text-2xl font-mono font-black text-brand-600 bg-brand-50 inline-block px-4 py-1.5 rounded-xl border border-brand-200 mt-1">
                 {bookingResult.bookingNumber}
               </p>
@@ -244,23 +320,29 @@ function BookingFormInner() {
               <span className="font-bold text-slate-900">{selectedService?.name || form.categoryId}</span>
             </div>
             <div className="flex justify-between items-center pb-2 border-b border-slate-200/60">
-              <span className="text-slate-500 font-semibold">Location:</span>
-              <span className="font-bold text-slate-900">{form.upazila}, {form.district}</span>
+              <span className="text-slate-500 font-semibold">Service Location:</span>
+              <span className="font-bold text-slate-900">
+                {locationMode === 'SAVED' && activeSavedAddress 
+                  ? `${activeSavedAddress.addressLine}, ${activeSavedAddress.upazila}, ${activeSavedAddress.district}` 
+                  : `${form.addressLine}, ${form.upazila}, ${form.district}`}
+              </span>
             </div>
             <div className="flex justify-between items-center pb-2 border-b border-slate-200/60">
-              <span className="text-slate-500 font-semibold">Preferred Schedule:</span>
+              <span className="text-slate-500 font-semibold">Scheduled Window:</span>
               <span className="font-bold text-slate-900">{form.preferredDate} ({form.preferredTimeSlot})</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-slate-500 font-semibold">Contact Phone:</span>
-              <span className="font-bold text-brand-600 font-mono">{form.customerPhone}</span>
+              <span className="text-slate-500 font-semibold">On-Site Contact:</span>
+              <span className="font-bold text-brand-600 font-mono">
+                {form.contactPersonName || user?.name} ({form.contactPhone || user?.phone})
+              </span>
             </div>
           </div>
 
           {/* Quick Actions */}
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <a
-              href={`https://wa.me/8801733983752?text=${encodeURIComponent(`Hello NEED ELECTRO! I booked service ${bookingResult.bookingNumber} for ${selectedService?.name || form.categoryId} in ${form.district}. Please confirm dispatch.`)}`}
+              href={`https://wa.me/8801733983752?text=${encodeURIComponent(`Hello NEED ELECTRO! I booked service ${bookingResult.bookingNumber} for ${selectedService?.name || form.categoryId}. Please confirm dispatch.`)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition shadow-md shadow-emerald-600/20 app-tap"
@@ -277,23 +359,23 @@ function BookingFormInner() {
         </div>
       ) : (
         <>
-          {/* Top Banner: Easy Booking Assurance */}
+          {/* Top Banner: Service Header */}
           <div className="bg-gradient-to-r from-brand-600 via-brand-500 to-sky-600 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
             <div className="max-w-2xl space-y-2 relative z-10">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-[11px] font-black uppercase tracking-wider text-white border border-white/30">
-                <Zap className="w-3.5 h-3.5 fill-amber-300 text-amber-300" /> Fast 1-Minute Booking
+                <Zap className="w-3.5 h-3.5 fill-amber-300 text-amber-300" /> Professional Technical Ecosystem
               </div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-                Book a Verified Technician in 60 Seconds
+                Book a Certified Technician
               </h1>
               <p className="text-xs sm:text-sm text-brand-100 leading-relaxed">
-                No complex account setup required. Select your trade, tell us where to visit, and our certified electrical and technology team takes care of the rest.
+                Schedule verified electricians, CCTV technicians, and computer specialists. Fast dispatch, digital job tracking, and 30-day workmanship warranty included.
               </p>
             </div>
 
-            {/* Direct Phone / WhatsApp Pill on Header */}
-            <div className="mt-4 sm:mt-6 pt-4 border-t border-white/20 flex flex-wrap items-center gap-3 text-xs">
-              <span className="text-brand-100 font-semibold">Prefer to book by phone or WhatsApp?</span>
+            {/* Hotline Link */}
+            <div className="mt-4 pt-4 border-t border-white/20 flex flex-wrap items-center gap-3 text-xs">
+              <span className="text-brand-100 font-semibold">Need urgent emergency assistance?</span>
               <a
                 href="tel:01733983752"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-brand-700 font-black hover:bg-brand-50 transition shadow-xs"
@@ -306,10 +388,67 @@ function BookingFormInner() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 text-white font-bold hover:bg-emerald-600 transition shadow-xs"
               >
-                <MessageCircle className="w-3.5 h-3.5" /> WhatsApp Us
+                <MessageCircle className="w-3.5 h-3.5" /> WhatsApp Support
               </a>
             </div>
           </div>
+
+          {/* ═══ MANDATORY AUTHENTICATION BANNER (If not signed in) ═══ */}
+          {!user && !authLoading && (
+            <div className="bg-amber-50 border-2 border-amber-300 rounded-3xl p-6 sm:p-7 shadow-sm space-y-4 animate-in fade-in">
+              <div className="flex items-start gap-3.5">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm shadow-amber-500/30">
+                  <Lock className="w-5 h-5" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-sm sm:text-base font-black text-amber-950">
+                    Customer Account Required to Book Services
+                  </h3>
+                  <p className="text-xs text-amber-900 leading-relaxed">
+                    Under NEED ELECTRO security and warranty policies, bookings are linked to verified customer accounts. Please sign in or register to schedule a technician. Your selected trade and inputs will be preserved.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-1 sm:pl-13">
+                <Link
+                  href={`/customer/login?redirect=${encodeURIComponent(redirectTarget)}`}
+                  className="btn-primary text-xs py-2.5 px-6 justify-center shadow-md shadow-brand-500/20"
+                >
+                  <UserCheck className="w-4 h-4 mr-1.5" />
+                  Sign In as Customer
+                </Link>
+                <Link
+                  href={`/customer/register?redirect=${encodeURIComponent(redirectTarget)}`}
+                  className="btn-secondary text-xs py-2.5 px-6 justify-center bg-white border-amber-300 hover:bg-amber-100 text-amber-950"
+                >
+                  Create Customer Account &rarr;
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {/* ═══ SMART PROFILE AUTO-FILL BANNER (If signed in) ═══ */}
+          {user && (
+            <div className="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-emerald-900">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-emerald-500 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-bold text-slate-900">
+                    Authenticated Customer: <span className="text-emerald-700">{user.name}</span>
+                  </p>
+                  <p className="text-[11px] text-slate-500 font-mono">
+                    Phone: {user.phone || 'Not set'} • Email: {user.email}
+                  </p>
+                </div>
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-white px-2.5 py-1 rounded-full border border-emerald-200">
+                ✓ Smart Profile Auto-Fill Active
+              </span>
+            </div>
+          )}
 
           {/* Quick Problem Selector (1-Click Fill) */}
           <div className="space-y-3">
@@ -318,7 +457,7 @@ function BookingFormInner() {
                 <Sparkles className="w-4 h-4 text-brand-500" />
                 Quick Select Common Issues (1-Click Fill)
               </h2>
-              <span className="text-[11px] text-slate-400">Click to autofill</span>
+              <span className="text-[11px] text-slate-400">Click to autofill description</span>
             </div>
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
               {QUICK_ISSUES.map((issue, idx) => (
@@ -346,7 +485,7 @@ function BookingFormInner() {
               <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-sm space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-black text-slate-900">1. Select Service Category</h3>
-                  <span className="text-[11px] font-bold text-brand-600">Step 1 of 2</span>
+                  <span className="text-[11px] font-bold text-brand-600">Trade Selection</span>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   {SERVICE_CATEGORIES.map((cat) => (
@@ -410,7 +549,7 @@ function BookingFormInner() {
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-700 flex justify-between">
                     <span>What needs to be fixed or installed? *</span>
-                    <span className="text-[11px] text-slate-400">Be as brief or detailed as you like</span>
+                    <span className="text-[11px] text-slate-400">Brief or detailed</span>
                   </label>
                   <textarea
                     required
@@ -453,7 +592,7 @@ function BookingFormInner() {
                 {/* Photo Upload (Optional) */}
                 <div className="space-y-2 pt-2">
                   <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                    <span>Attach Photos of the equipment / board (Optional)</span>
+                    <span>Attach Photos of equipment / board (Optional)</span>
                     <span className="text-[10px] text-slate-400">Up to 4 images</span>
                   </label>
                   <div className="flex flex-wrap gap-2.5">
@@ -481,116 +620,257 @@ function BookingFormInner() {
               </div>
             </div>
 
-            {/* Right 5 Columns: Contact, Location, Schedule & Instant Submit */}
+            {/* Right 5 Columns: FLEXIBLE SERVICE LOCATION & REVIEW */}
             <div className="lg:col-span-5 space-y-6">
               <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-sm space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-black text-slate-900">3. Where &amp; Who to Visit</h3>
-                  <span className="text-[11px] font-bold text-brand-600">Step 2 of 2</span>
+                  <h3 className="text-sm font-black text-slate-900 flex items-center gap-1.5">
+                    <MapPin className="w-4 h-4 text-brand-600" />
+                    Where do you need the service?
+                  </h3>
+                  <span className="text-[11px] font-bold text-brand-600">Location</span>
                 </div>
 
-                {/* Name & Phone */}
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Your Full Name *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Rahim Chowdhury"
-                      value={form.customerName}
-                      onChange={(e) => setForm((p) => ({ ...p, customerName: e.target.value }))}
-                      className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500"
-                    />
+                {/* ═══ FLEXIBLE LOCATION MODE SELECTOR ═══ */}
+                {user && savedAddresses.length > 0 && (
+                  <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-2xl">
+                    <button
+                      type="button"
+                      onClick={() => setLocationMode('SAVED')}
+                      className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition ${
+                        locationMode === 'SAVED'
+                          ? 'bg-white text-brand-700 shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <Home className="w-3.5 h-3.5" />
+                      Use Saved Address
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLocationMode('CUSTOM')}
+                      className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition ${
+                        locationMode === 'CUSTOM'
+                          ? 'bg-white text-brand-700 shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <Building className="w-3.5 h-3.5" />
+                      Use Another Address
+                    </button>
                   </div>
+                )}
 
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Contact Mobile Number *
-                    </label>
-                    <input
-                      type="tel"
-                      required
-                      placeholder="01XXXXXXXXX"
-                      value={form.customerPhone}
-                      onChange={(e) => setForm((p) => ({ ...p, customerPhone: e.target.value }))}
-                      className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-                    />
-                    <p className="text-[10px] text-slate-400 mt-1">
-                      Our coordinator will call this number to confirm technician dispatch.
+                {/* ═══ MODE A: SAVED PROFILE ADDRESS ═══ */}
+                {locationMode === 'SAVED' && savedAddresses.length > 0 && (
+                  <div className="space-y-3">
+                    <label className="block text-xs font-bold text-slate-700">Select Saved Address:</label>
+                    <div className="space-y-2">
+                      {savedAddresses.map((addr) => (
+                        <label
+                          key={addr.id}
+                          className={`flex items-start gap-3 p-3 rounded-2xl border cursor-pointer transition ${
+                            selectedAddressId === addr.id
+                              ? 'border-brand-500 bg-brand-50/70 ring-1 ring-brand-500'
+                              : 'border-slate-200 bg-white hover:bg-slate-50'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="savedAddress"
+                            checked={selectedAddressId === addr.id}
+                            onChange={() => setSelectedAddressId(addr.id)}
+                            className="mt-1 accent-brand-500"
+                          />
+                          <div className="min-w-0 text-xs">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-extrabold text-slate-900">{addr.label || 'Home'}</span>
+                              {addr.isDefault && (
+                                <span className="text-[9px] font-bold bg-brand-100 text-brand-700 px-1.5 py-0.5 rounded">
+                                  Default
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-slate-700 mt-0.5 font-medium">{addr.addressLine}, {addr.upazila}</p>
+                            <p className="text-slate-500 text-[11px]">{addr.district}, {addr.division} • {addr.phone}</p>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+
+                    <p className="text-[11px] text-slate-400 italic">
+                      Need technician at another location (e.g. office, shop, or relatives)? Click "Use Another Address" above.
                     </p>
                   </div>
-                </div>
+                )}
 
-                {/* Division & District */}
-                <div className="grid grid-cols-2 gap-3 pt-2">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Division *</label>
-                    <select
-                      value={form.division}
-                      onChange={(e) => {
-                        const div = e.target.value;
-                        const firstDist = BANGLADESH_DISTRICTS.find(
-                          (d) => d.division.toLowerCase() === div.toLowerCase()
-                        );
-                        setForm((p) => ({
-                          ...p,
-                          division: div,
-                          district: firstDist ? firstDist.name : 'Dhaka',
-                          upazila: `${firstDist ? firstDist.name : 'Dhaka'} Sadar`,
-                        }));
-                      }}
-                      className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
-                    >
-                      {BANGLADESH_DIVISIONS.map((d) => (
-                        <option key={d} value={d}>{d}</option>
-                      ))}
-                    </select>
-                  </div>
+                {/* ═══ MODE B: CUSTOM / DIFFERENT SERVICE LOCATION ═══ */}
+                {locationMode === 'CUSTOM' && (
+                  <div className="space-y-3">
+                    {user && (
+                      <div className="p-3 bg-sky-50 border border-sky-100 rounded-xl text-[11px] text-sky-900 flex items-start gap-2">
+                        <Info className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
+                        <p>
+                          <strong>Flexible Location:</strong> Entering a different service location will <em>NOT</em> overwrite your permanent profile address.
+                        </p>
+                      </div>
+                    )}
 
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">District *</label>
-                    <select
-                      value={form.district}
-                      onChange={(e) => {
-                        const dist = e.target.value;
-                        setForm((p) => ({ ...p, district: dist, upazila: `${dist} Sadar` }));
-                      }}
-                      className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
-                    >
-                      {availableDistricts.map((d) => (
-                        <option key={d.id} value={d.name}>{d.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
+                    {/* On-Site Contact Person & Phone */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Contact Person on Premises *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Name of person at site"
+                          value={form.contactPersonName}
+                          onChange={(e) => setForm((p) => ({ ...p, contactPersonName: e.target.value }))}
+                          className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Contact Phone at Site *
+                        </label>
+                        <input
+                          type="tel"
+                          required
+                          placeholder="01XXXXXXXXX"
+                          value={form.contactPhone}
+                          onChange={(e) => setForm((p) => ({ ...p, contactPhone: e.target.value }))}
+                          className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono"
+                        />
+                      </div>
+                    </div>
 
-                {/* Upazila & Address Line */}
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Area / Upazila *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Kusumbag Point, Moulvibazar Sadar, Sreemangal..."
-                      value={form.upazila}
-                      onChange={(e) => setForm((p) => ({ ...p, upazila: e.target.value }))}
-                      className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
-                    />
-                  </div>
+                    {/* Division & District */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Division *</label>
+                        <select
+                          value={form.division}
+                          onChange={(e) => {
+                            const div = e.target.value;
+                            const firstDist = BANGLADESH_DISTRICTS.find(
+                              (d) => d.division.toLowerCase() === div.toLowerCase()
+                            );
+                            setForm((p) => ({
+                              ...p,
+                              division: div,
+                              district: firstDist ? firstDist.name : 'Dhaka',
+                              upazila: `${firstDist ? firstDist.name : 'Dhaka'} Sadar`,
+                            }));
+                          }}
+                          className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+                        >
+                          {BANGLADESH_DIVISIONS.map((d) => (
+                            <option key={d} value={d}>{d}</option>
+                          ))}
+                        </select>
+                      </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      House / Road / Building Address *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. House #14, Road #2, Kusumbag (Near Central Mosque)"
-                      value={form.addressLine}
-                      onChange={(e) => setForm((p) => ({ ...p, addressLine: e.target.value }))}
-                      className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
-                    />
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">District *</label>
+                        <select
+                          value={form.district}
+                          onChange={(e) => {
+                            const dist = e.target.value;
+                            setForm((p) => ({ ...p, district: dist, upazila: `${dist} Sadar` }));
+                          }}
+                          className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                        >
+                          {availableDistricts.map((d) => (
+                            <option key={d.id} value={d.name}>{d.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Upazila & Address Line */}
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Upazila / Area *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. Moulvibazar Sadar, Mirpur, Uttara, Sreemangal..."
+                          value={form.upazila}
+                          onChange={(e) => setForm((p) => ({ ...p, upazila: e.target.value }))}
+                          className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Building / Flat / Road Address *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Holding #, Road #, Building Name, Floor"
+                          value={form.addressLine}
+                          onChange={(e) => setForm((p) => ({ ...p, addressLine: e.target.value }))}
+                          className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Nearby Landmark (Optional)</label>
+                        <input
+                          type="text"
+                          placeholder="Near Central Mosque, Market, School or Junction"
+                          value={form.landmark}
+                          onChange={(e) => setForm((p) => ({ ...p, landmark: e.target.value }))}
+                          className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Optional: Save to profile checkbox */}
+                    {user && (
+                      <label className="flex items-center gap-2 pt-1 text-xs text-slate-600 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={saveToProfile}
+                          onChange={(e) => setSaveToProfile(e.target.checked)}
+                          className="rounded accent-brand-500"
+                        />
+                        <span>Save this address to my account for future bookings</span>
+                      </label>
+                    )}
                   </div>
+                )}
+
+                {/* ═══ SERVICE AVAILABILITY VALIDATION BADGE ═══ */}
+                <div className="p-3 rounded-2xl border text-xs space-y-1">
+                  {currentDistrictInfo?.onSiteServiceAvailable ? (
+                    <div className="flex items-start gap-2 text-emerald-800 bg-emerald-50/70 p-2.5 rounded-xl border border-emerald-200/80">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-extrabold text-emerald-950">
+                          ✓ Verified Service Coverage in {currentDistrictName}
+                        </p>
+                        <p className="text-[11px] text-emerald-800 mt-0.5">
+                          Certified technicians available for scheduled on-site dispatch across {currentDistrictName}.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-start gap-2 text-amber-800 bg-amber-50/70 p-2.5 rounded-xl border border-amber-200/80">
+                      <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-extrabold text-amber-950">
+                          Coverage Notice: Regional Confirmation Required
+                        </p>
+                        <p className="text-[11px] text-amber-800 mt-0.5">
+                          Technician dispatch to {currentDistrictName} will be confirmed by our regional coordinator within 30 minutes.
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Date & Time Slot */}
@@ -627,25 +907,35 @@ function BookingFormInner() {
                     <span>30-Day Workmanship Warranty Included</span>
                   </div>
                   <p className="text-slate-500">
-                    Transparent pricing. Standard inspection fee from ৳500. No advance payment required before technician diagnosis.
+                    Transparent pricing. Standard inspection fee from ৳500. Parts billed at official catalog prices with genuine warranty.
                   </p>
                 </div>
 
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="btn-primary w-full py-3.5 text-sm font-black justify-center shadow-lg shadow-brand-500/25 active:scale-[0.99] transition"
-                >
-                  {loading ? (
-                    'Registering Technician Booking...'
-                  ) : (
-                    <>
-                      <Zap className="w-4 h-4 mr-2 fill-white" />
-                      Confirm &amp; Request Technician
-                    </>
-                  )}
-                </button>
+                {/* Submit Action */}
+                {user ? (
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="btn-primary w-full py-3.5 text-sm font-black justify-center shadow-lg shadow-brand-500/25 active:scale-[0.99] transition"
+                  >
+                    {loading ? (
+                      'Registering Technician Booking...'
+                    ) : (
+                      <>
+                        <Zap className="w-4 h-4 mr-2 fill-white" />
+                        Confirm &amp; Request Technician
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <Link
+                    href={`/customer/login?redirect=${encodeURIComponent(redirectTarget)}`}
+                    className="btn-primary w-full py-3.5 text-sm font-black justify-center shadow-lg shadow-brand-500/25 active:scale-[0.99] transition"
+                  >
+                    <Lock className="w-4 h-4 mr-2" />
+                    Sign In to Confirm Booking
+                  </Link>
+                )}
               </div>
             </div>
           </form>

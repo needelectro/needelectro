@@ -13,8 +13,10 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useCart } from '@/lib/context/CartContext';
+import { useAuth } from '@/lib/context/AuthContext';
 
 export default function CartPage() {
+  const { user } = useAuth();
   const {
     items,
     updateQuantity,
@@ -213,13 +215,32 @@ export default function CartPage() {
             </div>
 
             {/* Checkout CTA */}
-            <Link
-              href="/checkout"
-              className="btn-primary w-full py-3 text-xs flex items-center justify-center gap-2"
-            >
-              <span>Proceed to Checkout</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+            {user ? (
+              <Link
+                href="/checkout"
+                className="btn-primary w-full py-3 text-xs flex items-center justify-center gap-2 shadow-md shadow-brand-500/20"
+              >
+                <span>Proceed to Checkout</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            ) : (
+              <Link
+                href="/customer/login?redirect=/checkout"
+                className="btn-primary w-full py-3 text-xs flex items-center justify-center gap-2 shadow-md shadow-brand-500/20"
+              >
+                <span>Sign In to Checkout</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            )}
+
+            {!user && (
+              <div className="p-3 bg-amber-50/80 border border-amber-200/80 rounded-2xl text-[11px] text-amber-900 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <p>
+                  <strong>Mandatory Customer Login:</strong> An account is required to place product orders. Your cart items are preserved.
+                </p>
+              </div>
+            )}
 
             <div className="pt-2 text-[11px] text-slate-400 space-y-2 text-center">
               <p className="flex items-center justify-center gap-1.5 text-slate-600">

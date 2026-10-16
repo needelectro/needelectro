@@ -16,7 +16,10 @@ import {
   Truck,
   FileText,
   Clock,
-  Printer
+  Printer,
+  Sparkles,
+  UserCheck,
+  Plus
 } from 'lucide-react';
 import { useCart } from '@/lib/context/CartContext';
 import { useAuth } from '@/lib/context/AuthContext';
@@ -62,16 +65,23 @@ const PAYMENT_METHODS = [
 
 export default function CheckoutPage() {
   const { items, subtotal, discount, deliveryCharge, total, clearCart, deliveryDistrict, setDeliveryDistrict } = useCart();
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
 
   const [step, setStep] = useState<'address' | 'payment' | 'review' | 'done'>('address');
   const [submitting, setSubmitting] = useState(false);
   const [orderResult, setOrderResult] = useState<any | null>(null);
 
+  // Saved addresses state
+  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+  const [loadingAddresses, setLoadingAddresses] = useState(false);
+  const [addressMode, setAddressMode] = useState<'SAVED' | 'CUSTOM'>('SAVED');
+  const [selectedAddressId, setSelectedAddressId] = useState<string>('');
+  const [saveToProfile, setSaveToProfile] = useState(false);
+
   const [form, setForm] = useState({
-    recipientName: user?.name || '',
-    phone: user?.phone || '',
+    recipientName: '',
+    phone: '',
     division: 'Sylhet',
     district: 'Moulvibazar',
     upazila: 'Moulvibazar Sadar',
@@ -83,6 +93,49 @@ export default function CheckoutPage() {
     notes: '',
   });
 
+  // Auto-populate user info and fetch saved addresses when authenticated
+  useEffect(() => {
+    if (user) {
+      setForm((prev) => ({
+        ...prev,
+        recipientName: prev.recipientName || user.name || '',
+        phone: prev.phone || user.phone || '',
+      }));
+
+      // Fetch saved profile addresses
+      setLoadingAddresses(true);
+      fetch('/api/v1/customer/addresses')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && Array.isArray(data.addresses) && data.addresses.length > 0) {
+            setSavedAddresses(data.addresses);
+            const defaultAddr = data.addresses.find((a: any) => a.isDefault) || data.addresses[0];
+            setSelectedAddressId(defaultAddr.id);
+            setAddressMode('SAVED');
+            if (defaultAddr.district) {
+              setDeliveryDistrict(defaultAddr.district);
+            }
+          } else {
+            setAddressMode('CUSTOM');
+          }
+        })
+        .catch(() => {
+          setAddressMode('CUSTOM');
+        })
+        .finally(() => {
+          setLoadingAddresses(false);
+        });
+    }
+  }, [user]);
+
+  // Selected address object (for saved mode)
+  const activeSavedAddress = savedAddresses.find((a) => a.id === selectedAddressId);
+
+  // Active district for shipping calculation
+  const activeDistrictName = addressMode === 'SAVED' && activeSavedAddress
+    ? activeSavedAddress.district
+    : form.district;
+
   // Filter districts belonging to the selected division
   const availableDistricts = BANGLADESH_DISTRICTS.filter(
     (d) => d.division.toLowerCase() === form.division.toLowerCase()
@@ -90,17 +143,15 @@ export default function CheckoutPage() {
 
   // Selected district info (for delivery window & coverage notes)
   const currentDistrictInfo: DistrictData | undefined = BANGLADESH_DISTRICTS.find(
-    (d) => d.name.toLowerCase() === form.district.toLowerCase()
+    (d) => d.name.toLowerCase() === activeDistrictName.toLowerCase()
   );
 
-  useEffect(() => {
-    if (user?.name && !form.recipientName) {
-      setForm((prev) => ({ ...prev, recipientName: user.name || '' }));
+  const handleSelectSavedAddress = (addr: any) => {
+    setSelectedAddressId(addr.id);
+    if (addr.district) {
+      setDeliveryDistrict(addr.district);
     }
-    if (user?.phone && !form.phone) {
-      setForm((prev) => ({ ...prev, phone: user.phone || '' }));
-    }
-  }, [user]);
+  };
 
   const handleDivisionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newDivision = e.target.value;
@@ -138,8 +189,25 @@ export default function CheckoutPage() {
       router.push('/customer/login?redirect=/checkout');
       return;
     }
+    if (submitting) return;
+
     setSubmitting(true);
     try {
+      // Build delivery address payload
+      const deliveryPayload = addressMode === 'SAVED' && activeSavedAddress
+        ? activeSavedAddress.id
+        : {
+            recipientName: form.recipientName.trim(),
+            phone: form.phone.trim(),
+            division: form.division,
+            district: form.district,
+            upazila: form.upazila.trim(),
+            area: form.area.trim(),
+            addressLine: form.addressLine.trim(),
+            landmark: form.landmark.trim() || undefined,
+            saveToProfile,
+          };
+
       const res = await fetch('/api/v1/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -148,16 +216,7 @@ export default function CheckoutPage() {
             productId: item.product.id,
             quantity: item.quantity,
           })),
-          deliveryAddress: {
-            recipientName: form.recipientName,
-            phone: form.phone,
-            division: form.division,
-            district: form.district,
-            upazila: form.upazila,
-            area: form.area,
-            addressLine: form.addressLine,
-            landmark: form.landmark,
-          },
+          deliveryAddress: deliveryPayload,
           paymentMethod: form.paymentMethod,
           paymentTrxId: form.paymentTrxId ? form.paymentTrxId.trim() : undefined,
           notes: form.notes,
@@ -170,10 +229,10 @@ export default function CheckoutPage() {
         clearCart();
         setStep('done');
       } else {
-        alert(data.error || 'Failed to place order.');
+        alert(data.error || 'Failed to place order. Please review your details.');
       }
     } catch {
-      alert('Network error while placing order. Please try again.');
+      alert('Network error while placing order. Please check your connection and try again.');
     } finally {
       setSubmitting(false);
     }
@@ -298,36 +357,70 @@ export default function CheckoutPage() {
           {/* Left Form Area */}
           <div className="lg:col-span-2 space-y-6">
             {!user ? (
-              <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xs text-center space-y-5">
-                <div className="w-14 h-14 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center mx-auto">
-                  <ShieldCheck className="w-7 h-7" />
+              /* MANDATORY AUTHENTICATION BANNER */
+              <div className="bg-white border-2 border-brand-500/20 rounded-3xl p-6 sm:p-10 shadow-lg text-center space-y-6 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
+                
+                <div className="w-16 h-16 rounded-3xl bg-brand-50 border border-brand-200 text-brand-600 flex items-center justify-center mx-auto shadow-sm">
+                  <ShieldCheck className="w-8 h-8" />
                 </div>
-                <div className="space-y-1">
-                  <h2 className="text-xl font-black text-slate-900">Sign In to Complete Order</h2>
-                  <p className="text-xs text-slate-600 max-w-md mx-auto">
-                    Sign in to activate your digital warranty, receive SMS updates, and track doorstep courier delivery.
+
+                <div className="space-y-2 max-w-lg mx-auto">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-50 text-brand-700 text-[11px] font-bold">
+                    <UserCheck className="w-3.5 h-3.5" />
+                    Mandatory Customer Authentication
+                  </div>
+                  <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+                    Please Sign In to Complete Your Order
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                    NEED ELECTRO requires customer authentication for all purchases to guarantee your official product warranty, enable real-time SMS courier dispatch tracking, and provide automatic tax invoices.
                   </p>
                 </div>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+
+                {/* Cart preservation reassurance */}
+                <div className="bg-emerald-50/80 border border-emerald-200/80 rounded-2xl p-3.5 max-w-md mx-auto text-xs text-emerald-800 flex items-center justify-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Your <strong>{items.length} items</strong> (৳{total.toLocaleString()}) are securely preserved.</span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2 max-w-md mx-auto">
                   <Link
                     href="/customer/login?redirect=/checkout"
-                    className="btn-primary w-full sm:w-auto py-2.5 px-6 text-xs font-bold"
+                    className="btn-primary w-full py-3.5 text-xs font-bold justify-center shadow-lg shadow-brand-500/25"
                   >
                     Sign In as Customer
                   </Link>
                   <Link
                     href="/customer/register?redirect=/checkout"
-                    className="btn-secondary w-full sm:w-auto py-2.5 px-6 text-xs font-bold"
+                    className="btn-secondary w-full py-3.5 text-xs font-bold justify-center"
                   >
-                    Create Account
+                    Create Customer Account
                   </Link>
                 </div>
+
+                <p className="text-[11px] text-slate-400">
+                  Guest checkout is disabled to ensure warranty authenticity &amp; customer dispute protection.
+                </p>
               </div>
             ) : (
               <>
+                {/* LOGGED IN SMART AUTO-FILL BADGE */}
+                <div className="bg-gradient-to-r from-brand-50 to-sky-50 border border-brand-200/80 rounded-2xl p-3.5 flex items-center justify-between text-xs text-brand-950">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-brand-600 shrink-0" />
+                    <span>
+                      Signed in as <strong>{user.name}</strong> ({user.phone || user.email}) &bull; Profile Auto-Fill Active
+                    </span>
+                  </div>
+                  <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full bg-brand-100 text-brand-700 text-[10px] font-bold">
+                    Authenticated Customer
+                  </span>
+                </div>
+
                 {/* STEP 1: Delivery Address */}
                 {step === 'address' && (
-                  <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 sm:p-8 space-y-5">
+                  <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 sm:p-8 space-y-6">
                     <div className="flex items-center justify-between pb-4 border-b border-slate-100">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-xl bg-brand-500 text-white flex items-center justify-center">
@@ -335,106 +428,239 @@ export default function CheckoutPage() {
                         </div>
                         <div>
                           <h2 className="text-base font-extrabold text-slate-900">National Delivery Address</h2>
-                          <p className="text-[11px] text-slate-500">Courier delivery available across all 64 districts in Bangladesh</p>
+                          <p className="text-[11px] text-slate-500">Doorstep courier delivery across all 64 districts in Bangladesh</p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-700">Recipient Name *</label>
-                        <input
-                          type="text"
-                          name="recipientName"
-                          required
-                          value={form.recipientName}
-                          onChange={handleChange}
-                          placeholder="Full Name"
-                          className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500"
-                        />
-                      </div>
+                    {/* Address Selection Mode (Saved vs Custom) */}
+                    {savedAddresses.length > 0 && (
+                      <div className="space-y-3">
+                        <label className="text-xs font-bold text-slate-700 block">
+                          Where should we deliver this order?
+                        </label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAddressMode('SAVED');
+                              if (activeSavedAddress?.district) {
+                                setDeliveryDistrict(activeSavedAddress.district);
+                              }
+                            }}
+                            className={`p-3.5 rounded-2xl border text-left transition flex items-start gap-3 ${
+                              addressMode === 'SAVED'
+                                ? 'border-brand-500 bg-brand-50/40 ring-2 ring-brand-500/20'
+                                : 'border-slate-200 hover:bg-slate-50'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="addressMode"
+                              checked={addressMode === 'SAVED'}
+                              onChange={() => {}}
+                              className="mt-1 accent-brand-500"
+                            />
+                            <div>
+                              <p className="font-extrabold text-xs text-slate-900">Use Saved Address</p>
+                              <p className="text-[11px] text-slate-500 mt-0.5">
+                                Select from your {savedAddresses.length} saved customer address{savedAddresses.length === 1 ? '' : 'es'}
+                              </p>
+                            </div>
+                          </button>
 
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-700">Mobile Number *</label>
-                        <input
-                          type="text"
-                          name="phone"
-                          required
-                          value={form.phone}
-                          onChange={handleChange}
-                          placeholder="01XXXXXXXXX"
-                          className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 font-mono"
-                        />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAddressMode('CUSTOM');
+                              setDeliveryDistrict(form.district);
+                            }}
+                            className={`p-3.5 rounded-2xl border text-left transition flex items-start gap-3 ${
+                              addressMode === 'CUSTOM'
+                                ? 'border-brand-500 bg-brand-50/40 ring-2 ring-brand-500/20'
+                                : 'border-slate-200 hover:bg-slate-50'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="addressMode"
+                              checked={addressMode === 'CUSTOM'}
+                              onChange={() => {}}
+                              className="mt-1 accent-brand-500"
+                            />
+                            <div>
+                              <p className="font-extrabold text-xs text-slate-900">Deliver to Another Address</p>
+                              <p className="text-[11px] text-slate-500 mt-0.5">
+                                Enter a one-time delivery address for this order
+                              </p>
+                            </div>
+                          </button>
+                        </div>
                       </div>
+                    )}
 
-                      {/* Division Dropdown (8 Divisions) */}
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-700">Division *</label>
-                        <select
-                          name="division"
-                          value={form.division}
-                          onChange={handleDivisionChange}
-                          className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
-                        >
-                          {BANGLADESH_DIVISIONS.map((div) => (
-                            <option key={div} value={div}>{div}</option>
-                          ))}
-                        </select>
+                    {/* SAVED ADDRESSES LIST */}
+                    {addressMode === 'SAVED' && savedAddresses.length > 0 && (
+                      <div className="space-y-3 pt-1">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {savedAddresses.map((addr) => {
+                            const isSelected = selectedAddressId === addr.id;
+                            return (
+                              <div
+                                key={addr.id}
+                                onClick={() => handleSelectSavedAddress(addr)}
+                                className={`p-4 rounded-2xl border text-xs cursor-pointer transition relative ${
+                                  isSelected
+                                    ? 'border-brand-500 bg-brand-50/30 ring-1 ring-brand-500'
+                                    : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between gap-2 mb-1.5">
+                                  <span className="font-bold text-slate-900 flex items-center gap-1.5">
+                                    <MapPin className="w-3.5 h-3.5 text-brand-600" />
+                                    {addr.label || 'Saved Address'}
+                                  </span>
+                                  {addr.isDefault && (
+                                    <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 text-[10px] font-bold">
+                                      Default
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="font-semibold text-slate-800">{addr.recipientName || user.name}</p>
+                                <p className="text-slate-500 text-[11px] font-mono">{addr.phone || user.phone}</p>
+                                <p className="text-slate-600 mt-1 line-clamp-2">
+                                  {addr.addressLine}, {addr.upazila}, {addr.district}
+                                </p>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
+                    )}
 
-                      {/* District Dropdown (Filtered 64 Districts) */}
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-700">District *</label>
-                        <select
-                          name="district"
-                          value={form.district}
-                          onChange={handleDistrictChange}
-                          className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
-                        >
-                          {availableDistricts.map((d) => (
-                            <option key={d.id} value={d.name}>{d.name} ({d.nameBn})</option>
-                          ))}
-                        </select>
-                      </div>
+                    {/* CUSTOM / NEW ADDRESS FORM */}
+                    {(addressMode === 'CUSTOM' || savedAddresses.length === 0) && (
+                      <div className="space-y-4 pt-1">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-700">Recipient Name *</label>
+                            <input
+                              type="text"
+                              name="recipientName"
+                              required
+                              value={form.recipientName}
+                              onChange={handleChange}
+                              placeholder="Full Name"
+                              className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500"
+                            />
+                          </div>
 
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-700">Thana / Upazila *</label>
-                        <input
-                          type="text"
-                          name="upazila"
-                          required
-                          value={form.upazila}
-                          onChange={handleChange}
-                          placeholder="e.g. Moulvibazar Sadar / Dhanmondi"
-                          className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
-                        />
-                      </div>
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-700">Mobile Number *</label>
+                            <input
+                              type="text"
+                              name="phone"
+                              required
+                              value={form.phone}
+                              onChange={handleChange}
+                              placeholder="01XXXXXXXXX"
+                              className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 font-mono"
+                            />
+                          </div>
 
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-700">Area / Neighborhood</label>
-                        <input
-                          type="text"
-                          name="area"
-                          value={form.area}
-                          onChange={handleChange}
-                          placeholder="e.g. Kusumbag / Mirpur-10"
-                          className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
-                        />
-                      </div>
+                          {/* Division Dropdown (8 Divisions) */}
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-700">Division *</label>
+                            <select
+                              name="division"
+                              value={form.division}
+                              onChange={handleDivisionChange}
+                              className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+                            >
+                              {BANGLADESH_DIVISIONS.map((div) => (
+                                <option key={div} value={div}>{div}</option>
+                              ))}
+                            </select>
+                          </div>
 
-                      <div className="sm:col-span-2 space-y-1.5">
-                        <label className="text-xs font-bold text-slate-700">Road / House / Flat Address *</label>
-                        <input
-                          type="text"
-                          name="addressLine"
-                          required
-                          value={form.addressLine}
-                          onChange={handleChange}
-                          placeholder="House #, Road #, Sector / Village, Landmark..."
-                          className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
-                        />
+                          {/* District Dropdown (Filtered 64 Districts) */}
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-700">District *</label>
+                            <select
+                              name="district"
+                              value={form.district}
+                              onChange={handleDistrictChange}
+                              className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                            >
+                              {availableDistricts.map((d) => (
+                                <option key={d.id} value={d.name}>{d.name} ({d.nameBn})</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-700">Thana / Upazila *</label>
+                            <input
+                              type="text"
+                              name="upazila"
+                              required
+                              value={form.upazila}
+                              onChange={handleChange}
+                              placeholder="e.g. Moulvibazar Sadar / Dhanmondi"
+                              className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+                            />
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-700">Area / Neighborhood</label>
+                            <input
+                              type="text"
+                              name="area"
+                              value={form.area}
+                              onChange={handleChange}
+                              placeholder="e.g. Kusumbag / Mirpur-10"
+                              className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+                            />
+                          </div>
+
+                          <div className="sm:col-span-2 space-y-1.5">
+                            <label className="text-xs font-bold text-slate-700">Road / House / Flat Address *</label>
+                            <input
+                              type="text"
+                              name="addressLine"
+                              required
+                              value={form.addressLine}
+                              onChange={handleChange}
+                              placeholder="House #, Road #, Sector / Village, Landmark..."
+                              className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+                            />
+                          </div>
+
+                          <div className="sm:col-span-2 space-y-1.5">
+                            <label className="text-xs font-bold text-slate-700">Nearby Landmark (Optional)</label>
+                            <input
+                              type="text"
+                              name="landmark"
+                              value={form.landmark}
+                              onChange={handleChange}
+                              placeholder="e.g. Opposite Central Mosque, Beside Kusumbag Point"
+                              className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Save to profile checkbox */}
+                        <label className="flex items-center gap-2 pt-1 text-xs text-slate-700 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={saveToProfile}
+                            onChange={(e) => setSaveToProfile(e.target.checked)}
+                            className="rounded-sm border-slate-300 text-brand-600 focus:ring-brand-500"
+                          />
+                          <span>Save this address to my customer profile for future orders</span>
+                        </label>
                       </div>
-                    </div>
+                    )}
 
                     {/* District Shipping & Delivery Window Notice */}
                     {currentDistrictInfo && (
@@ -452,8 +678,12 @@ export default function CheckoutPage() {
                     <div className="pt-2">
                       <button
                         onClick={() => setStep('payment')}
-                        disabled={!form.recipientName || !form.phone || !form.addressLine}
-                        className="btn-primary w-full py-3 text-xs flex items-center justify-center gap-2"
+                        disabled={
+                          addressMode === 'SAVED'
+                            ? !activeSavedAddress
+                            : (!form.recipientName || !form.phone || !form.addressLine)
+                        }
+                        className="btn-primary w-full py-3 text-xs flex items-center justify-center gap-2 shadow-md shadow-brand-500/20"
                       >
                         Continue to Payment Method
                         <ArrowRight className="w-4 h-4" />
@@ -564,8 +794,21 @@ export default function CheckoutPage() {
                     <div className="space-y-3 bg-slate-50 p-4 rounded-2xl text-xs">
                       <div>
                         <span className="font-bold text-slate-500 uppercase tracking-wide text-[10px]">Deliver To:</span>
-                        <p className="font-bold text-slate-900 mt-0.5">{form.recipientName} ({form.phone})</p>
-                        <p className="text-slate-600">{form.addressLine}, {form.upazila}, {form.district}, {form.division}</p>
+                        {addressMode === 'SAVED' && activeSavedAddress ? (
+                          <>
+                            <p className="font-bold text-slate-900 mt-0.5">
+                              {activeSavedAddress.recipientName || user.name} ({activeSavedAddress.phone || user.phone})
+                            </p>
+                            <p className="text-slate-600">
+                              {activeSavedAddress.addressLine}, {activeSavedAddress.upazila}, {activeSavedAddress.district}, {activeSavedAddress.division}
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="font-bold text-slate-900 mt-0.5">{form.recipientName} ({form.phone})</p>
+                            <p className="text-slate-600">{form.addressLine}, {form.upazila}, {form.district}, {form.division}</p>
+                          </>
+                        )}
                       </div>
                       <div className="border-t border-slate-200 pt-2">
                         <span className="font-bold text-slate-500 uppercase tracking-wide text-[10px]">Payment Method:</span>
@@ -584,7 +827,7 @@ export default function CheckoutPage() {
                       <button
                         onClick={handlePlaceOrder}
                         disabled={submitting}
-                        className="btn-primary text-xs py-3 flex-1 flex items-center justify-center gap-2 shadow-lg shadow-brand-500/25"
+                        className="btn-primary text-xs py-3 flex-1 flex items-center justify-center gap-2 shadow-lg shadow-brand-500/25 disabled:opacity-50"
                       >
                         {submitting ? 'Placing Order...' : `Confirm & Place Order (৳${total.toLocaleString()})`}
                       </button>
@@ -627,7 +870,7 @@ export default function CheckoutPage() {
                   </div>
                 )}
                 <div className="flex justify-between text-slate-600">
-                  <span>Delivery ({form.district})</span>
+                  <span>Delivery ({activeDistrictName})</span>
                   <span>{deliveryCharge === 0 ? 'FREE' : `৳${deliveryCharge}`}</span>
                 </div>
                 <div className="border-t border-slate-200 pt-2 flex justify-between font-black text-sm text-slate-900">

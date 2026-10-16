@@ -70,11 +70,15 @@ export default function ServicesPage() {
   const [customerName, setCustomerName] = useState(user?.name || '');
 
   const handleOpenBooking = (service: any) => {
+    if (!user) {
+      router.push(`/customer/login?redirect=${encodeURIComponent(`/booking?service=${service.id}`)}`);
+      return;
+    }
     setSelectedService(service);
     setBookingSuccess(null);
     setProblemDescription('');
     setCustomerName(user?.name || '');
-    setPhone(user?.phone || '01733983752');
+    setPhone(user?.phone || '');
     setUrgency(service.isEmergencyService ? 'EMERGENCY' : 'NORMAL');
     setBookingModalOpen(true);
   };
@@ -366,10 +370,47 @@ export default function ServicesPage() {
                   </button>
                 </div>
               </div>
+            ) : !user ? (
+              <div className="p-6 text-center space-y-4 overflow-y-auto flex-1">
+                <div className="w-14 h-14 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center mx-auto">
+                  <ShieldCheck className="w-7 h-7" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-slate-900">Sign In Required to Book</h3>
+                  <p className="text-xs text-slate-600 max-w-sm mx-auto mt-1">
+                    NEED ELECTRO requires customer authentication before requesting technicians to secure service warranties and verify technician dispatch.
+                  </p>
+                </div>
+                <div className="pt-2 flex flex-col gap-2.5 max-w-xs mx-auto">
+                  <Link
+                    href={`/customer/login?redirect=${encodeURIComponent(`/booking?service=${selectedService.id}`)}`}
+                    className="btn-primary w-full text-xs py-3 text-center font-bold"
+                  >
+                    Sign In as Customer
+                  </Link>
+                  <Link
+                    href={`/customer/register?redirect=${encodeURIComponent(`/booking?service=${selectedService.id}`)}`}
+                    className="btn-secondary w-full text-xs py-3 text-center font-bold"
+                  >
+                    Create Customer Account
+                  </Link>
+                </div>
+              </div>
             ) : (
               <form onSubmit={handleCreateBooking} className="flex flex-col flex-1 min-h-0 overflow-hidden">
                 {/* Scrollable Form Body */}
                 <div className="overflow-y-auto p-5 space-y-3.5 flex-1">
+                  {/* Smart Auto-fill info */}
+                  <div className="p-2.5 bg-brand-50/70 border border-brand-200/80 rounded-xl flex items-center justify-between text-xs text-brand-900">
+                    <span>Booking as <strong>{user.name}</strong> ({user.phone || user.email})</span>
+                    <Link
+                      href={`/booking?service=${selectedService.id}`}
+                      className="text-[11px] font-bold text-brand-600 hover:underline"
+                    >
+                      Advanced Options &rarr;
+                    </Link>
+                  </div>
+
                   {/* Problem Description */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">

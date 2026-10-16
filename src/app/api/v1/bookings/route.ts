@@ -112,109 +112,72 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Resolve customer profile for authenticated user or auto-provision for guest with phone
-    let customerProfileId = session?.customerProfileId;
-    let resolvedUserId = session?.id;
-    let newSessionToken: string | null = null;
-
-    const targetAddress = address || body.location;
-
+    // MANDATORY AUTHENTICATION: Require verified customer session
     if (!session) {
-      const cleanPhone = (body.customerPhone || targetAddress?.phone || '').trim();
-      if (!cleanPhone) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'Please enter your mobile phone number so we can confirm your technician.',
-            requiresPhone: true,
-          },
-          { status: 400 }
-        );
-      }
-
-      // Check if user already exists with this phone
-      const fallbackEmail = `${cleanPhone.replace(/\D/g, '')}@needelectro.store`;
-      let user = await prisma.user.findFirst({
-        where: {
-          OR: [
-            { phone: cleanPhone },
-            { email: fallbackEmail },
-          ],
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Please sign in or create a customer account to book a service.',
+          requiresAuth: true,
+          redirectUrl: '/customer/login?redirect=/booking',
         },
-        include: { customerProfile: true },
-      });
+        { status: 401 }
+      );
+    }
 
-      if (!user) {
-        const dummyPassword = await hashPassword(Math.random().toString(36).slice(-10) + 'NE@2026');
-        user = await prisma.user.create({
-          data: {
-            name: body.customerName || targetAddress?.recipientName || 'Valued Customer',
-            phone: cleanPhone,
-            email: body.customerEmail || fallbackEmail,
-            passwordHash: dummyPassword,
-            role: 'CUSTOMER',
-            status: 'ACTIVE',
-            customerProfile: {
-              create: {},
-            },
-          },
-          include: { customerProfile: true },
-        });
-      } else if (!user.customerProfile) {
-        const cp = await prisma.customerProfile.create({ data: { userId: user.id } });
-        user = { ...user, customerProfile: cp };
+    // Resolve customer profile for authenticated user
+    let customerProfileId = session.customerProfileId;
+    if (!customerProfileId) {
+      let cp = await prisma.customerProfile.findUnique({ where: { userId: session.id } });
+      if (!cp) {
+        cp = await prisma.customerProfile.create({ data: { userId: session.id } });
       }
-
-      resolvedUserId = user.id;
-      customerProfileId = user.customerProfile!.id;
-
-      // Generate session token so the customer gets automatically logged in
-      newSessionToken = signToken({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone || undefined,
-        role: 'CUSTOMER',
-        status: 'ACTIVE',
-        customerProfileId: user.customerProfile!.id,
-      });
-    } else {
-      // Authenticated user
-      if (!customerProfileId) {
-        let cp = await prisma.customerProfile.findUnique({ where: { userId: session.id } });
-        if (!cp) {
-          cp = await prisma.customerProfile.create({ data: { userId: session.id } });
-        }
-        customerProfileId = cp.id;
-      }
+      customerProfileId = cp.id;
     }
 
     if (!customerProfileId) {
       return NextResponse.json(
-        { success: false, error: 'Customer profile required. Please try again.' },
+        { success: false, error: 'Customer profile required. Please sign in again.' },
         { status: 400 }
       );
     }
 
-    // Handle Address (accept either address or location parameter)
+    // Flexible Service Location: Handle saved addressId or create independent service location snapshot
+    const targetAddress = address || body.location;
     let addressId = typeof targetAddress === 'string' ? targetAddress : null;
     let resolvedThana = thana;
+
     if (!addressId && typeof targetAddress === 'object' && targetAddress) {
+      const isDefaultExplicit = Boolean(body.setAsDefault);
+      if (isDefaultExplicit) {
+        await prisma.address.updateMany({
+          where: { customerId: customerProfileId, isDefault: true },
+          data: { isDefault: false },
+        });
+      }
+
       const createdAddr = await prisma.address.create({
         data: {
           customerId: customerProfileId,
-          recipientName: targetAddress.recipientName || body.customerName || 'Customer',
-          phone: targetAddress.phone || body.customerPhone || '01733983752',
+          label: targetAddress.label || (body.saveToProfile ? 'Saved Service Location' : 'Service Location Snapshot'),
+          recipientName: targetAddress.recipientName || body.customerName || session.name || 'Customer',
+          phone: targetAddress.phone || body.customerPhone || session.phone || '01733983752',
           division: targetAddress.division || 'Sylhet',
           district: targetAddress.district || 'Moulvibazar',
           upazila: targetAddress.upazila || targetAddress.thana || 'Moulvibazar Sadar',
           area: targetAddress.area || 'Kusumbag Point',
           addressLine: targetAddress.addressLine || 'Main Road',
-          landmark: targetAddress.landmark,
+          landmark: targetAddress.landmark || null,
+          isDefault: isDefaultExplicit, // NEVER changes customer's permanent address unless explicitly chosen
         },
       });
       addressId = createdAddr.id;
       if (!resolvedThana) resolvedThana = createdAddr.upazila;
+    } else if (addressId) {
+      const existingAddr = await prisma.address.findUnique({ where: { id: addressId } });
+      if (existingAddr && !resolvedThana) {
+        resolvedThana = existingAddr.upazila;
+      }
     }
 
     // Fetch service price
@@ -232,7 +195,7 @@ export async function POST(req: NextRequest) {
       const createdBooking = await tx.booking.create({
         data: {
           bookingNumber,
-          customerId: customerProfileId!,
+          customerId: customerProfileId,
           serviceId,
           problemDescription,
           preferredDate,
@@ -251,8 +214,8 @@ export async function POST(req: NextRequest) {
             create: {
               status: 'REQUESTED',
               actorRole: 'CUSTOMER',
-              actorId: resolvedUserId || 'GUEST_USER',
-              note: 'Service booking request created with instant estimate.',
+              actorId: session.id,
+              note: 'Service booking request registered with verified customer profile.',
             },
           },
         },
@@ -282,17 +245,7 @@ export async function POST(req: NextRequest) {
       return createdBooking;
     });
 
-    const response = NextResponse.json({ success: true, booking, autoLoggedIn: !!newSessionToken });
-    if (newSessionToken) {
-      response.cookies.set('need_electro_token', newSessionToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7,
-        path: '/',
-      });
-    }
-    return response;
+    return NextResponse.json({ success: true, booking });
   } catch (error) {
     console.error('Create booking error:', error);
     return NextResponse.json({ error: 'Failed to create booking' }, { status: 500 });

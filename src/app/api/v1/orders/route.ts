@@ -137,9 +137,19 @@ export async function POST(req: NextRequest) {
     if (!addressId && typeof deliveryAddress === 'object') {
       targetDistrict = deliveryAddress.district || 'Moulvibazar';
       targetDivision = deliveryAddress.division || 'Sylhet';
+
+      const shouldSaveDefault = Boolean(deliveryAddress.saveToProfile);
+      if (shouldSaveDefault) {
+        await prisma.address.updateMany({
+          where: { customerId: customerProfileId, isDefault: true },
+          data: { isDefault: false },
+        });
+      }
+
       const createdAddr = await prisma.address.create({
         data: {
           customerId: customerProfileId,
+          label: deliveryAddress.label || (shouldSaveDefault ? 'Default Address' : 'Order Delivery Address'),
           recipientName: deliveryAddress.recipientName || session.name || 'Customer',
           phone: deliveryAddress.phone || session.phone || '01733983752',
           division: targetDivision,
@@ -148,6 +158,7 @@ export async function POST(req: NextRequest) {
           area: deliveryAddress.area || deliveryAddress.upazila || targetDistrict,
           addressLine: deliveryAddress.addressLine || `${targetDistrict}, Bangladesh`,
           landmark: deliveryAddress.landmark || null,
+          isDefault: shouldSaveDefault,
         },
       });
       addressId = createdAddr.id;

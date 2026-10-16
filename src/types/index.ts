@@ -58,6 +58,23 @@ export interface UserSession {
   avatarUrl?: string | null;
   technicianProfileId?: string | null;
   customerProfileId?: string | null;
+  customerProfile?: {
+    id: string;
+    alternativePhone?: string | null;
+    addresses?: Array<{
+      id: string;
+      label: string;
+      recipientName: string;
+      phone: string;
+      division: string;
+      district: string;
+      upazila: string;
+      area: string;
+      addressLine: string;
+      landmark?: string | null;
+      isDefault: boolean;
+    }>;
+  } | null;
 }
 
 export interface ServiceItem {
