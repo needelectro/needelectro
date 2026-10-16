@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
 
     // Provide default fallback values if empty
     const defaults = {
-      site_name: "NEED ELECTRO SHOP",
+      site_name: "NEED ELECTRO",
       tagline: "Trusted Electrical and Technological Solutions",
       parent_company: "AMDADS GROUP",
       currency: "BDT (৳)",

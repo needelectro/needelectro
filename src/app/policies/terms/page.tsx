@@ -61,7 +61,7 @@ export default function TermsOfServicePage() {
           },
           {
             title: '9. Contact & Support',
-            content: `For questions regarding these Terms:\n\nNEED ELECTRO SHOP\nMoulvibazar, Bangladesh\nPhone: 01733 983752\nEmail: needelectro23@gmail.com`,
+            content: `For questions regarding these Terms:\n\nNEED ELECTRO\nMoulvibazar, Bangladesh\nPhone: 01733 983752\nEmail: needelectro23@gmail.com`,
           },
         ].map(({ title, content }) => (
           <div key={title} className="space-y-3">

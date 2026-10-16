@@ -19,11 +19,11 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.needelectro.store'),
   title: {
-    default: 'NEED ELECTRO SHOP | Laptops, Computers, CCTV & Electrical Services in Bangladesh',
-    template: '%s | NEED ELECTRO SHOP',
+    default: 'NEED ELECTRO | Laptops, Computers, CCTV & Electrical Services in Bangladesh',
+    template: '%s | NEED ELECTRO',
   },
   description:
-    'Shop laptops, computers, CCTV cameras, networking devices and electrical products at NEED ELECTRO SHOP. Explore electrical installation, electrician booking, repairs and technology services across Bangladesh.',
+    'Shop laptops, computers, CCTV cameras, networking devices and electrical products at NEED ELECTRO. Explore electrical installation, electrician booking, repairs and technology services across Bangladesh.',
   keywords: [
     'laptop price in bangladesh',
     'computer shop bangladesh',
@@ -33,7 +33,6 @@ export const metadata: Metadata = {
     'electrical repair service',
     'router price in bangladesh',
     'wifi installation service',
-    'need electro shop',
     'need electro',
     'amdads group',
   ],
@@ -52,20 +51,20 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent', // Allows content to render under iOS status bar
-    title: 'NEED ELECTRO SHOP',
+    title: 'NEED ELECTRO',
   },
   openGraph: {
-    title: 'NEED ELECTRO SHOP | Laptops, Computers, CCTV & Electrical Services in Bangladesh',
+    title: 'NEED ELECTRO | Laptops, Computers, CCTV & Electrical Services in Bangladesh',
     description:
-      'Shop laptops, computers, CCTV cameras, networking devices and electrical products at NEED ELECTRO SHOP. Explore electrical installation, electrician booking, repairs and technology services across Bangladesh.',
+      'Shop laptops, computers, CCTV cameras, networking devices and electrical products at NEED ELECTRO. Explore electrical installation, electrician booking, repairs and technology services across Bangladesh.',
     url: 'https://www.needelectro.store',
-    siteName: 'NEED ELECTRO SHOP',
+    siteName: 'NEED ELECTRO',
     images: [
       {
         url: '/brand/needelectro-logo.png',
         width: 1132,
         height: 570,
-        alt: 'NEED ELECTRO SHOP Logo',
+        alt: 'NEED ELECTRO Logo',
       },
     ],
     locale: 'en_US',
@@ -73,9 +72,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'NEED ELECTRO SHOP | Laptops, Computers, CCTV & Electrical Services in Bangladesh',
+    title: 'NEED ELECTRO | Laptops, Computers, CCTV & Electrical Services in Bangladesh',
     description:
-      'Shop laptops, computers, CCTV cameras, networking devices and electrical products at NEED ELECTRO SHOP across Bangladesh.',
+      'Shop laptops, computers, CCTV cameras, networking devices and electrical products at NEED ELECTRO across Bangladesh.',
     images: ['/brand/needelectro-logo.png'],
   },
 };
@@ -111,8 +110,8 @@ export default function RootLayout({
             __html: JSON.stringify({
               '@context': 'https://schema.org',
               '@type': 'Organization',
-              name: 'NEED ELECTRO SHOP',
-              legalName: 'NEED ELECTRO SHOP',
+              name: 'NEED ELECTRO',
+              legalName: 'NEED ELECTRO',
               url: 'https://www.needelectro.store',
               logo: 'https://www.needelectro.store/brand/needelectro-logo.png',
               description:
@@ -148,7 +147,7 @@ export default function RootLayout({
             __html: JSON.stringify({
               '@context': 'https://schema.org',
               '@type': 'WebSite',
-              name: 'NEED ELECTRO SHOP',
+              name: 'NEED ELECTRO',
               url: 'https://www.needelectro.store',
               potentialAction: {
                 '@type': 'SearchAction',

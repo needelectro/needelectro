@@ -75,7 +75,7 @@ export default function HomePage() {
 
             {/* Headline */}
             <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-slate-950 tracking-tight leading-[1.2] sm:leading-[1.15] break-words">
-              NEED ELECTRO SHOP &mdash; <br className="hidden sm:inline" />
+              NEED ELECTRO &mdash; <br className="hidden sm:inline" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 via-brand-500 to-sky-400">
                 Laptops, Computers, CCTV &amp; Electrical Services in Bangladesh
               </span>

@@ -155,7 +155,7 @@ export default function Footer() {
             <Link href="/locations" className="hover:text-slate-400">Districts Directory</Link>
           </div>
           <div>
-            &copy; {new Date().getFullYear()} NEED ELECTRO SHOP. All rights reserved. | Serving Customers Across Bangladesh | A Sister Concern of AMDADS Group
+            &copy; {new Date().getFullYear()} NEED ELECTRO. All rights reserved. | Serving Customers Across Bangladesh | A Sister Concern of AMDADS Group
           </div>
         </div>
       </div>

@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: ServicePageProps): Promise<Me
 
   if (!service) {
     return {
-      title: 'Service Not Found | NEED ELECTRO SHOP',
+      title: 'Service Not Found | NEED ELECTRO',
     };
   }
 
@@ -77,7 +77,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
     image: service.imageUrl || 'https://www.needelectro.store/brand/needelectro-logo.png',
     provider: {
       '@type': 'Organization',
-      name: 'NEED ELECTRO SHOP',
+      name: 'NEED ELECTRO',
       url: 'https://www.needelectro.store',
       telephone: '+8801733983752',
     },

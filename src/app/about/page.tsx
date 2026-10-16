@@ -23,8 +23,8 @@ const STATS = [
 const TEAM = [
   {
     name: 'Amdadur Rahman',
-    role: 'Founder & CEO, AMDADS Group & NEED ELECTRO SHOP',
-    bio: 'Visionary entrepreneur who established NEED ELECTRO SHOP to bring dependable electrical products, computer technologies, and certified technical services to customers nationwide across Bangladesh.',
+    role: 'Founder & CEO, AMDADS Group & NEED ELECTRO',
+    bio: 'Visionary entrepreneur who established NEED ELECTRO to bring dependable electrical products, computer technologies, and certified technical services to customers nationwide across Bangladesh.',
     avatar: '👨‍💼',
   },
   {

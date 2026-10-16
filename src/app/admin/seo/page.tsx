@@ -30,14 +30,14 @@ export default function AdminSeoPage() {
   const [searchDistrict, setSearchDistrict] = useState('');
 
   const [formData, setFormData] = useState({
-    seo_business_name: 'NEED ELECTRO SHOP',
+    seo_business_name: 'NEED ELECTRO',
     seo_founder_ceo: 'Amdadur Rahman',
     seo_parent_organization: 'AMDADS Group',
     seo_site_url: 'https://www.needelectro.store',
-    seo_homepage_title: 'NEED ELECTRO SHOP | Laptops, Computers, CCTV & Electrical Services in Bangladesh',
-    seo_homepage_desc: 'Shop laptops, computers, CCTV cameras, networking devices and electrical products at NEED ELECTRO SHOP. Explore electrical installation, electrician booking, repairs and technology services across Bangladesh.',
-    seo_homepage_h1: 'NEED ELECTRO SHOP — Laptops, Computers, CCTV & Electrical Services in Bangladesh',
-    seo_default_keywords: 'laptop price in bangladesh, computer shop bangladesh, cctv camera price in bangladesh, electrician service bangladesh, need electro shop',
+    seo_homepage_title: 'NEED ELECTRO | Laptops, Computers, CCTV & Electrical Services in Bangladesh',
+    seo_homepage_desc: 'Shop laptops, computers, CCTV cameras, networking devices and electrical products at NEED ELECTRO. Explore electrical installation, electrician booking, repairs and technology services across Bangladesh.',
+    seo_homepage_h1: 'NEED ELECTRO — Laptops, Computers, CCTV & Electrical Services in Bangladesh',
+    seo_default_keywords: 'laptop price in bangladesh, computer shop bangladesh, cctv camera price in bangladesh, electrician service bangladesh, need electro',
     seo_google_search_console_tag: '',
     seo_google_analytics_id: '',
     seo_robots_index: 'true',

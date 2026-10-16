@@ -18,12 +18,12 @@ import { BANGLADESH_DISTRICTS, BANGLADESH_DIVISIONS } from '@/lib/data/districts
 export const metadata: Metadata = {
   title: 'Bangladesh Nationwide Service & Delivery Coverage | All 64 Districts',
   description:
-    'Explore NEED ELECTRO SHOP delivery and technical service coverage across all 64 districts in Bangladesh. Verified laptops, computers, CCTV systems, and electrical solutions delivered to your doorstep.',
+    'Explore NEED ELECTRO delivery and technical service coverage across all 64 districts in Bangladesh. Verified laptops, computers, CCTV systems, and electrical solutions delivered to your doorstep.',
   alternates: {
     canonical: 'https://www.needelectro.store/locations',
   },
   openGraph: {
-    title: 'NEED ELECTRO SHOP | 64 Districts Nationwide Coverage in Bangladesh',
+    title: 'NEED ELECTRO | 64 Districts Nationwide Coverage in Bangladesh',
     description:
       'Fast doorstep delivery of laptops, CCTV cameras, routers, and electronics across Dhaka, Sylhet, Chattogram, and all 64 districts of Bangladesh.',
     url: 'https://www.needelectro.store/locations',
@@ -77,7 +77,7 @@ export default function LocationsIndexPage() {
             Nationwide Coverage &amp; Delivery Information
           </h1>
           <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-            NEED ELECTRO SHOP is an online technology marketplace operating across Bangladesh. We deliver genuine laptops, computer components, CCTV surveillance gear, routers, and electrical hardware directly to your doorstep in all 64 districts, backed by official warranty and technical support.
+            NEED ELECTRO is an online technology marketplace operating across Bangladesh. We deliver genuine laptops, computer components, CCTV surveillance gear, routers, and electrical hardware directly to your doorstep in all 64 districts, backed by official warranty and technical support.
           </p>
         </div>
 
@@ -109,7 +109,7 @@ export default function LocationsIndexPage() {
           <span>Accurate Service &amp; Delivery Transparency</span>
         </div>
         <p className="leading-relaxed">
-          NEED ELECTRO SHOP operates as an online marketplace with central fulfillment and verified logistics partners. We deliver physical technology hardware to all 64 districts via courier. On-site technical services (electrical wiring, CCTV installation, physical repairs) are provided directly in verified service hubs (Sylhet, Moulvibazar, Dhaka), while other districts receive remote diagnostics and scheduled on-site support.
+          NEED ELECTRO operates as an online marketplace with central fulfillment and verified logistics partners. We deliver physical technology hardware to all 64 districts via courier. On-site technical services (electrical wiring, CCTV installation, physical repairs) are provided directly in verified service hubs (Sylhet, Moulvibazar, Dhaka), while other districts receive remote diagnostics and scheduled on-site support.
         </p>
       </div>
 

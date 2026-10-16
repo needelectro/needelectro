@@ -19,13 +19,13 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
   if (!product) {
     return {
-      title: 'Product Not Found | NEED ELECTRO SHOP',
+      title: 'Product Not Found | NEED ELECTRO',
     };
   }
 
   const effectivePrice = product.discountPrice ?? product.price;
   const title = product.name;
-  const description = `Buy ${product.name} at NEED ELECTRO SHOP. Genuine specifications, current price ৳${effectivePrice.toLocaleString('en-BD')}, ${product.warrantyPeriodMonths} months official warranty, and fast doorstep delivery across Bangladesh.`;
+  const description = `Buy ${product.name} at NEED ELECTRO. Genuine specifications, current price ৳${effectivePrice.toLocaleString('en-BD')}, ${product.warrantyPeriodMonths} months official warranty, and fast doorstep delivery across Bangladesh.`;
   const canonicalUrl = `https://www.needelectro.store/product/${product.slug}`;
   const images = product.images ? product.images.split(',') : [];
   const primaryImage = images[0] || 'https://www.needelectro.store/brand/needelectro-logo.png';
@@ -124,7 +124,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
           : 'https://schema.org/OutOfStock',
       seller: {
         '@type': 'Organization',
-        name: 'NEED ELECTRO SHOP',
+        name: 'NEED ELECTRO',
       },
     },
   };

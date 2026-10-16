@@ -5,9 +5,9 @@ import ContactForm from './ContactForm';
 import { MapPin, Phone, Mail, Clock, Zap, MessageCircle, Globe } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Contact NEED ELECTRO SHOP | Nationwide Customer Helpdesk',
+  title: 'Contact NEED ELECTRO | Nationwide Customer Helpdesk',
   description:
-    'Contact NEED ELECTRO SHOP for product inquiries, electrician booking, CCTV installation, and warranty help across all 64 districts in Bangladesh.',
+    'Contact NEED ELECTRO for product inquiries, electrician booking, CCTV installation, and warranty help across all 64 districts in Bangladesh.',
   alternates: {
     canonical: 'https://www.needelectro.store/contact',
   },
@@ -107,7 +107,7 @@ export default function ContactPage() {
               <div className="flex gap-3 items-start">
                 <MapPin className="w-4 h-4 text-brand-500 shrink-0 mt-0.5" />
                 <div>
-                  <strong className="text-slate-800">NEED ELECTRO SHOP</strong>
+                  <strong className="text-slate-800">NEED ELECTRO</strong>
                   <p>Moulvibazar-3200, Bangladesh (Serving all 64 districts nationwide)</p>
                 </div>
               </div>

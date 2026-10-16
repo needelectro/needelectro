@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!district) {
     return {
-      title: 'District Not Found | NEED ELECTRO SHOP',
+      title: 'District Not Found | NEED ELECTRO',
     };
   }
 
@@ -63,7 +63,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
           url: '/brand/needelectro-logo.png',
           width: 1132,
           height: 570,
-          alt: `NEED ELECTRO SHOP ${district.name}`,
+          alt: `NEED ELECTRO ${district.name}`,
         },
       ],
     },
@@ -151,7 +151,7 @@ export default async function DistrictLandingPage({ params }: PageProps) {
     },
     {
       question: `Can I buy laptops, computers, and CCTV systems with official warranty in ${district.name}?`,
-      answer: `Yes, all products sold by NEED ELECTRO SHOP come with genuine manufacturer or store warranties, valid for customers across ${district.name} and throughout Bangladesh.`,
+      answer: `Yes, all products sold by NEED ELECTRO come with genuine manufacturer or store warranties, valid for customers across ${district.name} and throughout Bangladesh.`,
     },
     {
       question: `How can I book technical support or service in ${district.name}?`,
@@ -206,7 +206,7 @@ export default async function DistrictLandingPage({ params }: PageProps) {
           </div>
 
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight text-white">
-            NEED ELECTRO SHOP in {district.name}
+            NEED ELECTRO in {district.name}
           </h1>
 
           <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
@@ -267,7 +267,7 @@ export default async function DistrictLandingPage({ params }: PageProps) {
         </p>
         <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-600 space-y-1">
           <div className="font-semibold text-slate-800">Important Customer Information:</div>
-          <div>&bull; NEED ELECTRO SHOP operates as a central online marketplace serving customers nationwide. We do not operate an unverified physical retail branch in {district.name}.</div>
+          <div>&bull; NEED ELECTRO operates as a central online marketplace serving customers nationwide. We do not operate an unverified physical retail branch in {district.name}.</div>
           <div>&bull; Physical products (Laptops, Desktops, CCTV, Routers, Electrical Supplies) are dispatched via courier with tracking and warranty registration.</div>
           <div>&bull; For emergency electrical or technical queries, contact our customer helpdesk at 01733 983752.</div>
         </div>
