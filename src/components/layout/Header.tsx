@@ -119,33 +119,33 @@ export default function Header() {
   return (
     <>
       {/* ═══ TOP HOTLINE BAR (Desktop Only) ═══ */}
-      <div className="bg-slate-950/85 backdrop-blur-md text-slate-300 text-xs py-1.5 px-4 hidden md:block border-b border-white/10 relative z-50">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
+      <div className="bg-slate-950/85 backdrop-blur-md text-slate-300 text-xs py-1.5 px-3 sm:px-4 lg:px-6 xl:px-8 hidden md:block border-b border-white/10 relative z-50">
+        <div className="max-w-7xl mx-auto flex items-center justify-between text-[11px] xl:text-xs">
+          <div className="flex items-center gap-3 xl:gap-4 shrink-0">
             <a href="tel:01733983752" className="flex items-center gap-1.5 text-slate-300 hover:text-white transition">
-              <PhoneCall className="w-3.5 h-3.5 text-brand-400" />
-              Hotline: <strong className="text-white">01733 983752</strong>
+              <PhoneCall className="w-3.5 h-3.5 text-brand-400 shrink-0" />
+              <span>Hotline: <strong className="text-white">01733 983752</strong></span>
             </a>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 lg:gap-3 xl:gap-4 shrink-0">
             <Link href="/training" className="text-slate-300 hover:text-white transition flex items-center gap-1">
-              <GraduationCap className="w-3 h-3 text-amber-400" />
-              Academy
+              <GraduationCap className="w-3 h-3 text-amber-400 shrink-0" />
+              <span>Academy</span>
             </Link>
             <span className="text-slate-600">|</span>
             <Link href="/branches" className="text-slate-300 hover:text-white transition flex items-center gap-1">
-              <Building2 className="w-3 h-3 text-sky-400" />
-              Branches
+              <Building2 className="w-3 h-3 text-sky-400 shrink-0" />
+              <span>Branches</span>
             </Link>
             <span className="text-slate-600">|</span>
             <Link href="/become-a-technician" className="text-slate-300 hover:text-white transition flex items-center gap-1">
-              <Wrench className="w-3 h-3 text-brand-400" />
-              Become a Technician
+              <Wrench className="w-3 h-3 text-brand-400 shrink-0" />
+              <span>Become a Technician</span>
             </Link>
             <span className="text-slate-600">|</span>
             <Link href="/warranty" className="text-slate-300 hover:text-white transition flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3 text-emerald-400" />
-              Warranty Check
+              <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />
+              <span>Warranty Check</span>
             </Link>
           </div>
         </div>
@@ -374,13 +374,13 @@ export default function Header() {
 
       {/* ═══ DESKTOP HEADER (hidden on mobile) ═══ */}
       <header className="hidden lg:block sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-white/80 shadow-[0_2px_15px_rgba(15,23,42,0.04)] transition-all">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
+          <div className="flex items-center justify-between h-20 gap-2 xl:gap-4">
             {/* Logo */}
-            <BrandLogo priority size="md" />
+            <BrandLogo priority size="md" subtitleClassName="hidden xl:block" />
 
             {/* Desktop Navigation Links */}
-            <nav className="hidden lg:flex items-center gap-1.5 font-medium">
+            <nav className="hidden lg:flex items-center gap-1 xl:gap-1.5 font-medium shrink-0">
               {[
                 { href: '/', label: 'Home', icon: Home, active: pathname === '/' },
                 { href: '/services', label: 'Services', icon: Zap, active: pathname?.startsWith('/services') },
@@ -390,23 +390,23 @@ export default function Header() {
                 <Link
                   key={href}
                   href={href}
-                  className={`group flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 border ${
+                  className={`group flex items-center gap-1 xl:gap-1.5 px-2.5 xl:px-3 py-1.5 xl:py-2 rounded-xl text-xs font-bold transition-all duration-200 border whitespace-nowrap ${
                     active
                       ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white border-white/25 shadow-md shadow-brand-500/25 scale-[1.02]'
                       : 'bg-white/65 hover:bg-white/95 text-slate-700 hover:text-brand-600 border-white/85 hover:border-brand-200/80 backdrop-blur-md shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-md hover:-translate-y-0.5 active:scale-95'
                   }`}
                 >
-                  <Icon className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-110 ${active ? 'text-white' : ''}`} />
+                  <Icon className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-110 shrink-0 ${active ? 'text-white' : ''}`} />
                   <span>{label}</span>
                 </Link>
               ))}
 
               {/* More Dropdown */}
-              <div className="relative">
+              <div className="relative shrink-0">
                 <button
                   type="button"
                   onClick={() => setMoreMenuOpen(!moreMenuOpen)}
-                  className={`flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 border ${
+                  className={`flex items-center gap-1 px-2.5 xl:px-3 py-1.5 xl:py-2 rounded-xl text-xs font-bold transition-all duration-200 border whitespace-nowrap ${
                     moreMenuOpen
                       ? 'bg-white text-brand-600 border-brand-300 shadow-sm'
                       : 'bg-white/50 hover:bg-white/90 text-slate-600 hover:text-slate-900 border-white/80 backdrop-blur-md shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-sm'
@@ -499,27 +499,27 @@ export default function Header() {
             </nav>
 
             {/* Desktop Right Actions */}
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-1.5 xl:gap-2 shrink-0">
               {/* Search */}
               <button
                 onClick={() => setSearchOpen(!searchOpen)}
-                className="p-2.5 text-slate-600 hover:text-brand-500 hover:bg-slate-100 rounded-xl transition-all"
+                className="p-2 xl:p-2.5 text-slate-600 hover:text-brand-500 hover:bg-slate-100 rounded-xl transition-all"
                 title="Search services and products"
                 aria-label="Search"
               >
-                <Search className="w-5 h-5" />
+                <Search className="w-4 h-4 xl:w-5 xl:h-5" />
               </button>
 
               {/* Cart */}
               <Link
                 href="/cart"
-                className="relative p-2.5 text-slate-600 hover:text-brand-500 hover:bg-slate-100 rounded-xl transition-all"
+                className="relative p-2 xl:p-2.5 text-slate-600 hover:text-brand-500 hover:bg-slate-100 rounded-xl transition-all"
                 title="View Cart"
                 aria-label="View Cart"
               >
-                <ShoppingCart className="w-5 h-5" />
+                <ShoppingCart className="w-4 h-4 xl:w-5 xl:h-5" />
                 {itemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-brand-500 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-xs animate-in zoom-in">
+                  <span className="absolute -top-1 -right-1 bg-brand-500 text-white text-[10px] font-black w-4 h-4 xl:w-5 xl:h-5 rounded-full flex items-center justify-center shadow-xs animate-in zoom-in">
                     {itemCount > 9 ? '9+' : itemCount}
                   </span>
                 )}
@@ -531,13 +531,13 @@ export default function Header() {
                   <>
                     <button
                       onClick={() => setAccountMenuOpen(!accountMenuOpen)}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/80 bg-white/60 backdrop-blur-md hover:bg-white/90 hover:border-brand-300 transition-all text-xs font-semibold shadow-xs"
+                      className="flex items-center gap-1.5 xl:gap-2 px-2.5 xl:px-3 py-1.5 rounded-xl border border-white/80 bg-white/60 backdrop-blur-md hover:bg-white/90 hover:border-brand-300 transition-all text-xs font-semibold shadow-xs"
                       aria-expanded={accountMenuOpen}
                     >
-                      <div className="w-7 h-7 rounded-lg bg-brand-500 text-white flex items-center justify-center font-bold shadow-xs text-xs shrink-0">
+                      <div className="w-6 h-6 xl:w-7 xl:h-7 rounded-lg bg-brand-500 text-white flex items-center justify-center font-bold shadow-xs text-xs shrink-0">
                         {user.name.charAt(0).toUpperCase()}
                       </div>
-                      <span className="hidden md:inline max-w-[90px] truncate">{user.name.split(' ')[0]}</span>
+                      <span className="hidden sm:inline max-w-[75px] xl:max-w-[95px] truncate">{user.name.split(' ')[0]}</span>
                       <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${accountMenuOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {accountMenuOpen && (
@@ -581,23 +581,23 @@ export default function Header() {
                     )}
                   </>
                 ) : (
-                  <div className="hidden sm:flex items-center gap-2">
-                    <Link href="/customer/login" className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-brand-600 rounded-xl bg-white/60 hover:bg-white/90 border border-white/80 backdrop-blur-md shadow-xs transition">
-                      <UserIcon className="w-3.5 h-3.5 text-brand-500" />
-                      Sign In
+                  <div className="flex items-center gap-1.5 xl:gap-2">
+                    <Link href="/customer/login" className="flex items-center gap-1 xl:gap-1.5 px-2.5 xl:px-3.5 py-1.5 xl:py-2 text-xs font-bold text-slate-700 hover:text-brand-600 rounded-xl bg-white/60 hover:bg-white/90 border border-white/80 backdrop-blur-md shadow-xs transition whitespace-nowrap">
+                      <UserIcon className="w-3.5 h-3.5 text-brand-500 shrink-0" />
+                      <span>Sign In</span>
                     </Link>
-                    <Link href="/technician/login" className="hidden md:flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-amber-800 hover:text-amber-900 rounded-xl bg-amber-50/90 hover:bg-amber-100 border border-amber-200/60 backdrop-blur-md transition" title="Technician Workspace Portal">
-                      <Wrench className="w-3.5 h-3.5 text-amber-600" />
-                      Technician
+                    <Link href="/technician/login" className="hidden xl:flex items-center gap-1.5 px-2.5 xl:px-3 py-1.5 xl:py-2 text-xs font-bold text-amber-800 hover:text-amber-900 rounded-xl bg-amber-50/90 hover:bg-amber-100 border border-amber-200/60 backdrop-blur-md transition whitespace-nowrap" title="Technician Workspace Portal">
+                      <Wrench className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                      <span>Technician</span>
                     </Link>
                   </div>
                 )}
               </div>
 
               {/* Book Service CTA */}
-              <Link href="/booking" className="hidden sm:inline-flex btn-primary text-xs sm:text-sm py-2 px-4 shadow-md shadow-brand-500/20">
-                <Zap className="w-4 h-4 mr-1.5 fill-white" />
-                Book Service
+              <Link href="/booking" className="inline-flex btn-primary text-xs xl:text-sm py-2 px-3 xl:px-4 shadow-md shadow-brand-500/20 shrink-0 whitespace-nowrap">
+                <Zap className="w-3.5 h-3.5 xl:w-4 xl:h-4 mr-1 xl:mr-1.5 fill-white shrink-0" />
+                <span>Book Service</span>
               </Link>
             </div>
           </div>

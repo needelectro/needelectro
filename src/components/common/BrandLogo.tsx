@@ -11,6 +11,7 @@ export interface BrandLogoProps {
   theme?: 'light' | 'dark' | 'auto';
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   showSubtitle?: boolean;
+  subtitleClassName?: string;
   href?: string | null;
   className?: string;
   priority?: boolean;
@@ -59,6 +60,7 @@ export default function BrandLogo({
   theme = 'light',
   size = 'md',
   showSubtitle = true,
+  subtitleClassName = '',
   href = '/',
   className = '',
   priority = false,
@@ -111,7 +113,7 @@ export default function BrandLogo({
             <span
               className={`font-medium ${cfg.subtitleSize} tracking-tight ${
                 isDark ? 'text-slate-300' : 'text-slate-600'
-              } ${cfg.subtitleMargin} leading-none block whitespace-nowrap`}
+              } ${cfg.subtitleMargin} leading-none block whitespace-nowrap ${subtitleClassName}`}
             >
               Trusted Electrical and Technological Solutions
             </span>
