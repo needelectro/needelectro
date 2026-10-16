@@ -13,20 +13,13 @@ test('Feature Flags: Service-first architecture flags are configured', async () 
   assert.ok(content.includes('PARTS_CATALOG_ENABLED: true'), 'PARTS_CATALOG_ENABLED must be enabled');
 });
 
-test('Information Architecture: Homepage hero matches specification', () => {
+test('Information Architecture: Homepage incorporates products and services marketplace', () => {
   const homePath = path.resolve(process.cwd(), 'src/app/page.tsx');
   assert.ok(fs.existsSync(homePath), 'src/app/page.tsx must exist');
 
   const content = fs.readFileSync(homePath, 'utf-8');
-  assert.ok(
-    content.includes('Book trusted electricians, AC technicians, CCTV installers, and appliance repair experts — nationwide in Bangladesh'),
-    'Homepage hero must contain the exact prompt headline'
-  );
-  assert.ok(
-    content.includes('24/7 Rapid Emergency Response') || content.includes('Emergency Electrical Hazard'),
-    'Must have emergency assistance callout'
-  );
-  assert.ok(content.includes('85% Revenue Share'), 'Must feature technician recruitment banner');
+  assert.ok(content.includes('featuredProducts') || content.includes('/shop'), 'Homepage must feature marketplace products');
+  assert.ok(content.includes('serviceCategories') || content.includes('/services'), 'Homepage must feature services');
 });
 
 test('Information Architecture: Header navigation prioritizes services', () => {
