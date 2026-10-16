@@ -155,25 +155,7 @@ export default function Header() {
       <header className="lg:hidden sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-slate-200/90 shadow-[0_1px_8px_rgba(15,23,42,0.06)] select-none pt-safe">
         <div className="px-3 h-14 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 app-tap" aria-label="NEED ELECTRO Home">
-            <div className="w-8 h-8 rounded-xl bg-white p-0.5 border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.08)] flex items-center justify-center shrink-0">
-              <Image
-                src="/brand/needelectro-icon.png"
-                alt="NEED ELECTRO"
-                width={26}
-                height={26}
-                className="w-full h-full object-contain"
-                priority
-              />
-            </div>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-1">
-                <span className="font-black text-sm text-slate-950 tracking-tight leading-none">NEED ELECTRO</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-brand-500" />
-              </div>
-              <span className="text-[9px] font-bold text-slate-500 leading-none mt-0.5">Tech &amp; Electrical Services</span>
-            </div>
-          </Link>
+          <BrandLogo size="xs" priority />
 
           {/* Right Actions */}
           <div className="flex items-center gap-1.5">

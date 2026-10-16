@@ -4,11 +4,10 @@ import Image from 'next/image';
 
 export interface BrandLogoProps {
   /**
-   * 'full': Uses public/logo.png directly as the official logo image
-   * 'symbol': Uses the square brand icon symbol
-   * 'combined': Logo with supplementary subtitle
+   * 'full': Icon + "NEED ELECTRO" + "Trusted Electrical and Technological Solutions"
+   * 'symbol': Icon only
    */
-  variant?: 'full' | 'symbol' | 'combined';
+  variant?: 'full' | 'symbol';
   theme?: 'light' | 'dark' | 'auto';
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   showSubtitle?: boolean;
@@ -17,82 +16,114 @@ export interface BrandLogoProps {
   priority?: boolean;
 }
 
-const HEIGHT_CLASSES = {
-  xs: 'h-6 sm:h-7',
-  sm: 'h-8 sm:h-9',
-  md: 'h-10 sm:h-12',
-  lg: 'h-12 sm:h-14',
-  xl: 'h-14 sm:h-16',
-};
-
-const SYMBOL_SIZES = {
-  xs: 24,
-  sm: 32,
-  md: 42,
-  lg: 52,
-  xl: 64,
+const SIZE_CONFIGS = {
+  xs: {
+    iconSize: 26,
+    textSize: 'text-sm font-black',
+    subtitleSize: 'text-[8.5px]',
+    gap: 'gap-2',
+    subtitleMargin: 'mt-0.5',
+  },
+  sm: {
+    iconSize: 32,
+    textSize: 'text-base sm:text-lg font-black',
+    subtitleSize: 'text-[9.5px]',
+    gap: 'gap-2.5',
+    subtitleMargin: 'mt-0.5 sm:mt-1',
+  },
+  md: {
+    iconSize: 42,
+    textSize: 'text-xl sm:text-2xl font-black',
+    subtitleSize: 'text-[11px] sm:text-xs',
+    gap: 'gap-3',
+    subtitleMargin: 'mt-1',
+  },
+  lg: {
+    iconSize: 52,
+    textSize: 'text-2xl sm:text-3xl font-black',
+    subtitleSize: 'text-xs sm:text-sm',
+    gap: 'gap-3.5',
+    subtitleMargin: 'mt-1.5',
+  },
+  xl: {
+    iconSize: 64,
+    textSize: 'text-3xl sm:text-4xl font-black',
+    subtitleSize: 'text-sm sm:text-base',
+    gap: 'gap-4',
+    subtitleMargin: 'mt-2',
+  },
 };
 
 export default function BrandLogo({
   variant = 'full',
   theme = 'light',
   size = 'md',
-  showSubtitle = false,
+  showSubtitle = true,
   href = '/',
   className = '',
   priority = false,
 }: BrandLogoProps) {
   const isDark = theme === 'dark';
-  const heightClass = HEIGHT_CLASSES[size] || HEIGHT_CLASSES.md;
-  const symbolSize = SYMBOL_SIZES[size] || SYMBOL_SIZES.md;
+  const cfg = SIZE_CONFIGS[size] || SIZE_CONFIGS.md;
 
   const content = (() => {
     if (variant === 'symbol') {
       return (
         <div
-          className={`relative inline-flex items-center justify-center shrink-0 rounded-2xl overflow-hidden transition-transform duration-200 group-hover:scale-105 ${className}`}
+          className={`relative inline-flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 ${className}`}
         >
           <Image
             src="/brand/needelectro-icon.png"
             alt="NEED ELECTRO Logo"
-            width={symbolSize}
-            height={symbolSize}
-            className="w-full h-full object-contain filter drop-shadow-sm"
+            width={cfg.iconSize}
+            height={cfg.iconSize}
+            style={{ width: `${cfg.iconSize}px`, height: 'auto' }}
+            className="object-contain filter drop-shadow-sm"
             priority={priority}
           />
         </div>
       );
     }
 
-    // Default: 'full' (uses /logo.png directly as requested by user)
-    const logoSrc = isDark ? '/brand/needelectro-logo-white.png' : '/logo.png';
-
+    // Default 'full': Exactly matching https://needelectro.vercel.app/
     return (
-      <div className={`relative inline-flex flex-col items-start shrink-0 group ${className}`}>
-        <Image
-          src={logoSrc}
-          alt="NEED ELECTRO"
-          width={220}
-          height={110}
-          className={`${heightClass} w-auto object-contain transition-transform duration-200 group-hover:scale-105 filter drop-shadow-xs`}
-          priority={priority}
-        />
-        {showSubtitle && (
-          <span
-            className={`text-[9px] font-semibold tracking-wider uppercase hidden sm:block ${
-              isDark ? 'text-slate-400' : 'text-slate-500'
-            } mt-0.5 ml-1`}
-          >
-            Trusted Electrical &amp; Tech Solutions
-          </span>
-        )}
+      <div className={`relative inline-flex items-center ${cfg.gap} shrink-0 group select-none ${className}`}>
+        {/* Lightning Bolt Icon */}
+        <div className="relative shrink-0 flex items-center justify-center transition-transform duration-200 group-hover:scale-105">
+          <Image
+            src="/brand/needelectro-icon.png"
+            alt="NEED ELECTRO Symbol"
+            width={cfg.iconSize}
+            height={cfg.iconSize}
+            style={{ width: `${cfg.iconSize}px`, height: 'auto' }}
+            className="object-contain filter drop-shadow-sm"
+            priority={priority}
+          />
+        </div>
+
+        {/* Text Block: NEED ELECTRO + Subtitle */}
+        <div className="flex flex-col justify-center leading-none">
+          <div className={`${cfg.textSize} tracking-tight leading-none`}>
+            <span className="text-[#008CFF]">NEED</span>{' '}
+            <span className={isDark ? 'text-white' : 'text-[#0F172A]'}>ELECTRO</span>
+          </div>
+          {showSubtitle && (
+            <span
+              className={`font-medium ${cfg.subtitleSize} tracking-tight ${
+                isDark ? 'text-slate-300' : 'text-slate-600'
+              } ${cfg.subtitleMargin} leading-none block whitespace-nowrap`}
+            >
+              Trusted Electrical and Technological Solutions
+            </span>
+          )}
+        </div>
       </div>
     );
   })();
 
   if (href) {
     return (
-      <Link href={href} className="inline-flex shrink-0 no-underline" title="NEED ELECTRO">
+      <Link href={href} className="inline-flex shrink-0 no-underline" title="NEED ELECTRO — Trusted Electrical and Technological Solutions">
         {content}
       </Link>
     );
