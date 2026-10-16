@@ -30,27 +30,27 @@ import ProductCard from '@/components/common/ProductCard';
 const DEFAULT_FEATURED_SERVICES = [
   {
     id: 'srv-house-wiring',
+    name: 'Electrical Service',
+    slug: 'complete-house-electrical-wiring',
+    shortDescription: 'Electrical Service',
+    imageUrl: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800',
+    basePrice: 500,
+    priceType: 'FIXED',
+    estimatedDuration: '1-2 Hours',
+    isEmergencyService: false,
+    category: { slug: 'electrical-services', name: 'Electrical Services' },
+  },
+  {
+    id: 'srv-house-wiring-complete',
     name: 'Complete House Electrical Wiring',
     slug: 'complete-house-electrical-wiring',
-    shortDescription: 'Standard copper conduit wiring, distribution board balancing, and earth leakage protection.',
+    shortDescription: 'Safe, standard-gauge copper conduit wiring, distribution box...',
     imageUrl: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800',
     basePrice: 1500,
     priceType: 'INSPECTION_BASED',
     estimatedDuration: '1-3 Days',
     isEmergencyService: false,
-    category: { slug: 'electrical', name: 'Electrical' },
-  },
-  {
-    id: 'srv-emergency',
-    name: '24/7 Emergency Electrical Troubleshooting',
-    slug: 'emergency-electrical-troubleshooting',
-    shortDescription: 'Rapid 30-minute response for short circuits, sparking, sudden blackouts, and electrical hazards.',
-    imageUrl: 'https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?w=800',
-    basePrice: 500,
-    priceType: 'STARTING_FROM',
-    estimatedDuration: '45-90 Mins',
-    isEmergencyService: true,
-    category: { slug: 'electrical', name: 'Electrical' },
+    category: { slug: 'electrical-services', name: 'Electrical Services' },
   },
   {
     id: 'srv-cctv',
@@ -62,7 +62,7 @@ const DEFAULT_FEATURED_SERVICES = [
     priceType: 'STARTING_FROM',
     estimatedDuration: '2-4 Hours',
     isEmergencyService: false,
-    category: { slug: 'cctv', name: 'CCTV & Security' },
+    category: { slug: 'cctv-security', name: 'CCTV & Security' },
   },
   {
     id: 'srv-laptop',
@@ -74,7 +74,7 @@ const DEFAULT_FEATURED_SERVICES = [
     priceType: 'INSPECTION_BASED',
     estimatedDuration: '1-2 Days',
     isEmergencyService: false,
-    category: { slug: 'computer', name: 'Computer' },
+    category: { slug: 'computer-laptop-services', name: 'Computer Services' },
   },
 ];
 
@@ -296,71 +296,68 @@ export default function HomePage() {
             {filteredServices.map((service) => (
               <div
                 key={service.id || service.slug}
-                className={`card-premium overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:-translate-y-1 ${
-                  service.isEmergencyService ? 'border-amber-300/80 bg-amber-50/15' : ''
-                }`}
+                className="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
               >
                 <div>
-                  <div className="relative aspect-video sm:aspect-square w-full bg-slate-100 overflow-hidden">
+                  {/* Image Container with Top-Left Category Badge */}
+                  <div className="relative aspect-[4/3] w-full bg-slate-100 overflow-hidden">
                     <img
                       src={service.imageUrl || 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800'}
                       alt={service.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
-                    <span className="absolute top-2.5 left-2.5 bg-white/95 backdrop-blur-md text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
-                      {service.category?.name || 'Service'}
+                    <span className="absolute top-3 left-3 bg-white/95 backdrop-blur-md text-slate-800 text-[11px] font-bold px-3 py-1 rounded-full shadow-xs">
+                      {service.category?.name || 'Electrical Services'}
                     </span>
-                    {service.isEmergencyService && (
-                      <span className="absolute top-2.5 right-2.5 bg-red-600 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-xs flex items-center gap-1 animate-pulse">
-                        <Zap className="w-2.5 h-2.5 fill-white" />
-                        Rapid 24/7
-                      </span>
-                    )}
                   </div>
 
-                  <div className="p-4 space-y-2">
-                    <div className="flex items-center gap-1.5 text-slate-500 text-[11px]">
-                      <Clock className="w-3.5 h-3.5 text-brand-600 shrink-0" />
-                      <span>{service.estimatedDuration || '1-2 Hours'}</span>
-                    </div>
-
-                    <h3 className="font-bold text-slate-900 text-sm leading-tight line-clamp-2 group-hover:text-brand-600 transition-colors">
-                      {service.name}
+                  {/* Content Area */}
+                  <div className="p-4 space-y-1.5">
+                    <h3 className="font-bold text-slate-900 text-base leading-tight truncate group-hover:text-brand-600 transition-colors">
+                      <Link href={`/services/${service.slug}`}>
+                        {service.name}
+                      </Link>
                     </h3>
-                    <p className="text-[11px] text-slate-500 leading-relaxed line-clamp-2">
+
+                    <p className="text-xs text-slate-500 leading-snug truncate">
                       {service.shortDescription}
                     </p>
 
-                    <div className="pt-2 border-t border-slate-100 flex items-baseline justify-between">
-                      <span className="text-[10px] text-slate-400 font-medium">
-                        {service.priceType === 'INSPECTION_BASED'
-                          ? 'Inspection: '
-                          : service.priceType === 'STARTING_FROM'
-                          ? 'Starting from: '
-                          : 'Service Charge: '}
-                      </span>
-                      <strong className="text-sm font-extrabold text-slate-900">
-                        ৳{Number(service.basePrice).toLocaleString()}
-                      </strong>
+                    <div className="pt-2.5 flex items-center justify-between text-xs border-t border-slate-100">
+                      <div className="flex items-center gap-1.5 text-slate-500">
+                        <Clock className="w-4 h-4 text-slate-500 shrink-0" />
+                        <span>{service.estimatedDuration || '1-2 Hours'}</span>
+                      </div>
+
+                      <div>
+                        <span className="text-slate-500 text-xs">
+                          {service.priceType === 'INSPECTION_BASED'
+                            ? 'Insp: '
+                            : service.priceType === 'STARTING_FROM'
+                            ? 'From: '
+                            : 'Fixed: '}
+                        </span>
+                        <strong className="text-base font-bold text-slate-900">
+                          ৳{Number(service.basePrice).toLocaleString()}
+                        </strong>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-4 pt-0 grid grid-cols-2 gap-2">
+                {/* Bottom Action Buttons */}
+                <div className="p-4 pt-0 grid grid-cols-2 gap-2.5">
                   <Link
                     href={`/services/${service.slug}`}
-                    className="btn-secondary text-[11px] py-2 px-2 text-center rounded-xl font-bold justify-center"
+                    className="py-2 px-3 text-center rounded-xl font-bold text-xs bg-white border border-slate-200 text-slate-800 hover:bg-slate-50 transition shadow-2xs"
                   >
                     Details
                   </Link>
                   <Link
                     href={`/booking?service=${service.id || service.slug}`}
-                    className={`text-[11px] py-2 px-2 text-center rounded-xl font-bold justify-center flex items-center gap-1 ${
-                      service.isEmergencyService ? 'btn-danger shadow-md shadow-red-500/20' : 'btn-primary shadow-md shadow-brand-500/20'
-                    }`}
+                    className="py-2 px-3 text-center rounded-xl font-bold text-xs bg-[#008CFF] hover:bg-[#0070cc] text-white transition shadow-sm flex items-center justify-center"
                   >
-                    <span>Book Now</span>
-                    <ArrowRight className="w-3 h-3" />
+                    Book
                   </Link>
                 </div>
               </div>
