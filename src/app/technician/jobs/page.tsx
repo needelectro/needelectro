@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/context/AuthContext';
 import {
   Wrench, MapPin, Clock, Calendar, CheckCircle2, AlertCircle,
-  ExternalLink, ChevronRight, Zap, RefreshCw, ShieldCheck, DollarSign
+  ExternalLink, ChevronRight, Zap, RefreshCw, ShieldCheck, DollarSign,
+  Check, Navigation, Play, Pause
 } from 'lucide-react';
 
 const STATUS_BADGES: Record<string, { label: string; color: string }> = {
@@ -100,6 +101,39 @@ export default function TechnicianJobsPage() {
       router.push(`/technician/jobs/${bookingId}`);
     } catch (err: any) {
       setError(err.message || 'Could not claim job.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleQuickStatusUpdate = async (bookingId: string, nextStatus: string) => {
+    setActionLoading(bookingId);
+    setError('');
+    setSuccessMsg('');
+    try {
+      const isComplete = nextStatus === 'COMPLETED' || nextStatus === 'WORK_COMPLETED';
+      const res = await fetch(`/api/v1/bookings/${bookingId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: nextStatus,
+          quickUpdate: true,
+          quickComplete: isComplete,
+          note: `Work status updated to ${nextStatus.replace('_', ' ')} by technician.`,
+          workPerformed: 'On-site technical service completed and verified.',
+          technicianNotes: 'Work executed and verified.',
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to update work status.');
+      }
+
+      setSuccessMsg(`Status updated to ${nextStatus.replace('_', ' ')}!`);
+      await loadData();
+    } catch (err: any) {
+      setError(err.message || 'Error updating status.');
     } finally {
       setActionLoading(null);
     }
@@ -268,6 +302,89 @@ export default function TechnicianJobsPage() {
                           {job.preferredDate || (job.scheduledDate ? new Date(job.scheduledDate).toLocaleDateString('en-BD') : 'Today')} · {job.preferredTimeSlot || 'Standard Dispatch'}
                         </span>
                       </p>
+                    </div>
+
+                    {/* ═══ EASY 1-TAP WORK STATUS UPDATE ═══ */}
+                    <div className="pt-3 border-t border-slate-100 space-y-2">
+                      <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
+                        <span className="flex items-center gap-1 text-brand-600">
+                          <Zap className="w-3 h-3 text-amber-500" /> Quick Status Update:
+                        </span>
+                        <span className="text-slate-400 font-normal">1-Click</span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {job.status === 'ASSIGNED' && (
+                          <button
+                            onClick={() => handleQuickStatusUpdate(job.id, 'ACCEPTED')}
+                            disabled={actionLoading === job.id}
+                            className="px-2.5 py-1 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1 shadow-xs transition active:scale-95"
+                          >
+                            <Check className="w-3 h-3" /> Accept
+                          </button>
+                        )}
+                        {job.status === 'ACCEPTED' && (
+                          <button
+                            onClick={() => handleQuickStatusUpdate(job.id, 'ON_THE_WAY')}
+                            disabled={actionLoading === job.id}
+                            className="px-2.5 py-1 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-1 shadow-xs transition active:scale-95"
+                          >
+                            <Navigation className="w-3 h-3" /> En Route
+                          </button>
+                        )}
+                        {job.status === 'ON_THE_WAY' && (
+                          <button
+                            onClick={() => handleQuickStatusUpdate(job.id, 'ARRIVED')}
+                            disabled={actionLoading === job.id}
+                            className="px-2.5 py-1 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white flex items-center gap-1 shadow-xs transition active:scale-95"
+                          >
+                            <MapPin className="w-3 h-3" /> Arrived
+                          </button>
+                        )}
+                        {(job.status === 'ARRIVED' || job.status === 'INSPECTION_STARTED') && (
+                          <button
+                            onClick={() => handleQuickStatusUpdate(job.id, 'IN_PROGRESS')}
+                            disabled={actionLoading === job.id}
+                            className="px-2.5 py-1 rounded-xl text-xs font-bold bg-orange-600 hover:bg-orange-700 text-white flex items-center gap-1 shadow-xs transition active:scale-95"
+                          >
+                            <Wrench className="w-3 h-3" /> Start Work
+                          </button>
+                        )}
+                        {(job.status === 'IN_PROGRESS' || job.status === 'WORK_STARTED') && (
+                          <button
+                            onClick={() => handleQuickStatusUpdate(job.id, 'COMPLETED')}
+                            disabled={actionLoading === job.id}
+                            className="px-2.5 py-1 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1 shadow-xs transition active:scale-95"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" /> ✅ Complete
+                          </button>
+                        )}
+                        {job.status === 'ON_HOLD' && (
+                          <button
+                            onClick={() => handleQuickStatusUpdate(job.id, 'IN_PROGRESS')}
+                            disabled={actionLoading === job.id}
+                            className="px-2.5 py-1 rounded-xl text-xs font-bold bg-orange-600 hover:bg-orange-700 text-white flex items-center gap-1 shadow-xs transition active:scale-95"
+                          >
+                            <Play className="w-3 h-3" /> Resume
+                          </button>
+                        )}
+
+                        {/* Direct Quick Dropdown */}
+                        <select
+                          value={job.status}
+                          onChange={(e) => handleQuickStatusUpdate(job.id, e.target.value)}
+                          disabled={actionLoading === job.id}
+                          className="text-[11px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl px-2 py-1 cursor-pointer focus:outline-none"
+                        >
+                          <option value={job.status} disabled>Set Status...</option>
+                          <option value="ACCEPTED">Accepted</option>
+                          <option value="ON_THE_WAY">En Route</option>
+                          <option value="ARRIVED">Arrived</option>
+                          <option value="IN_PROGRESS">In Progress</option>
+                          <option value="COMPLETED">✅ Completed</option>
+                          <option value="ON_HOLD">⏸ On Hold</option>
+                        </select>
+                      </div>
                     </div>
 
                     <div className="flex items-center justify-between pt-2 border-t border-slate-100">

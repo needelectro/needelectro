@@ -9,7 +9,8 @@ import {
   Wrench, MapPin, Clock, CheckCircle2, DollarSign,
   Star, Wallet, BarChart2, LogOut, Bell, ChevronRight, Zap,
   AlertCircle, Package, User, TrendingUp, Radio, LifeBuoy,
-  ShieldCheck, ArrowUpRight, Calendar, AlertTriangle, MessageSquare
+  ShieldCheck, ArrowUpRight, Calendar, AlertTriangle, MessageSquare,
+  Check, Navigation
 } from 'lucide-react';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -128,6 +129,32 @@ export default function AdvancedTechnicianDashboard() {
       }
     } catch {
       // ignore
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleQuickStatusUpdate = async (bookingId: string, nextStatus: string) => {
+    setActionLoading(bookingId);
+    try {
+      const isComplete = nextStatus === 'COMPLETED' || nextStatus === 'WORK_COMPLETED';
+      const res = await fetch(`/api/v1/bookings/${bookingId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: nextStatus,
+          quickUpdate: true,
+          quickComplete: isComplete,
+          note: `Work status updated to ${nextStatus.replace('_', ' ')} by technician.`,
+          workPerformed: 'On-site technical service completed and verified.',
+          technicianNotes: 'Work executed and verified.',
+        }),
+      });
+      if (res.ok) {
+        await loadData();
+      }
+    } catch {
+      // silent
     } finally {
       setActionLoading(null);
     }
@@ -531,12 +558,60 @@ export default function AdvancedTechnicianDashboard() {
                           </p>
                         </div>
 
-                        <Link
-                          href={`/technician/jobs/${job.id}`}
-                          className="btn-primary text-xs py-2 px-4 self-start sm:self-auto flex items-center gap-1.5 shadow-xs"
-                        >
-                          Control Center <ChevronRight className="w-3.5 h-3.5" />
-                        </Link>
+                        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                          {job.status === 'ASSIGNED' && (
+                            <button
+                              onClick={() => handleQuickStatusUpdate(job.id, 'ACCEPTED')}
+                              disabled={actionLoading === job.id}
+                              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1 shadow-xs transition active:scale-95"
+                            >
+                              <Check className="w-3.5 h-3.5" /> Accept
+                            </button>
+                          )}
+                          {job.status === 'ACCEPTED' && (
+                            <button
+                              onClick={() => handleQuickStatusUpdate(job.id, 'ON_THE_WAY')}
+                              disabled={actionLoading === job.id}
+                              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-1 shadow-xs transition active:scale-95"
+                            >
+                              <Navigation className="w-3.5 h-3.5" /> En Route
+                            </button>
+                          )}
+                          {job.status === 'ON_THE_WAY' && (
+                            <button
+                              onClick={() => handleQuickStatusUpdate(job.id, 'ARRIVED')}
+                              disabled={actionLoading === job.id}
+                              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white flex items-center gap-1 shadow-xs transition active:scale-95"
+                            >
+                              <MapPin className="w-3.5 h-3.5" /> Arrived
+                            </button>
+                          )}
+                          {(job.status === 'ARRIVED' || job.status === 'INSPECTION_STARTED') && (
+                            <button
+                              onClick={() => handleQuickStatusUpdate(job.id, 'IN_PROGRESS')}
+                              disabled={actionLoading === job.id}
+                              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-orange-600 hover:bg-orange-700 text-white flex items-center gap-1 shadow-xs transition active:scale-95"
+                            >
+                              <Wrench className="w-3.5 h-3.5" /> Start Work
+                            </button>
+                          )}
+                          {(job.status === 'IN_PROGRESS' || job.status === 'WORK_STARTED') && (
+                            <button
+                              onClick={() => handleQuickStatusUpdate(job.id, 'COMPLETED')}
+                              disabled={actionLoading === job.id}
+                              className="px-3 py-1.5 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1 shadow-xs transition active:scale-95"
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5" /> ✅ Complete
+                            </button>
+                          )}
+
+                          <Link
+                            href={`/technician/jobs/${job.id}`}
+                            className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1 transition"
+                          >
+                            <span>Details</span> <ChevronRight className="w-3.5 h-3.5" />
+                          </Link>
+                        </div>
                       </div>
                     ))}
                   </div>

@@ -9,7 +9,7 @@ import {
   AlertCircle, ShieldCheck, DollarSign, Plus, Package, Navigation,
   FileText, Calendar, Camera, ExternalLink, RefreshCw, Send,
   AlertTriangle, Pause, Play, Check, X, MessageSquare, UploadCloud,
-  ChevronRight, LifeBuoy
+  ChevronRight, LifeBuoy, Zap
 } from 'lucide-react';
 
 const STATUS_PROGRESSION_ORDER = [
@@ -173,8 +173,18 @@ export default function TechnicianJobControlCenter() {
     setError('');
     setSuccessMsg('');
     try {
-      const payload: any = { status: nextStatus };
-      if (noteText) payload.note = noteText;
+      const isComplete = nextStatus === 'COMPLETED' || nextStatus === 'WORK_COMPLETED';
+      const payload: any = {
+        status: nextStatus,
+        quickUpdate: true,
+        quickComplete: isComplete,
+        note: noteText || `Status updated to ${nextStatus.replace('_', ' ')} by technician.`,
+        workPerformed: workPerformed.trim() || 'On-site technical service completed and verified.',
+        finalResolution: finalResolution.trim() || 'Electrical and technical service successfully tested.',
+        technicianNotes: completionNotes.trim() || 'Work executed and verified.',
+        beforePhotos: beforePhotosList.join(','),
+        afterPhotos: afterPhotosList.join(','),
+      };
 
       const res = await fetch(`/api/v1/bookings/${jobId}`, {
         method: 'PATCH',
@@ -187,9 +197,10 @@ export default function TechnicianJobControlCenter() {
         throw new Error(data.error || 'Failed to update job status');
       }
 
-      setSuccessMsg(`Status updated to ${nextStatus}!`);
+      setSuccessMsg(`Status updated to ${nextStatus.replace('_', ' ')}!`);
       setStatusModal({ isOpen: false, targetStatus: '', title: '', requireReason: false });
       setModalReason('');
+      setIsCompletionModalOpen(false);
       await loadJobDetails();
     } catch (err: any) {
       setError(err.message || 'Failed to progress job');
@@ -238,45 +249,7 @@ export default function TechnicianJobControlCenter() {
 
   const handleSubmitCompletionReport = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!workPerformed.trim() || !finalResolution.trim()) {
-      setError('Work performed and final resolution are required fields.');
-      return;
-    }
-    if (!confirmCheck) {
-      setError('Please confirm that technical safety and workmanship checks were performed.');
-      return;
-    }
-
-    setUpdating(true);
-    setError('');
-    try {
-      const payload: any = {
-        status: 'COMPLETED',
-        workPerformed: workPerformed.trim(),
-        finalResolution: finalResolution.trim(),
-        handoverNotes: handoverNotes.trim(),
-        technicianNotes: completionNotes.trim(),
-        beforePhotos: beforePhotosList.join(','),
-        afterPhotos: afterPhotosList.join(','),
-      };
-
-      const res = await fetch(`/api/v1/bookings/${jobId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to submit completion report');
-
-      setSuccessMsg('Job marked as COMPLETED! Service invoice and 30-day warranty issued.');
-      setIsCompletionModalOpen(false);
-      await loadJobDetails();
-    } catch (err: any) {
-      setError(err.message || 'Error submitting completion report');
-    } finally {
-      setUpdating(false);
-    }
+    await handleUpdateStatus('COMPLETED', completionNotes.trim() || 'Work completed successfully.');
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, targetType: 'before' | 'after') => {
@@ -473,219 +446,133 @@ export default function TechnicianJobControlCenter() {
         </div>
       )}
 
-      {/* Contextual Action Control Bar */}
+      {/* ═══ EASY 1-TAP WORK STATUS CONTROL CENTER ═══ */}
       {!isCompleted && !isCancelled && (
-        <div className="bg-white rounded-3xl border-2 border-brand-200 p-5 shadow-sm space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="bg-white rounded-3xl border-2 border-brand-300 p-5 shadow-sm space-y-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div>
-              <span className="text-[10px] font-black uppercase tracking-wider text-brand-600">
-                Action Control Center
-              </span>
-              <h3 className="text-base font-black text-slate-900">
-                {currentStatus === 'ASSIGNED' && 'Accept or Reject Assignment'}
-                {currentStatus === 'ACCEPTED' && 'Ready to Travel'}
-                {currentStatus === 'ON_THE_WAY' && 'Travelling to Customer Premises'}
-                {currentStatus === 'ARRIVED' && 'Arrived at Customer Location'}
-                {currentStatus === 'INSPECTION_STARTED' && 'Inspection & Problem Diagnosis'}
-                {currentStatus === 'AWAITING_APPROVAL' && 'Awaiting Customer / Admin Approval'}
-                {(currentStatus === 'IN_PROGRESS' || currentStatus === 'WORK_STARTED') && 'Work Active in Progress'}
-                {currentStatus === 'ON_HOLD' && 'Service Call On Hold'}
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-wider bg-brand-50 text-brand-700 px-2.5 py-0.5 rounded-md border border-brand-200">
+                  ⚡ Easy Status Control
+                </span>
+                <span className="text-xs text-slate-500 font-medium">1-Tap Instant Update</span>
+              </div>
+              <h3 className="text-base font-black text-slate-900 mt-1">
+                Current Status: <span className="text-brand-600">{STATUS_BADGES[currentStatus]?.text || currentStatus}</span>
               </h3>
             </div>
 
-            {/* Status Transition Action Buttons */}
-            <div className="flex items-center gap-2 flex-wrap">
-              {currentStatus === 'ASSIGNED' && (
-                <>
-                  <button
-                    onClick={() => handleUpdateStatus('ACCEPTED', 'Technician accepted job assignment.')}
-                    disabled={updating}
-                    className="btn-primary text-xs py-2 px-4 flex items-center gap-1.5"
-                  >
-                    <Check className="w-4 h-4" /> Accept Assignment
-                  </button>
-                  <button
-                    onClick={() =>
-                      setStatusModal({
-                        isOpen: true,
-                        targetStatus: 'REJECTED',
-                        title: 'Reject Job Assignment',
-                        requireReason: true,
-                        reasonPlaceholder: 'Reason for rejecting (e.g., location out of reach, tool repair)...',
-                      })
-                    }
-                    className="px-3 py-2 rounded-xl border border-rose-200 text-rose-700 hover:bg-rose-50 text-xs font-bold"
-                  >
-                    Reject
-                  </button>
-                </>
-              )}
+            {/* Quick 1-Tap Status Buttons */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <button
+                type="button"
+                onClick={() => handleUpdateStatus('ACCEPTED', 'Technician accepted assignment.')}
+                disabled={updating || currentStatus === 'ACCEPTED'}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-xs active:scale-95 ${
+                  currentStatus === 'ACCEPTED'
+                    ? 'bg-blue-600 text-white ring-2 ring-blue-300'
+                    : 'bg-slate-100 text-slate-700 hover:bg-blue-50 hover:text-blue-700'
+                }`}
+                title="Accept job assignment"
+              >
+                <Check className="w-3.5 h-3.5" /> Accept
+              </button>
 
-              {currentStatus === 'ACCEPTED' && (
-                <>
-                  <button
-                    onClick={() => handleUpdateStatus('ON_THE_WAY', 'Technician started travelling to the customer address.')}
-                    disabled={updating}
-                    className="btn-primary text-xs py-2 px-4 flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700"
-                  >
-                    <Navigation className="w-4 h-4" /> Start Travel (On The Way)
-                  </button>
-                  <button
-                    onClick={() =>
-                      setStatusModal({
-                        isOpen: true,
-                        targetStatus: 'CANCELLED',
-                        title: 'Cancel Accepted Job',
-                        requireReason: true,
-                        reasonPlaceholder: 'State reason for cancellation...',
-                      })
-                    }
-                    className="px-3 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold"
-                  >
-                    Cancel Job
-                  </button>
-                </>
-              )}
+              <button
+                type="button"
+                onClick={() => handleUpdateStatus('ON_THE_WAY', 'Technician en route to location.')}
+                disabled={updating || currentStatus === 'ON_THE_WAY'}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-xs active:scale-95 ${
+                  currentStatus === 'ON_THE_WAY'
+                    ? 'bg-indigo-600 text-white ring-2 ring-indigo-300'
+                    : 'bg-slate-100 text-slate-700 hover:bg-indigo-50 hover:text-indigo-700'
+                }`}
+                title="Mark en route"
+              >
+                <Navigation className="w-3.5 h-3.5" /> En Route
+              </button>
 
-              {currentStatus === 'ON_THE_WAY' && (
-                <>
-                  <button
-                    onClick={() => handleUpdateStatus('ARRIVED', `Arrived on site at ${new Date().toLocaleTimeString('en-US')}`)}
-                    disabled={updating}
-                    className="btn-primary text-xs py-2 px-4 flex items-center gap-1.5 bg-sky-600 hover:bg-sky-700"
-                  >
-                    <MapPin className="w-4 h-4" /> Mark as Arrived at Site
-                  </button>
-                  <button
-                    onClick={() =>
-                      setStatusModal({
-                        isOpen: true,
-                        targetStatus: 'ON_HOLD',
-                        title: 'Report Travel Delay / Put on Hold',
-                        requireReason: true,
-                        reasonPlaceholder: 'Explain delay (e.g., severe traffic, customer requested later hour)...',
-                      })
-                    }
-                    className="px-3 py-2 rounded-xl border border-amber-200 text-amber-800 hover:bg-amber-50 text-xs font-bold"
-                  >
-                    Report Delay
-                  </button>
-                </>
-              )}
+              <button
+                type="button"
+                onClick={() => handleUpdateStatus('ARRIVED', 'Technician arrived at site.')}
+                disabled={updating || currentStatus === 'ARRIVED'}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-xs active:scale-95 ${
+                  currentStatus === 'ARRIVED'
+                    ? 'bg-sky-600 text-white ring-2 ring-sky-300'
+                    : 'bg-slate-100 text-slate-700 hover:bg-sky-50 hover:text-sky-700'
+                }`}
+                title="Mark arrived at location"
+              >
+                <MapPin className="w-3.5 h-3.5" /> Arrived
+              </button>
 
-              {currentStatus === 'ARRIVED' && (
-                <>
-                  <button
-                    onClick={() => handleUpdateStatus('INSPECTION_STARTED', 'Started initial diagnosis and safety checks.')}
-                    disabled={updating}
-                    className="btn-primary text-xs py-2 px-4 flex items-center gap-1.5 bg-cyan-600 hover:bg-cyan-700"
-                  >
-                    <Wrench className="w-4 h-4" /> Start Inspection
-                  </button>
-                  <button
-                    onClick={() => handleUpdateStatus('IN_PROGRESS', 'Directly started electrical service execution.')}
-                    disabled={updating}
-                    className="px-3 py-2 rounded-xl bg-orange-600 text-white hover:bg-orange-700 text-xs font-bold"
-                  >
-                    Start Work Directly
-                  </button>
-                </>
-              )}
+              <button
+                type="button"
+                onClick={() => handleUpdateStatus('IN_PROGRESS', 'Work actively in progress.')}
+                disabled={updating || currentStatus === 'IN_PROGRESS' || currentStatus === 'WORK_STARTED'}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-xs active:scale-95 ${
+                  currentStatus === 'IN_PROGRESS' || currentStatus === 'WORK_STARTED'
+                    ? 'bg-orange-600 text-white ring-2 ring-orange-300'
+                    : 'bg-slate-100 text-slate-700 hover:bg-orange-50 hover:text-orange-700'
+                }`}
+                title="Start work"
+              >
+                <Wrench className="w-3.5 h-3.5" /> In Progress
+              </button>
 
-              {currentStatus === 'INSPECTION_STARTED' && (
-                <>
-                  <button
-                    onClick={() => handleUpdateStatus('IN_PROGRESS', 'Completed inspection. Started servicing.')}
-                    disabled={updating}
-                    className="btn-primary text-xs py-2 px-4 flex items-center gap-1.5 bg-orange-600 hover:bg-orange-700"
-                  >
-                    <Play className="w-4 h-4" /> Start Servicing
-                  </button>
-                  <button
-                    onClick={() => setIsApprovalModalOpen(true)}
-                    className="px-3 py-2 rounded-xl bg-amber-500 text-white hover:bg-amber-600 text-xs font-bold flex items-center gap-1"
-                  >
-                    <DollarSign className="w-3.5 h-3.5" /> Request Approval For Extra Cost
-                  </button>
-                  <button
-                    onClick={() =>
-                      setStatusModal({
-                        isOpen: true,
-                        targetStatus: 'ON_HOLD',
-                        title: 'Put Service On Hold',
-                        requireReason: true,
-                        reasonPlaceholder: 'Reason (e.g. waiting for parts or customer decision)...',
-                      })
-                    }
-                    className="px-3 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold"
-                  >
-                    Pause / Hold
-                  </button>
-                </>
-              )}
+              <button
+                type="button"
+                onClick={() => handleUpdateStatus('COMPLETED', 'Work successfully completed.')}
+                disabled={updating}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 shadow-md shadow-emerald-600/20 active:scale-95 transition"
+                title="Mark job complete in 1 tap"
+              >
+                <CheckCircle2 className="w-4 h-4" /> ✅ Complete Job
+              </button>
 
-              {currentStatus === 'AWAITING_APPROVAL' && (
-                <>
-                  <span className="text-xs text-amber-800 font-bold bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200">
-                    ⏳ Customer / Admin Review in Progress
-                  </span>
-                  <button
-                    onClick={() => handleUpdateStatus('IN_PROGRESS', 'Resumed servicing with original terms.')}
-                    disabled={updating}
-                    className="px-3 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold"
-                  >
-                    Resume Without Extra Cost
-                  </button>
-                </>
-              )}
+              <button
+                type="button"
+                onClick={() => handleUpdateStatus('ON_HOLD', 'Work temporarily on hold.')}
+                disabled={updating || currentStatus === 'ON_HOLD'}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 ${
+                  currentStatus === 'ON_HOLD'
+                    ? 'bg-rose-600 text-white'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+                title="Pause work"
+              >
+                <Pause className="w-3.5 h-3.5" /> On Hold
+              </button>
+            </div>
+          </div>
 
-              {(currentStatus === 'IN_PROGRESS' || currentStatus === 'WORK_STARTED') && (
-                <>
-                  <button
-                    onClick={() => setIsCompletionModalOpen(true)}
-                    disabled={updating}
-                    className="btn-primary text-xs py-2 px-4 flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700"
-                  >
-                    <CheckCircle2 className="w-4 h-4" /> Submit Completion Report
-                  </button>
-                  <button
-                    onClick={() => setIsPartsModalOpen(true)}
-                    className="px-3 py-2 rounded-xl bg-slate-100 text-slate-800 hover:bg-slate-200 text-xs font-bold flex items-center gap-1"
-                  >
-                    <Plus className="w-3.5 h-3.5" /> Add Parts
-                  </button>
-                  <button
-                    onClick={() => setIsApprovalModalOpen(true)}
-                    className="px-3 py-2 rounded-xl border border-amber-300 text-amber-800 hover:bg-amber-50 text-xs font-bold"
-                  >
-                    Request Extra Cost
-                  </button>
-                  <button
-                    onClick={() =>
-                      setStatusModal({
-                        isOpen: true,
-                        targetStatus: 'ON_HOLD',
-                        title: 'Put Work on Hold',
-                        requireReason: true,
-                        reasonPlaceholder: 'Reason for temporary hold (e.g. rain, power outage)...',
-                      })
-                    }
-                    className="px-3 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold"
-                  >
-                    Pause
-                  </button>
-                </>
-              )}
-
-              {currentStatus === 'ON_HOLD' && (
-                <button
-                  onClick={() => handleUpdateStatus('IN_PROGRESS', 'Resumed work after temporary hold.')}
-                  disabled={updating}
-                  className="btn-primary text-xs py-2 px-4 flex items-center gap-1.5 bg-orange-600 hover:bg-orange-700"
-                >
-                  <Play className="w-4 h-4" /> Resume Work
-                </button>
-              )}
+          {/* Quick Helper / Optional Details Links */}
+          <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100 flex-wrap gap-2">
+            <span className="flex items-center gap-1 text-slate-600 font-semibold">
+              <Zap className="w-3.5 h-3.5 text-amber-500" /> Tap any status above to update immediately. No hard forms required.
+            </span>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setIsPartsModalOpen(true)}
+                className="text-brand-600 hover:underline font-bold flex items-center gap-1"
+              >
+                <Plus className="w-3 h-3" /> Add Parts
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsApprovalModalOpen(true)}
+                className="text-amber-700 hover:underline font-bold flex items-center gap-1"
+              >
+                <DollarSign className="w-3 h-3" /> Extra Cost
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsCompletionModalOpen(true)}
+                className="text-slate-600 hover:underline font-semibold flex items-center gap-1"
+              >
+                <Camera className="w-3 h-3" /> Optional Photos &amp; Notes
+              </button>
             </div>
           </div>
         </div>

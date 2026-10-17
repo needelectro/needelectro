@@ -133,7 +133,7 @@ export async function PATCH(
     }
 
     const body = await req.json();
-    const {
+    let {
       status,
       note,
       paymentStatus,
@@ -159,15 +159,15 @@ export async function PATCH(
     }
 
     const VALID_TECHNICIAN_TRANSITIONS: Record<string, string[]> = {
-      ASSIGNED: ['ACCEPTED', 'REJECTED'],
-      ACCEPTED: ['ON_THE_WAY', 'REJECTED', 'CANCELLED'],
-      ON_THE_WAY: ['ARRIVED', 'ON_HOLD'],
-      ARRIVED: ['INSPECTION_STARTED', 'IN_PROGRESS', 'WORK_STARTED', 'ON_HOLD'],
-      INSPECTION_STARTED: ['AWAITING_APPROVAL', 'IN_PROGRESS', 'WORK_STARTED', 'ON_HOLD'],
-      AWAITING_APPROVAL: ['IN_PROGRESS', 'WORK_STARTED', 'ON_HOLD', 'CANCELLED'],
-      IN_PROGRESS: ['ON_HOLD', 'AWAITING_APPROVAL', 'COMPLETED', 'WORK_COMPLETED'],
-      WORK_STARTED: ['ON_HOLD', 'AWAITING_APPROVAL', 'COMPLETED', 'WORK_COMPLETED'],
-      ON_HOLD: ['IN_PROGRESS', 'WORK_STARTED', 'AWAITING_APPROVAL', 'CANCELLED'],
+      ASSIGNED: ['ACCEPTED', 'REJECTED', 'ON_THE_WAY', 'ARRIVED', 'IN_PROGRESS', 'WORK_STARTED', 'COMPLETED', 'WORK_COMPLETED', 'CANCELLED'],
+      ACCEPTED: ['ON_THE_WAY', 'ARRIVED', 'INSPECTION_STARTED', 'IN_PROGRESS', 'WORK_STARTED', 'COMPLETED', 'WORK_COMPLETED', 'REJECTED', 'CANCELLED'],
+      ON_THE_WAY: ['ARRIVED', 'INSPECTION_STARTED', 'IN_PROGRESS', 'WORK_STARTED', 'COMPLETED', 'WORK_COMPLETED', 'ON_HOLD', 'CANCELLED'],
+      ARRIVED: ['INSPECTION_STARTED', 'IN_PROGRESS', 'WORK_STARTED', 'COMPLETED', 'WORK_COMPLETED', 'ON_HOLD', 'CANCELLED'],
+      INSPECTION_STARTED: ['AWAITING_APPROVAL', 'IN_PROGRESS', 'WORK_STARTED', 'COMPLETED', 'WORK_COMPLETED', 'ON_HOLD', 'CANCELLED'],
+      AWAITING_APPROVAL: ['IN_PROGRESS', 'WORK_STARTED', 'COMPLETED', 'WORK_COMPLETED', 'ON_HOLD', 'CANCELLED'],
+      IN_PROGRESS: ['ON_HOLD', 'AWAITING_APPROVAL', 'COMPLETED', 'WORK_COMPLETED', 'CANCELLED'],
+      WORK_STARTED: ['ON_HOLD', 'AWAITING_APPROVAL', 'COMPLETED', 'WORK_COMPLETED', 'CANCELLED'],
+      ON_HOLD: ['IN_PROGRESS', 'WORK_STARTED', 'COMPLETED', 'WORK_COMPLETED', 'AWAITING_APPROVAL', 'CANCELLED'],
       COMPLETED: ['DISPUTED'],
       WORK_COMPLETED: ['DISPUTED'],
       DISPUTED: [],
@@ -208,18 +208,26 @@ export async function PATCH(
           );
         }
 
-        // Reasons mandatory for rejection, cancellation, or hold
+        // Reasons mandatory for rejection, cancellation, or hold (supports quick update fallback)
         if (['REJECTED', 'CANCELLED', 'ON_HOLD'].includes(targetNormalized)) {
           if (!note || note.trim().length < 3) {
-            return NextResponse.json(
-              { error: `A clear reason/note is required when setting job status to ${status}.` },
-              { status: 400 }
-            );
+            if (body.quickUpdate) {
+              note = targetNormalized === 'ON_HOLD' ? 'Work placed on hold by technician.' : `Job ${targetNormalized.toLowerCase()} by technician.`;
+            } else {
+              return NextResponse.json(
+                { error: `A clear reason/note is required when setting job status to ${status}.` },
+                { status: 400 }
+              );
+            }
           }
         }
 
-        // Completion report requirements
+        // Completion report requirements (supports quick complete with pre-filled defaults)
         if (targetNormalized === 'COMPLETED') {
+          if (body.quickComplete || !body.workPerformed) {
+            body.workPerformed = body.workPerformed || 'On-site technical service completed and verified.';
+            technicianNotes = technicianNotes || 'Work successfully completed and tested.';
+          }
           const hasReport = (technicianNotes && technicianNotes.trim().length >= 5) || (body.workPerformed && body.workPerformed.trim().length >= 5);
           if (!hasReport) {
             return NextResponse.json(

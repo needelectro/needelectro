@@ -125,3 +125,30 @@ test('Admin Job Control: Audit log recorded on manual status corrections', () =>
   assert.ok(content.includes('ADMIN_CORRECT_JOB_STATUS'), 'Must record audit log on admin status corrections');
   assert.ok(content.includes('bookingTimeline.create'), 'Must log timeline event');
 });
+
+test('Easy Work Status Update System: 1-tap quick status updates and flexible transitions', () => {
+  // 1. Verify flexible transitions in booking route
+  const routePath = path.resolve(process.cwd(), 'src/app/api/v1/bookings/[id]/route.ts');
+  const routeContent = fs.readFileSync(routePath, 'utf-8');
+  assert.ok(routeContent.includes('quickUpdate'), 'Booking route must support quickUpdate flag');
+  assert.ok(routeContent.includes('quickComplete'), 'Booking route must support quickComplete flag');
+
+  // 2. Verify 1-tap quick status controls in jobs list
+  const jobsPagePath = path.resolve(process.cwd(), 'src/app/technician/jobs/page.tsx');
+  const jobsContent = fs.readFileSync(jobsPagePath, 'utf-8');
+  assert.ok(jobsContent.includes('handleQuickStatusUpdate'), 'Jobs list must feature handleQuickStatusUpdate');
+  assert.ok(jobsContent.includes('Quick Status Update:'), 'Jobs card must feature quick status update bar');
+  assert.ok(jobsContent.includes('Set Status...'), 'Jobs card must feature quick status dropdown');
+
+  // 3. Verify easy status bar in job detail workspace
+  const detailPagePath = path.resolve(process.cwd(), 'src/app/technician/jobs/[id]/page.tsx');
+  const detailContent = fs.readFileSync(detailPagePath, 'utf-8');
+  assert.ok(detailContent.includes('Easy Status Control'), 'Job detail must feature Easy Status Control');
+  assert.ok(detailContent.includes('Complete Job'), 'Job detail must feature 1-tap Complete Job button');
+  assert.ok(detailContent.includes('En Route'), 'Job detail must feature 1-tap En Route button');
+
+  // 4. Verify quick status button on dashboard
+  const dashPagePath = path.resolve(process.cwd(), 'src/app/technician/dashboard/page.tsx');
+  const dashContent = fs.readFileSync(dashPagePath, 'utf-8');
+  assert.ok(dashContent.includes('handleQuickStatusUpdate'), 'Dashboard must feature handleQuickStatusUpdate');
+});
