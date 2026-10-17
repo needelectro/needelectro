@@ -125,6 +125,9 @@ export async function POST(
       });
 
       return bookingPart;
+    }, {
+      maxWait: 15000,
+      timeout: 30000,
     });
 
     return NextResponse.json({ success: true, bookingPart: result });

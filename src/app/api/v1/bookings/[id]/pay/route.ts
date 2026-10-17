@@ -111,6 +111,9 @@ export async function POST(
       });
 
       return { payment, invoice, booking: updatedBooking };
+    }, {
+      maxWait: 15000,
+      timeout: 30000,
     });
 
     return NextResponse.json({
