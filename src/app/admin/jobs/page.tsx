@@ -126,15 +126,17 @@ export default function JobsPage() {
     }
   };
 
-  const handleUpdateStatus = async (jobId: string, status: string) => {
+  const handleUpdateStatus = async (jobId: string, status: string, notes?: string) => {
     setSaving(true);
     try {
       const res = await fetch("/api/v1/admin/jobs", {
-        method: "PATCH",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          action: "UPDATE_STATUS",
           bookingId: jobId,
           status,
+          notes: notes || `Administrative status correction to ${status}`,
         }),
       });
       if (res.ok) {
@@ -169,15 +171,35 @@ export default function JobsPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "PENDING":
+      case "REQUESTED":
+      case "MATCHING":
         return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800 border border-amber-200">Pending Dispatch</span>;
       case "ASSIGNED":
-        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 border border-blue-200">Assigned</span>;
+        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800 border border-purple-200">Assigned</span>;
+      case "ACCEPTED":
+        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 border border-blue-200">Accepted</span>;
+      case "ON_THE_WAY":
+        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200">En Route</span>;
+      case "ARRIVED":
+        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-sky-100 text-sky-800 border border-sky-200">Arrived at Site</span>;
+      case "INSPECTION_STARTED":
+        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-cyan-100 text-cyan-800 border border-cyan-200">Inspection</span>;
+      case "AWAITING_APPROVAL":
+        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-900 border border-amber-300 animate-pulse">Awaiting Approval</span>;
       case "IN_PROGRESS":
-        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200">In Progress</span>;
+      case "WORK_STARTED":
+        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800 border border-orange-200">In Progress</span>;
+      case "ON_HOLD":
+        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-rose-100 text-rose-800 border border-rose-200">On Hold</span>;
       case "COMPLETED":
+      case "WORK_COMPLETED":
         return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">Completed</span>;
       case "CANCELLED":
-        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-rose-100 text-rose-800 border border-rose-200">Cancelled</span>;
+        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-700 border border-slate-200">Cancelled</span>;
+      case "DISPUTED":
+        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 border border-red-300 font-bold">Disputed</span>;
+      case "REJECTED":
+        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-700 border border-slate-200">Rejected</span>;
       default:
         return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-800 border border-slate-200">{status}</span>;
     }
@@ -252,11 +274,18 @@ export default function JobsPage() {
             className="px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#008CFF]"
           >
             <option value="ALL">All Statuses</option>
-            <option value="PENDING">Pending</option>
+            <option value="REQUESTED">Requested / Pending</option>
             <option value="ASSIGNED">Assigned</option>
+            <option value="ACCEPTED">Accepted</option>
+            <option value="ON_THE_WAY">En Route (On The Way)</option>
+            <option value="ARRIVED">Arrived at Site</option>
+            <option value="INSPECTION_STARTED">Inspection Started</option>
+            <option value="AWAITING_APPROVAL">Awaiting Approval</option>
             <option value="IN_PROGRESS">In Progress</option>
+            <option value="ON_HOLD">On Hold</option>
             <option value="COMPLETED">Completed</option>
             <option value="CANCELLED">Cancelled</option>
+            <option value="DISPUTED">Disputed</option>
           </select>
           <select
             value={districtFilter}

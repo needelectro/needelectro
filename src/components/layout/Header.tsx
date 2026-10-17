@@ -35,6 +35,7 @@ import {
   ArrowRight,
   CalendarCheck,
   ClipboardList,
+  Clock,
   LifeBuoy,
 } from 'lucide-react';
 import { isShopEnabled } from '@/lib/featureFlags';
@@ -332,8 +333,9 @@ export default function Header() {
                 ? [
                     { href: '/technician/dashboard', label: 'Technician Portal', icon: LayoutDashboard, color: 'text-brand-600 bg-brand-50' },
                     { href: '/technician/jobs', label: 'Job Marketplace & Orders', icon: Wrench, color: 'text-amber-600 bg-amber-50' },
+                    { href: '/technician/schedule', label: 'Dispatch Calendar', icon: CalendarCheck, color: 'text-indigo-600 bg-indigo-50' },
                     { href: '/technician/earnings', label: 'Earnings & Payouts', icon: ShoppingBag, color: 'text-emerald-600 bg-emerald-50' },
-                    { href: '/technician/availability', label: 'Working Schedule', icon: CalendarCheck, color: 'text-blue-600 bg-blue-50' },
+                    { href: '/technician/availability', label: 'Working Schedule', icon: Clock, color: 'text-blue-600 bg-blue-50' },
                     { href: '/technician/profile', label: 'Professional Profile', icon: UserIcon, color: 'text-purple-600 bg-purple-50' },
                     { href: '/technician/reviews', label: 'Ratings & Performance', icon: ShieldCheck, color: 'text-teal-600 bg-teal-50' },
                     { href: '/technician/support', label: 'Support & Disputes', icon: LifeBuoy, color: 'text-sky-600 bg-sky-50' },
@@ -597,6 +599,9 @@ export default function Header() {
                               </Link>
                               <Link href="/technician/jobs" onClick={() => setAccountMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brand-600 transition">
                                 <Wrench className="w-4 h-4 text-brand-500" /> My Jobs &amp; Offers
+                              </Link>
+                              <Link href="/technician/schedule" onClick={() => setAccountMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition">
+                                <CalendarCheck className="w-4 h-4 text-indigo-500" /> Dispatch Calendar
                               </Link>
                               <Link href="/technician/earnings" onClick={() => setAccountMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-emerald-600 transition">
                                 <DollarSign className="w-4 h-4 text-emerald-500" /> Earnings &amp; Wallet

@@ -71,17 +71,53 @@ export async function GET(req: NextRequest) {
         : [];
     }
 
-    // Count statistics
-    const [assignedCount, completedCount, activeCount] = await Promise.all([
+    // Calculate Start of Month date
+    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    const todayDateStr = new Date().toISOString().slice(0, 10);
+
+    // Count statistics from real database records
+    const [
+      assignedCount,
+      awaitingCount,
+      acceptedCount,
+      inProgressCount,
+      completedCount,
+      cancelledDisputedCount,
+      todayScheduledCount,
+      monthlyEarningsAgg,
+      unreadNotifCount,
+    ] = await Promise.all([
       prisma.booking.count({ where: { technicianId: technician.id } }),
-      prisma.booking.count({ where: { technicianId: technician.id, status: 'COMPLETED' } }),
+      prisma.booking.count({ where: { technicianId: technician.id, status: 'ASSIGNED' } }),
+      prisma.booking.count({ where: { technicianId: technician.id, status: 'ACCEPTED' } }),
       prisma.booking.count({
         where: {
           technicianId: technician.id,
-          status: { in: ['ASSIGNED', 'EN_ROUTE', 'ON_THE_WAY', 'ARRIVED', 'IN_PROGRESS', 'WORK_STARTED'] },
+          status: { in: ['ON_THE_WAY', 'ARRIVED', 'INSPECTION_STARTED', 'AWAITING_APPROVAL', 'IN_PROGRESS', 'WORK_STARTED', 'ON_HOLD'] },
         },
       }),
+      prisma.booking.count({ where: { technicianId: technician.id, status: { in: ['COMPLETED', 'WORK_COMPLETED'] } } }),
+      prisma.booking.count({ where: { technicianId: technician.id, status: { in: ['CANCELLED', 'DISPUTED', 'REJECTED'] } } }),
+      prisma.booking.count({
+        where: {
+          technicianId: technician.id,
+          preferredDate: { contains: todayDateStr },
+          status: { notIn: ['COMPLETED', 'CANCELLED', 'REJECTED'] },
+        },
+      }),
+      prisma.technicianEarnings.aggregate({
+        where: {
+          technicianId: technician.id,
+          createdAt: { gte: startOfMonth },
+        },
+        _sum: { technicianAmount: true },
+      }),
+      prisma.notification.count({
+        where: { userId: payload.id, read: false },
+      }),
     ]);
+
+    const monthlyEarnings = monthlyEarningsAgg._sum.technicianAmount || 0;
 
     return NextResponse.json({
       success: true,
@@ -90,8 +126,15 @@ export async function GET(req: NextRequest) {
         parsedSkills,
         stats: {
           assignedTotal: assignedCount,
+          awaitingAcceptance: awaitingCount,
+          acceptedCount,
+          activeTotal: inProgressCount,
+          inProgressTotal: inProgressCount,
           completedTotal: completedCount,
-          activeTotal: activeCount,
+          cancelledOrDisputedTotal: cancelledDisputedCount,
+          todayScheduledTotal: todayScheduledCount,
+          monthlyEarnings,
+          unreadNotifications: unreadNotifCount,
         },
       },
     });

@@ -158,6 +158,23 @@ export async function PATCH(
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
     }
 
+    const VALID_TECHNICIAN_TRANSITIONS: Record<string, string[]> = {
+      ASSIGNED: ['ACCEPTED', 'REJECTED'],
+      ACCEPTED: ['ON_THE_WAY', 'REJECTED', 'CANCELLED'],
+      ON_THE_WAY: ['ARRIVED', 'ON_HOLD'],
+      ARRIVED: ['INSPECTION_STARTED', 'IN_PROGRESS', 'WORK_STARTED', 'ON_HOLD'],
+      INSPECTION_STARTED: ['AWAITING_APPROVAL', 'IN_PROGRESS', 'WORK_STARTED', 'ON_HOLD'],
+      AWAITING_APPROVAL: ['IN_PROGRESS', 'WORK_STARTED', 'ON_HOLD', 'CANCELLED'],
+      IN_PROGRESS: ['ON_HOLD', 'AWAITING_APPROVAL', 'COMPLETED', 'WORK_COMPLETED'],
+      WORK_STARTED: ['ON_HOLD', 'AWAITING_APPROVAL', 'COMPLETED', 'WORK_COMPLETED'],
+      ON_HOLD: ['IN_PROGRESS', 'WORK_STARTED', 'AWAITING_APPROVAL', 'CANCELLED'],
+      COMPLETED: ['DISPUTED'],
+      WORK_COMPLETED: ['DISPUTED'],
+      DISPUTED: [],
+      CANCELLED: [],
+      REJECTED: [],
+    };
+
     // Role-based authorization & tamper guard
     if (session.role === 'TECHNICIAN') {
       const tech = await prisma.technicianProfile.findUnique({
@@ -174,6 +191,43 @@ export async function PATCH(
           { error: 'Cannot update a cancelled booking without administrative authorization' },
           { status: 400 }
         );
+      }
+
+      // Enforce status transition lifecycle if status is being changed
+      if (status && status !== booking.status) {
+        const currentNormalized = booking.status === 'WORK_COMPLETED' ? 'COMPLETED' : (booking.status === 'WORK_STARTED' ? 'IN_PROGRESS' : booking.status);
+        const targetNormalized = status === 'WORK_COMPLETED' ? 'COMPLETED' : (status === 'WORK_STARTED' ? 'IN_PROGRESS' : status);
+
+        const allowedTransitions = VALID_TECHNICIAN_TRANSITIONS[currentNormalized] || [];
+        if (!allowedTransitions.includes(status) && !allowedTransitions.includes(targetNormalized)) {
+          return NextResponse.json(
+            {
+              error: `Invalid status transition: Cannot transition job directly from ${booking.status} to ${status}. Work lifecycle stages must be observed.`,
+            },
+            { status: 400 }
+          );
+        }
+
+        // Reasons mandatory for rejection, cancellation, or hold
+        if (['REJECTED', 'CANCELLED', 'ON_HOLD'].includes(targetNormalized)) {
+          if (!note || note.trim().length < 3) {
+            return NextResponse.json(
+              { error: `A clear reason/note is required when setting job status to ${status}.` },
+              { status: 400 }
+            );
+          }
+        }
+
+        // Completion report requirements
+        if (targetNormalized === 'COMPLETED') {
+          const hasReport = (technicianNotes && technicianNotes.trim().length >= 5) || (body.workPerformed && body.workPerformed.trim().length >= 5);
+          if (!hasReport) {
+            return NextResponse.json(
+              { error: 'Completion report requires documentation of work performed and final diagnosis/resolution.' },
+              { status: 400 }
+            );
+          }
+        }
       }
     } else if (session.role === 'CUSTOMER') {
       const customer = await prisma.customerProfile.findUnique({
@@ -204,6 +258,12 @@ export async function PATCH(
       if (beforePhotos !== undefined) updateData.beforePhotos = beforePhotos;
       if (afterPhotos !== undefined) updateData.afterPhotos = afterPhotos;
 
+      // Handle structured completion payload
+      if (body.workPerformed) {
+        const fullReport = `[WORK PERFORMED]: ${body.workPerformed}\n[RESOLUTION]: ${body.finalResolution || 'Resolved'}${body.handoverNotes ? `\n[HANDOVER NOTES]: ${body.handoverNotes}` : ''}${technicianNotes ? `\n[NOTES]: ${technicianNotes}` : ''}`;
+        updateData.technicianNotes = fullReport;
+      }
+
       const isCompleted = status === 'COMPLETED' || status === 'WORK_COMPLETED';
       if (isCompleted) {
         updateData.completedAt = new Date();
@@ -225,15 +285,81 @@ export async function PATCH(
 
       // Add timeline event
       if (status || note) {
+        const defaultNotes: Record<string, string> = {
+          ACCEPTED: `Job accepted by technician ${session.name}.`,
+          ON_THE_WAY: `Technician ${session.name} is on the way to the service location.`,
+          ARRIVED: `Technician arrived at site at ${new Date().toLocaleTimeString('en-US')}.`,
+          INSPECTION_STARTED: `Technician started technical inspection and diagnosis.`,
+          AWAITING_APPROVAL: `Additional work or spare parts submitted for approval.`,
+          IN_PROGRESS: `Work is actively in progress.`,
+          WORK_STARTED: `Work is actively in progress.`,
+          ON_HOLD: `Job placed on hold: ${note || 'Paused'}`,
+          COMPLETED: `Technician completed work and submitted completion report.`,
+          REJECTED: `Assignment rejected: ${note || 'Technician unavailable'}`,
+          CANCELLED: `Service cancelled: ${note || 'Cancelled'}`,
+          DISPUTED: `Dispute flagged: ${note || 'Under review'}`,
+        };
+
+        const timelineNote = note || defaultNotes[status] || `Status updated to ${isCompleted ? 'COMPLETED' : status} by ${session.name}.`;
+
         await tx.bookingTimeline.create({
           data: {
             bookingId: id,
             status: isCompleted ? 'COMPLETED' : status || booking.status,
             actorId: session.id,
             actorRole: session.role,
-            note: note || `Status updated to ${isCompleted ? 'COMPLETED' : status} by ${session.name}.`,
+            note: timelineNote,
           },
         });
+
+        // Customer In-App Notification Trigger
+        if (res.customer?.userId && session.role === 'TECHNICIAN') {
+          const notifTitles: Record<string, string> = {
+            ACCEPTED: 'Technician Assigned & Confirmed',
+            ON_THE_WAY: 'Technician Is En Route',
+            ARRIVED: 'Technician Has Arrived',
+            INSPECTION_STARTED: 'Technical Inspection Started',
+            AWAITING_APPROVAL: 'Approval Required: Additional Service/Parts Cost',
+            IN_PROGRESS: 'Work In Progress',
+            WORK_STARTED: 'Work In Progress',
+            ON_HOLD: 'Service Temporarily On Hold',
+            COMPLETED: 'Service Call Completed — View Warranty & Receipt',
+            CANCELLED: 'Booking Update: Cancelled',
+            REJECTED: 'Service Call Update',
+          };
+
+          const title = notifTitles[status];
+          if (title) {
+            await tx.notification.create({
+              data: {
+                userId: res.customer.userId,
+                title,
+                message: timelineNote,
+                type: 'BOOKING',
+                link: `/customer/dashboard`,
+              },
+            });
+          }
+        }
+
+        // Admin Audit Log on Admin status changes
+        if (session.role === 'ADMIN' || session.role === 'SUPER_ADMIN') {
+          try {
+            await tx.auditLog.create({
+              data: {
+                userId: session.id,
+                userRole: session.role,
+                action: 'UPDATE_BOOKING_STATUS',
+                entity: 'Booking',
+                entityId: id,
+                previousData: JSON.stringify({ status: booking.status, paymentStatus: booking.paymentStatus }),
+                newData: JSON.stringify({ status: res.status, paymentStatus: res.paymentStatus, reason: note }),
+              },
+            });
+          } catch {
+            // ignore non-critical audit log failure
+          }
+        }
       }
 
       // If technician is assigned, create/update job assignment

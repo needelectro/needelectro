@@ -9,26 +9,33 @@ import {
   Wrench, MapPin, Clock, CheckCircle2, DollarSign,
   Star, Wallet, BarChart2, LogOut, Bell, ChevronRight, Zap,
   AlertCircle, Package, User, TrendingUp, Radio, LifeBuoy,
-  ShieldCheck, ArrowUpRight, Calendar
+  ShieldCheck, ArrowUpRight, Calendar, AlertTriangle, MessageSquare
 } from 'lucide-react';
 
 const STATUS_COLORS: Record<string, string> = {
   AVAILABLE: 'bg-amber-100 text-amber-800',
-  ACCEPTED: 'bg-brand-100 text-brand-800',
-  ON_THE_WAY: 'bg-purple-100 text-purple-800',
-  ARRIVED: 'bg-indigo-100 text-indigo-800',
+  ASSIGNED: 'bg-purple-100 text-purple-800',
+  ACCEPTED: 'bg-blue-100 text-blue-800',
+  ON_THE_WAY: 'bg-indigo-100 text-indigo-800',
+  ARRIVED: 'bg-sky-100 text-sky-800',
+  INSPECTION_STARTED: 'bg-cyan-100 text-cyan-800',
+  AWAITING_APPROVAL: 'bg-amber-100 text-amber-900',
+  IN_PROGRESS: 'bg-orange-100 text-orange-800',
   WORK_STARTED: 'bg-orange-100 text-orange-800',
+  ON_HOLD: 'bg-rose-100 text-rose-800',
   COMPLETED: 'bg-emerald-100 text-emerald-800',
   WORK_COMPLETED: 'bg-emerald-100 text-emerald-800',
   CLOSED: 'bg-slate-100 text-slate-700',
   CANCELLED: 'bg-red-100 text-red-700',
-  PENDING: 'bg-amber-100 text-amber-800',
+  DISPUTED: 'bg-red-100 text-red-800',
+  REJECTED: 'bg-slate-100 text-slate-700',
   VERIFIED: 'bg-emerald-100 text-emerald-800',
+  PENDING: 'bg-amber-100 text-amber-800',
   UNDER_REVIEW: 'bg-blue-100 text-blue-800',
   SUSPENDED: 'bg-red-100 text-red-800',
 };
 
-export default function TechnicianDashboard() {
+export default function AdvancedTechnicianDashboard() {
   const { user, logout } = useAuth();
   const router = useRouter();
 
@@ -77,7 +84,7 @@ export default function TechnicianDashboard() {
       }
       if (nRes.ok) {
         const d = await nRes.json();
-        setNotifications(d.notifications?.slice(0, 3) || []);
+        setNotifications(d.notifications?.slice(0, 5) || []);
         setUnreadNotifications(d.unreadCount || 0);
       }
     } catch {
@@ -133,14 +140,27 @@ export default function TechnicianDashboard() {
 
   if (!user) return null;
 
-  const myActiveJobs = jobs.filter(
-    (j) => !['CLOSED', 'CANCELLED', 'WORK_COMPLETED', 'COMPLETED'].includes(j.status)
+  const stats = profile?.stats || {};
+  const activeDispatches = jobs.filter(
+    (j) => !['CLOSED', 'CANCELLED', 'WORK_COMPLETED', 'COMPLETED', 'REJECTED'].includes(j.status)
   );
-  const completedJobs = jobs.filter((j) =>
+  const completedJobsList = jobs.filter((j) =>
     ['WORK_COMPLETED', 'COMPLETED', 'CLOSED'].includes(j.status)
   );
+  const disputedOrCancelled = jobs.filter((j) =>
+    ['DISPUTED', 'CANCELLED', 'REJECTED'].includes(j.status)
+  );
 
-  // Calculate Profile Completion %
+  // Today's jobs
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayJobs = jobs.filter((j) => j.preferredDate && j.preferredDate.includes(todayStr) && !['COMPLETED', 'CANCELLED'].includes(j.status));
+
+  // Upcoming appointments
+  const upcomingAppointments = jobs
+    .filter((j) => !['COMPLETED', 'CANCELLED', 'REJECTED'].includes(j.status))
+    .slice(0, 3);
+
+  // Profile completion calculation
   let profileCompletion = 40;
   if (profile?.nidNumber) profileCompletion += 20;
   if (profile?.bio) profileCompletion += 15;
@@ -150,7 +170,7 @@ export default function TechnicianDashboard() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      {/* Top Bar Navigation Hub */}
+      {/* Top Bar Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div className="flex items-center gap-3">
           <Link
@@ -168,14 +188,14 @@ export default function TechnicianDashboard() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                Technician Portal
+                Technician Work Management
               </h1>
-              <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">
-                PRO
+              <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-md bg-brand-50 text-brand-700 border border-brand-200">
+                PORTAL
               </span>
             </div>
             <p className="text-xs text-slate-500">
-              Welcome back, <span className="font-bold text-slate-800">{user.name}</span> · {profile?.serviceAreas || 'Bangladesh Network'}
+              Welcome back, <span className="font-bold text-slate-800">{user.name}</span> · ID: <span className="font-mono">{profile?.id?.slice(-8) || user.id.slice(-8)}</span> · {profile?.serviceAreas || 'Moulvibazar Network'}
             </p>
           </div>
         </div>
@@ -198,8 +218,17 @@ export default function TechnicianDashboard() {
                   : 'bg-slate-400'
               }`}
             />
-            {profile?.availableStatus === 'AVAILABLE' ? 'Online: Accepting Jobs' : 'Offline: Resting'}
+            {profile?.availableStatus === 'AVAILABLE' ? 'Online: Accepting Dispatches' : 'Offline: Resting'}
           </button>
+
+          <Link
+            href="/technician/schedule"
+            className="p-2.5 rounded-2xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 transition relative shadow-xs flex items-center gap-1.5 text-xs font-bold"
+            title="Schedule & Calendar"
+          >
+            <Calendar className="w-4 h-4 text-brand-500" />
+            <span className="hidden sm:inline">Schedule</span>
+          </Link>
 
           <Link
             href="/technician/notifications"
@@ -232,8 +261,8 @@ export default function TechnicianDashboard() {
             <div className="space-y-0.5">
               <h3 className="font-black text-sm">Account Verification In Progress ({profile.verificationStatus})</h3>
               <p className="text-xs text-amber-900/80">
-                Your NID and electrical credentials are under review by NEED ELECTRO technical management.
-                Full job dispatch unlocks immediately upon approval.
+                Your NID and technical credentials are under review by NEED ELECTRO dispatcher management.
+                Accepting new job offers unlocks immediately upon verification approval.
               </p>
             </div>
           </div>
@@ -294,12 +323,13 @@ export default function TechnicianDashboard() {
           <nav className="glass-card rounded-3xl shadow-xs overflow-hidden divide-y divide-slate-100">
             {[
               { href: '/technician/dashboard', label: 'Dashboard Overview', icon: BarChart2, active: true },
-              { href: '/technician/jobs', label: 'Job Marketplace', icon: Wrench, badge: myActiveJobs.length },
+              { href: '/technician/jobs', label: 'Job Control & Board', icon: Wrench, badge: activeDispatches.length },
+              { href: '/technician/schedule', label: 'Schedule & Calendar', icon: Calendar, badge: todayJobs.length },
               { href: '/technician/earnings', label: 'Earnings & Payouts', icon: Wallet },
               { href: '/technician/availability', label: 'Working Schedule', icon: Clock },
               { href: '/technician/profile', label: 'Profile Settings', icon: User },
               { href: '/technician/reviews', label: 'Customer Reviews', icon: Star },
-              { href: '/technician/support', label: 'Support & Disputes', icon: LifeBuoy },
+              { href: '/technician/support', label: 'Disputes & Support Desk', icon: LifeBuoy },
             ].map(({ href, label, icon: Icon, badge, active }) => (
               <Link
                 key={href}
@@ -321,13 +351,13 @@ export default function TechnicianDashboard() {
             ))}
           </nav>
 
-          {/* Emergency Hotline Box */}
+          {/* Dispatch Hotline Box */}
           <div className="p-4 bg-slate-900 text-white rounded-3xl space-y-2 text-xs shadow-md">
             <p className="font-bold flex items-center gap-1.5 text-brand-400">
-              <Zap className="w-3.5 h-3.5" /> Dispatch Helpdesk
+              <Zap className="w-3.5 h-3.5" /> Dispatch Emergency Desk
             </p>
             <p className="text-[11px] text-slate-300">
-              Direct hotline for on-site assistance or customer location emergencies.
+              24/7 technical coordination and safety escalation for on-site staff.
             </p>
             <a
               href="tel:01733983752"
@@ -348,79 +378,131 @@ export default function TechnicianDashboard() {
 
           {!loading && (
             <>
-              {/* Metric Cards */}
+              {/* Primary Financial & Operational KPIs */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {[
-                  {
-                    label: 'Available Offers',
-                    value: availableJobs.length,
-                    icon: Zap,
-                    color: 'text-amber-600 bg-amber-50',
-                    link: '/technician/jobs',
-                  },
-                  {
-                    label: 'Active Dispatches',
-                    value: myActiveJobs.length,
-                    icon: Wrench,
-                    color: 'text-brand-600 bg-brand-50',
-                    link: '/technician/jobs',
-                  },
-                  {
-                    label: 'Completed Jobs',
-                    value: profile?.totalCompletedJobs || completedJobs.length,
-                    icon: CheckCircle2,
-                    color: 'text-emerald-600 bg-emerald-50',
-                    link: '/technician/jobs',
-                  },
-                  {
-                    label: 'Wallet Balance',
-                    value: `৳${(profile?.walletBalance || 0).toLocaleString()}`,
-                    icon: Wallet,
-                    color: 'text-purple-600 bg-purple-50',
-                    link: '/technician/earnings',
-                  },
-                ].map(({ label, value, icon: Icon, color, link }) => (
-                  <Link
-                    key={label}
-                    href={link}
-                    className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs space-y-2 hover:border-brand-300 transition group"
-                  >
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${color}`}>
-                      <Icon className="w-4 h-4" />
-                    </div>
-                    <p className="text-2xl font-black text-slate-900 group-hover:text-brand-600 transition">
-                      {value}
-                    </p>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
-                      {label}
-                    </p>
-                  </Link>
-                ))}
+                <Link
+                  href="/technician/earnings"
+                  className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs space-y-2 hover:border-brand-300 transition group"
+                >
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center text-purple-600 bg-purple-50">
+                    <Wallet className="w-4 h-4" />
+                  </div>
+                  <p className="text-2xl font-black text-slate-900 group-hover:text-brand-600 transition">
+                    ৳{(profile?.walletBalance || 0).toLocaleString()}
+                  </p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                    Available For Withdrawal
+                  </p>
+                </Link>
+
+                <Link
+                  href="/technician/earnings"
+                  className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs space-y-2 hover:border-brand-300 transition group"
+                >
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center text-emerald-600 bg-emerald-50">
+                    <TrendingUp className="w-4 h-4" />
+                  </div>
+                  <p className="text-2xl font-black text-slate-900 group-hover:text-brand-600 transition">
+                    ৳{(stats.monthlyEarnings || 0).toLocaleString()}
+                  </p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                    This Month's Earnings
+                  </p>
+                </Link>
+
+                <Link
+                  href="/technician/jobs"
+                  className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs space-y-2 hover:border-brand-300 transition group"
+                >
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center text-brand-600 bg-brand-50">
+                    <Wrench className="w-4 h-4" />
+                  </div>
+                  <p className="text-2xl font-black text-slate-900 group-hover:text-brand-600 transition">
+                    {activeDispatches.length}
+                  </p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                    Active / In-Progress Jobs
+                  </p>
+                </Link>
+
+                <Link
+                  href="/technician/reviews"
+                  className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs space-y-2 hover:border-brand-300 transition group"
+                >
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center text-amber-600 bg-amber-50">
+                    <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+                  </div>
+                  <p className="text-2xl font-black text-slate-900 group-hover:text-brand-600 transition">
+                    {(profile?.ratingOverall || 5.0).toFixed(1)}
+                  </p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                    Customer Quality Score
+                  </p>
+                </Link>
+              </div>
+
+              {/* Status Breakdown Pipeline Cards */}
+              <div className="bg-slate-50 border border-slate-200 rounded-3xl p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">
+                    Job Lifecycle Breakdown
+                  </h3>
+                  <span className="text-[11px] text-slate-400 font-bold">
+                    Total Assigned: {stats.assignedTotal || jobs.length}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
+                  <div className="bg-white p-3 rounded-2xl border border-slate-200 text-center space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Awaiting Acceptance</span>
+                    <p className="text-lg font-black text-purple-700">{stats.awaitingAcceptance || 0}</p>
+                  </div>
+                  <div className="bg-white p-3 rounded-2xl border border-slate-200 text-center space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Accepted Jobs</span>
+                    <p className="text-lg font-black text-blue-700">{stats.acceptedCount || 0}</p>
+                  </div>
+                  <div className="bg-white p-3 rounded-2xl border border-slate-200 text-center space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Today's Scheduled</span>
+                    <p className="text-lg font-black text-indigo-700">{todayJobs.length}</p>
+                  </div>
+                  <div className="bg-white p-3 rounded-2xl border border-slate-200 text-center space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-slate-400">In Progress</span>
+                    <p className="text-lg font-black text-orange-600">{activeDispatches.length}</p>
+                  </div>
+                  <div className="bg-white p-3 rounded-2xl border border-slate-200 text-center space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Completed</span>
+                    <p className="text-lg font-black text-emerald-600">{profile?.totalCompletedJobs || completedJobsList.length}</p>
+                  </div>
+                  <div className="bg-white p-3 rounded-2xl border border-slate-200 text-center space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Disputed / Cancelled</span>
+                    <p className="text-lg font-black text-rose-600">{disputedOrCancelled.length}</p>
+                  </div>
+                </div>
               </div>
 
               {/* Active Jobs in Progress */}
-              {myActiveJobs.length > 0 && (
+              {activeDispatches.length > 0 && (
                 <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden space-y-3 p-6">
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                     <h3 className="font-black text-slate-900 text-sm flex items-center gap-2">
-                      <Wrench className="w-4 h-4 text-brand-500" /> Current Active Jobs
+                      <Wrench className="w-4 h-4 text-brand-500" /> Current Active Jobs &amp; Dispatches
                     </h3>
                     <Link
                       href="/technician/jobs"
                       className="text-xs text-brand-600 font-bold hover:underline"
                     >
-                      View All ({myActiveJobs.length})
+                      View All ({activeDispatches.length})
                     </Link>
                   </div>
 
                   <div className="divide-y divide-slate-100">
-                    {myActiveJobs.map((job) => (
+                    {activeDispatches.map((job) => (
                       <div
                         key={job.id}
                         className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                       >
                         <div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-bold text-slate-900 text-sm">
                               {job.service?.name || job.service?.title || 'Service Booking'}
                             </span>
@@ -431,10 +513,21 @@ export default function TechnicianDashboard() {
                             >
                               {job.status?.replace(/_/g, ' ')}
                             </span>
+                            {job.urgency === 'EMERGENCY' && (
+                              <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-rose-100 text-rose-700">
+                                EMERGENCY
+                              </span>
+                            )}
                           </div>
-                          <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                            <MapPin className="w-3 h-3 text-slate-400" />
-                            {job.address?.addressLine || job.location?.area || 'Moulvibazar'}
+                          <p className="text-xs text-slate-500 mt-1 flex items-center gap-3 flex-wrap">
+                            <span className="flex items-center gap-1">
+                              <MapPin className="w-3 h-3 text-slate-400" />
+                              {job.address?.addressLine || job.address?.area || 'Moulvibazar'}
+                            </span>
+                            <span className="flex items-center gap-1 font-mono text-[11px]">
+                              <Clock className="w-3 h-3 text-slate-400" />
+                              {job.preferredDate} ({job.preferredTimeSlot})
+                            </span>
                           </p>
                         </div>
 
@@ -442,7 +535,46 @@ export default function TechnicianDashboard() {
                           href={`/technician/jobs/${job.id}`}
                           className="btn-primary text-xs py-2 px-4 self-start sm:self-auto flex items-center gap-1.5 shadow-xs"
                         >
-                          Open Job Workspace <ChevronRight className="w-3.5 h-3.5" />
+                          Control Center <ChevronRight className="w-3.5 h-3.5" />
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Today's Scheduled Appointments */}
+              {todayJobs.length > 0 && (
+                <div className="bg-indigo-50/50 border border-indigo-200 rounded-3xl p-6 shadow-xs space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-indigo-200">
+                    <h3 className="font-black text-slate-900 text-sm flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-indigo-600" /> Today's Scheduled Calls ({todayJobs.length})
+                    </h3>
+                    <Link
+                      href="/technician/schedule"
+                      className="text-xs text-indigo-600 font-bold hover:underline"
+                    >
+                      Open Calendar
+                    </Link>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {todayJobs.map((job) => (
+                      <div key={job.id} className="bg-white p-4 rounded-2xl border border-indigo-100 shadow-xs space-y-2">
+                        <div className="flex justify-between items-start">
+                          <h4 className="font-bold text-xs text-slate-900">{job.service?.name || 'Service Call'}</h4>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700">
+                            {job.preferredTimeSlot}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 flex items-center gap-1">
+                          <MapPin className="w-3 h-3 text-slate-400" />
+                          {job.address?.area || job.address?.upazila || 'Service Location'}
+                        </p>
+                        <Link
+                          href={`/technician/jobs/${job.id}`}
+                          className="block text-center text-xs font-bold text-brand-600 hover:text-brand-700 pt-1"
+                        >
+                          Open Job →
                         </Link>
                       </div>
                     ))}
@@ -455,7 +587,7 @@ export default function TechnicianDashboard() {
                 <div className="bg-amber-50/50 border border-amber-200 rounded-3xl p-6 shadow-xs space-y-4">
                   <div className="flex items-center justify-between pb-2 border-b border-amber-200">
                     <h3 className="font-black text-slate-900 text-sm flex items-center gap-2">
-                      <Zap className="w-4 h-4 text-amber-500" /> Live Job Offers Near You
+                      <Zap className="w-4 h-4 text-amber-500" /> Live Job Offers Near You ({availableJobs.length})
                     </h3>
                     <Link
                       href="/technician/jobs"
@@ -474,11 +606,11 @@ export default function TechnicianDashboard() {
                         <div className="flex justify-between items-start">
                           <div>
                             <h4 className="font-bold text-xs text-slate-900 line-clamp-1">
-                              {job.service?.name || job.service?.title || 'Electrical Repair'}
+                              {job.service?.name || job.service?.title || 'Electrical Service'}
                             </h4>
                             <p className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-1">
                               <MapPin className="w-3 h-3 text-slate-400" />
-                              {job.address?.upazila || job.location?.area || 'Moulvibazar'}
+                              {job.address?.upazila || job.address?.area || 'Moulvibazar'}
                             </p>
                           </div>
                           <span className="font-black text-xs text-emerald-600">
@@ -501,13 +633,13 @@ export default function TechnicianDashboard() {
 
               {/* Quick Actions Shortcuts */}
               <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-3">
-                <h3 className="font-black text-slate-900 text-sm">Technician Shortcuts</h3>
+                <h3 className="font-black text-slate-900 text-sm">Technician Work Shortcuts</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {[
-                    { label: 'Browse Jobs', href: '/technician/jobs', icon: Wrench },
+                    { label: 'Job Marketplace', href: '/technician/jobs', icon: Wrench },
+                    { label: 'Schedule & Calendar', href: '/technician/schedule', icon: Calendar },
                     { label: 'Wallet & Payouts', href: '/technician/earnings', icon: Wallet },
-                    { label: 'My Availability', href: '/technician/availability', icon: Clock },
-                    { label: 'Support Desk', href: '/technician/support', icon: LifeBuoy },
+                    { label: 'Disputes & Support', href: '/technician/support', icon: LifeBuoy },
                   ].map(({ label, href, icon: Icon }) => (
                     <Link
                       key={label}

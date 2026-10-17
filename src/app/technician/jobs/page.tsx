@@ -10,13 +10,20 @@ import {
 } from 'lucide-react';
 
 const STATUS_BADGES: Record<string, { label: string; color: string }> = {
+  ASSIGNED: { label: 'Assigned', color: 'bg-purple-50 text-purple-700 border-purple-200' },
   ACCEPTED: { label: 'Accepted', color: 'bg-brand-50 text-brand-700 border-brand-200' },
   ON_THE_WAY: { label: 'En Route', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
   ARRIVED: { label: 'Arrived at Site', color: 'bg-sky-50 text-sky-700 border-sky-200' },
-  WORK_STARTED: { label: 'In Progress', color: 'bg-amber-50 text-amber-700 border-amber-200' },
+  INSPECTION_STARTED: { label: 'Inspection', color: 'bg-cyan-50 text-cyan-700 border-cyan-200' },
+  AWAITING_APPROVAL: { label: 'Awaiting Approval', color: 'bg-amber-50 text-amber-900 border-amber-300' },
+  IN_PROGRESS: { label: 'In Progress', color: 'bg-orange-50 text-orange-700 border-orange-200' },
+  WORK_STARTED: { label: 'In Progress', color: 'bg-orange-50 text-orange-700 border-orange-200' },
+  ON_HOLD: { label: 'On Hold', color: 'bg-rose-50 text-rose-700 border-rose-200' },
   COMPLETED: { label: 'Completed', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
   WORK_COMPLETED: { label: 'Completed', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  CANCELLED: { label: 'Cancelled', color: 'bg-rose-50 text-rose-700 border-rose-200' },
+  CANCELLED: { label: 'Cancelled', color: 'bg-slate-50 text-slate-700 border-slate-200' },
+  REJECTED: { label: 'Rejected', color: 'bg-slate-50 text-slate-700 border-slate-200' },
+  DISPUTED: { label: 'Disputed', color: 'bg-red-50 text-red-700 border-red-300' },
 };
 
 export default function TechnicianJobsPage() {

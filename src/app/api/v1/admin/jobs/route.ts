@@ -93,13 +93,27 @@ export async function POST(req: NextRequest) {
 
     if (action === 'UPDATE_STATUS') {
       const updated = await prisma.$transaction(async (tx: any) => {
+        const prevBooking = await tx.booking.findUnique({
+          where: { id: bookingId },
+          include: {
+            customer: true,
+            technician: true,
+          },
+        });
+
         const booking = await tx.booking.update({
           where: { id: bookingId },
           data: {
             status,
             completedAt: status === 'COMPLETED' ? new Date() : undefined,
           },
+          include: {
+            customer: true,
+            technician: true,
+          },
         });
+
+        const auditNote = notes ? `Admin correction: ${notes}` : `Status manually corrected to ${status} by admin ${session.name}`;
 
         await tx.bookingTimeline.create({
           data: {
@@ -107,9 +121,39 @@ export async function POST(req: NextRequest) {
             status,
             actorId: session.id,
             actorRole: session.role,
-            note: notes || `Status updated to ${status}`,
+            note: auditNote,
           },
         });
+
+        // Mandatory audit log record
+        try {
+          await tx.auditLog.create({
+            data: {
+              userId: session.id,
+              userRole: session.role,
+              action: 'ADMIN_CORRECT_JOB_STATUS',
+              entity: 'Booking',
+              entityId: bookingId,
+              previousData: JSON.stringify({ status: prevBooking?.status }),
+              newData: JSON.stringify({ status, notes: auditNote }),
+            },
+          });
+        } catch {
+          // ignore non-critical audit log failure
+        }
+
+        // Notify technician if assigned
+        if (booking.technician?.userId) {
+          await tx.notification.create({
+            data: {
+              userId: booking.technician.userId,
+              title: `Admin Updated Job #${booking.bookingNumber}`,
+              message: `Job status adjusted to ${status}. Details: ${auditNote}`,
+              type: 'BOOKING',
+              link: `/technician/jobs/${bookingId}`,
+            },
+          });
+        }
 
         return booking;
       });
