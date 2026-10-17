@@ -129,9 +129,13 @@ export async function POST(req: NextRequest) {
       status: requestedStatus,
     } = body;
 
-    if (!serviceId || !problemDescription || !preferredDate || !preferredTimeSlot) {
+    // Sensible defaults for scheduling if omitted
+    const resolvedPreferredDate = preferredDate || new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+    const resolvedPreferredTimeSlot = preferredTimeSlot || '10:00 AM – 1:00 PM';
+
+    if (!serviceId || !problemDescription) {
       return NextResponse.json(
-        { error: 'Service, problem description, date, and time slot are required' },
+        { error: 'Service and problem description are required' },
         { status: 400 }
       );
     }
@@ -212,6 +216,43 @@ export async function POST(req: NextRequest) {
       if (existingAddr && !resolvedThana) {
         resolvedThana = existingAddr.upazila;
       }
+    } else {
+      // 3-Click Auto-Link: Auto-select customer's default saved address if available
+      const defaultAddr = await prisma.address.findFirst({
+        where: { customerId: customerProfileId, isDefault: true },
+      }) || await prisma.address.findFirst({
+        where: { customerId: customerProfileId },
+        orderBy: { createdAt: 'desc' },
+      });
+      if (defaultAddr) {
+        addressId = defaultAddr.id;
+        if (!resolvedThana) resolvedThana = defaultAddr.upazila;
+      }
+    }
+
+    // Duplicate submission protection (15 seconds window for same customer, service and problem)
+    const duplicateCutoff = new Date(Date.now() - 15000);
+    const existingRecentBooking = await prisma.booking.findFirst({
+      where: {
+        customerId: customerProfileId,
+        serviceId,
+        problemDescription,
+        createdAt: { gte: duplicateCutoff },
+      },
+      include: {
+        service: true,
+        address: true,
+        timeline: true,
+      },
+    });
+
+    if (existingRecentBooking) {
+      return NextResponse.json({
+        success: true,
+        booking: existingRecentBooking,
+        idempotent: true,
+        message: 'Duplicate submission prevented: Showing your existing booking.',
+      });
     }
 
     // Fetch service price
@@ -232,8 +273,8 @@ export async function POST(req: NextRequest) {
           customerId: customerProfileId,
           serviceId,
           problemDescription,
-          preferredDate,
-          preferredTimeSlot,
+          preferredDate: resolvedPreferredDate,
+          preferredTimeSlot: resolvedPreferredTimeSlot,
           urgency,
           status: bookingStatus,
           paymentMethod,
@@ -278,6 +319,37 @@ export async function POST(req: NextRequest) {
 
       return createdBooking;
     });
+
+    // Notify customer and admins asynchronously (fail-safe)
+    try {
+      await prisma.notification.create({
+        data: {
+          userId: session.id,
+          title: `Booking Received #${bookingNumber}`,
+          message: `Your service request for ${service?.name || 'Service'} has been received. Reference: ${bookingNumber}. Status: Awaiting Technician Assignment.`,
+          type: 'BOOKING',
+          link: `/customer/dashboard?tab=bookings`,
+        },
+      });
+
+      const admins = await prisma.user.findMany({
+        where: { role: { in: ['ADMIN', 'SUPER_ADMIN', 'OPERATIONS_MANAGER'] } },
+        select: { id: true },
+      });
+      if (admins.length > 0) {
+        await prisma.notification.createMany({
+          data: admins.map((admin) => ({
+            userId: admin.id,
+            title: `New Service Booking #${bookingNumber}`,
+            message: `New booking submitted by ${session.name || 'Customer'} for ${service?.name || 'Service'}. Location: ${resolvedThana || 'Assigned Area'}.`,
+            type: 'BOOKING',
+            link: `/admin/jobs`,
+          })),
+        });
+      }
+    } catch (notifErr) {
+      console.warn('Notification dispatch warning (booking succeeded):', notifErr);
+    }
 
     return NextResponse.json({ success: true, booking });
   } catch (error) {

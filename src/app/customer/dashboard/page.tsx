@@ -464,13 +464,22 @@ function CustomerDashboardContent() {
                 <h1 className="text-xl font-black text-slate-950">
                   Welcome back, {user.name.split(' ')[0]}! 👋
                 </h1>
-                <button
-                  onClick={() => setActiveTab('profile')}
-                  className="text-xs font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1.5 bg-brand-50 px-3 py-1.5 rounded-xl border border-brand-100 transition"
-                >
-                  <User className="w-3.5 h-3.5" />
-                  Edit Profile
-                </button>
+                <div className="flex items-center gap-2">
+                  <Link
+                    href="/booking"
+                    className="text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl shadow-xs transition"
+                  >
+                    <Zap className="w-3.5 h-3.5 fill-white" />
+                    Book a Service (3-Click)
+                  </Link>
+                  <button
+                    onClick={() => setActiveTab('profile')}
+                    className="text-xs font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1.5 bg-brand-50 px-3 py-1.5 rounded-xl border border-brand-100 transition"
+                  >
+                    <User className="w-3.5 h-3.5" />
+                    Edit Profile
+                  </button>
+                </div>
               </div>
 
               {/* Stat Cards */}

@@ -40,10 +40,50 @@ export async function GET(req: NextRequest) {
       }),
     ]);
 
+    const mappedJobs = bookings.map((b: any) => ({
+      ...b,
+      bookingNumber: b.bookingNumber || `NE${b.id.substring(0, 8)}`,
+      preferredTime: b.preferredTimeSlot || b.preferredTime || '10:00 AM – 1:00 PM',
+      address: b.address ? `${b.address.addressLine}, ${b.address.upazila}, ${b.address.district}` : (typeof b.address === 'string' ? b.address : 'On-Site Location'),
+      customer: {
+        ...b.customer,
+        fullName: b.customer?.user?.name || 'Verified Customer',
+        phone: b.customer?.user?.phone || b.address?.phone || 'N/A',
+        district: b.address?.district || 'Moulvibazar',
+        user: b.customer?.user,
+      },
+      service: {
+        ...b.service,
+        title: b.service?.name || 'Technical Service',
+        name: b.service?.name || 'Technical Service',
+        basePrice: b.service?.basePrice || b.totalAmount || 500,
+        category: b.service?.categoryId || 'ELECTRICAL',
+      },
+      technician: b.technician ? {
+        ...b.technician,
+        fullName: b.technician.user?.name || 'Assigned Technician',
+        phone: b.technician.user?.phone || 'N/A',
+        district: b.technician.district || 'Moulvibazar',
+        rating: b.technician.rating || 5.0,
+        skills: b.technician.skills ? b.technician.skills.split(',').map((s: string) => s.trim()) : [],
+        isAvailable: b.technician.isAvailable ?? true,
+      } : null,
+    }));
+
+    const mappedTechnicians = verifiedTechnicians.map((t: any) => ({
+      ...t,
+      fullName: t.user?.name || 'Verified Technician',
+      phone: t.user?.phone || 'N/A',
+      rating: t.rating || 5.0,
+      skills: t.skills ? t.skills.split(',').map((s: string) => s.trim()) : [],
+      isAvailable: t.isAvailable ?? true,
+      isVerified: t.verificationStatus === 'VERIFIED',
+    }));
+
     return NextResponse.json({
       success: true,
-      jobs: bookings,
-      technicians: verifiedTechnicians,
+      jobs: mappedJobs,
+      technicians: mappedTechnicians,
     });
   } catch (error) {
     console.error('Fetch jobs error:', error);

@@ -7,7 +7,7 @@ import {
   ChevronRight, Calendar, MapPin, Clock,
   CheckCircle2, Wrench, Camera, FileText, Phone, X, ShieldCheck,
   Zap, MessageCircle, AlertTriangle, ArrowRight, Sparkles, UserCheck,
-  Building, Home, Info, Lock
+  Building, Home, Info, Lock, ChevronDown, ChevronUp, Check
 } from 'lucide-react';
 import { useAuth } from '@/lib/context/AuthContext';
 import { BANGLADESH_DISTRICTS, DistrictData } from '@/lib/data/districts';
@@ -35,13 +35,13 @@ const SERVICE_CATEGORIES = [
 ];
 
 const QUICK_ISSUES = [
-  { label: '⚡ Short Circuit / Sparking', category: 'ELECTRICAL', desc: 'Main circuit breaker tripping or sparking at outlet' },
-  { label: '❄️ AC Servicing & Cooling Issue', category: 'INSTALLATION', desc: 'AC not cooling properly or water dripping' },
-  { label: '📹 CCTV Camera Offline / Blur', category: 'CCTV', desc: 'Camera video loss or DVR storage issues' },
-  { label: '💡 Fan & Light Installation', category: 'ELECTRICAL', desc: 'Ceiling fan, chandelier, or LED panel fitting' },
-  { label: '💻 Computer / Laptop Diagnostic', category: 'COMPUTER', desc: 'Slow system, no display, or hardware repair' },
-  { label: '🔋 IPS Battery / Power Backup', category: 'IPS_INVERTER', desc: 'Inverter not charging or low backup time' },
-  { label: '🚨 Power Blackout / Urgent Help', category: 'EMERGENCY', desc: 'Sudden total power outage or dangerous fault' },
+  { label: '⚡ Short Circuit / Sparking', category: 'ELECTRICAL', desc: 'Main circuit breaker tripping or sparking at outlet / শর্ট সার্কিট বা স্পার্কিং সমস্যা' },
+  { label: '❄️ AC Cooling Issue', category: 'INSTALLATION', desc: 'AC not cooling properly or water dripping / এসি ঠান্ডা হচ্ছে না বা পানি পড়ছে' },
+  { label: '📹 CCTV Camera Offline', category: 'CCTV', desc: 'Camera video loss or DVR storage issues / সিসিটিভি ক্যামেরা ডিসপ্লে বা রেকর্ডিং সমস্যা' },
+  { label: '💡 Fan & Light Installation', category: 'ELECTRICAL', desc: 'Ceiling fan, chandelier, or LED panel fitting / ফ্যান বা লাইট ইনস্টলেশন' },
+  { label: '💻 Computer Diagnostics', category: 'COMPUTER', desc: 'Slow system, no display, or hardware repair / কম্পিউটার বা ল্যাপটপ অন হচ্ছে না' },
+  { label: '🔋 IPS Battery Backup', category: 'IPS_INVERTER', desc: 'Inverter not charging or low backup time / আইপিএস চার্জ হচ্ছে না বা ব্যাকআপ কম' },
+  { label: '🚨 Sudden Power Outage', category: 'EMERGENCY', desc: 'Sudden total power outage or dangerous electrical fault / পুরো বাসায় বিদ্যুৎ চলে গেছে' },
 ];
 
 const TIME_SLOTS = [
@@ -62,6 +62,7 @@ function BookingFormInner() {
   const [bookingResult, setBookingResult] = useState<any>(null);
   const [attachedImages, setAttachedImages] = useState<string[]>([]);
   const [bookingComplete, setBookingComplete] = useState(false);
+  const [showAdditionalDetails, setShowAdditionalDetails] = useState(false);
 
   // Saved addresses from customer profile
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
@@ -79,7 +80,6 @@ function BookingFormInner() {
     categoryId: initialCat,
     serviceId: searchParams.get('service') || '',
     description: '',
-    // On-site contact info (auto-filled from user, but editable)
     contactPersonName: '',
     contactPhone: '',
     division: 'Sylhet',
@@ -121,7 +121,7 @@ function BookingFormInner() {
         contactPhone: p.contactPhone || user.phone || '',
       }));
 
-      // Fetch saved addresses
+      // Fetch saved addresses from customer profile
       setLoadingAddresses(true);
       fetch('/api/v1/customer/addresses')
         .then((r) => r.json())
@@ -131,6 +131,14 @@ function BookingFormInner() {
             const defaultAddr = data.addresses.find((a: any) => a.isDefault) || data.addresses[0];
             setSelectedAddressId(defaultAddr.id);
             setLocationMode('SAVED');
+            if (defaultAddr.district) {
+              setForm((p) => ({
+                ...p,
+                district: defaultAddr.district,
+                division: defaultAddr.division || p.division,
+                upazila: defaultAddr.upazila || p.upazila,
+              }));
+            }
           } else {
             setLocationMode('CUSTOM');
           }
@@ -206,13 +214,13 @@ function BookingFormInner() {
     }
 
     if (!form.description.trim()) {
-      alert('Please describe what problem needs fixing or servicing.');
+      alert('Please describe your problem so our technician can prepare appropriate tools.');
       return;
     }
 
     if (locationMode === 'CUSTOM') {
       if (!form.addressLine.trim() || !form.upazila.trim()) {
-        alert('Please provide the full road/building address and area for the technician.');
+        alert('Please provide the road/building address and area for technician dispatch.');
         return;
       }
       if (!form.contactPhone.trim()) {
@@ -235,10 +243,8 @@ function BookingFormInner() {
       };
 
       if (locationMode === 'SAVED' && selectedAddressId) {
-        // Use existing saved address without changing anything
         payload.address = selectedAddressId;
       } else {
-        // Use separate service location (one-time snapshot, or optionally saved)
         payload.address = {
           recipientName: form.contactPersonName || user.name,
           phone: form.contactPhone || user.phone,
@@ -268,7 +274,7 @@ function BookingFormInner() {
           router.push(`/customer/login?redirect=${encodeURIComponent(redirectTarget)}`);
           return;
         }
-        alert(data.error || 'Could not register booking. Please contact 01733 983752.');
+        alert(data.error || 'Could not register booking. Please contact hotline at 01733 983752.');
       }
     } catch {
       alert('Network error while booking. Please try again or call 01733 983752.');
@@ -278,14 +284,14 @@ function BookingFormInner() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-6">
       {/* Breadcrumb Navigation */}
       <nav className="flex items-center gap-2 text-xs text-slate-500">
         <Link href="/" className="hover:text-brand-600">Home</Link>
         <ChevronRight className="w-3.5 h-3.5" />
         <Link href="/services" className="hover:text-brand-600">Services</Link>
         <ChevronRight className="w-3.5 h-3.5" />
-        <span className="text-slate-900 font-bold">Book a Service</span>
+        <span className="text-slate-900 font-bold">Three-Click Service Booking</span>
       </nav>
 
       {/* ═══ SUCCESS CONFIRMATION SCREEN ═══ */}
@@ -303,13 +309,18 @@ function BookingFormInner() {
               Technician Request Registered!
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto">
-              Your service request is assigned to a verified technician. Our operations coordinator will call you to confirm arrival.
+              Your service request is in our pending assignment queue. Our operations coordinator will contact you to confirm technician arrival.
             </p>
             <div className="pt-2">
               <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">Your Booking Reference Number</span>
               <p className="text-xl sm:text-2xl font-mono font-black text-brand-600 bg-brand-50 inline-block px-4 py-1.5 rounded-xl border border-brand-200 mt-1">
                 {bookingResult.bookingNumber}
               </p>
+            </div>
+            <div className="pt-1">
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200">
+                <Clock className="w-3.5 h-3.5" /> Status: Awaiting Technician Assignment
+              </span>
             </div>
           </div>
 
@@ -324,7 +335,7 @@ function BookingFormInner() {
               <span className="font-bold text-slate-900">
                 {locationMode === 'SAVED' && activeSavedAddress 
                   ? `${activeSavedAddress.addressLine}, ${activeSavedAddress.upazila}, ${activeSavedAddress.district}` 
-                  : `${form.addressLine}, ${form.upazila}, ${form.district}`}
+                  : `${form.addressLine || 'Address on file'}, ${form.upazila}, ${form.district}`}
               </span>
             </div>
             <div className="flex justify-between items-center pb-2 border-b border-slate-200/60">
@@ -342,7 +353,7 @@ function BookingFormInner() {
           {/* Quick Actions */}
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <a
-              href={`https://wa.me/8801733983752?text=${encodeURIComponent(`Hello NEED ELECTRO! I booked service ${bookingResult.bookingNumber} for ${selectedService?.name || form.categoryId}. Please confirm dispatch.`)}`}
+              href={`https://wa.me/8801733983752?text=${encodeURIComponent(`Hello NEED ELECTRO! I booked service #${bookingResult.bookingNumber} for ${selectedService?.name || form.categoryId}. Please confirm dispatch.`)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition shadow-md shadow-emerald-600/20 app-tap"
@@ -359,34 +370,34 @@ function BookingFormInner() {
         </div>
       ) : (
         <>
-          {/* Top Banner: Service Header */}
-          <div className="bg-gradient-to-r from-brand-600 via-brand-500 to-sky-600 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+          {/* Header Banner */}
+          <div className="bg-gradient-to-r from-brand-600 via-brand-500 to-sky-600 text-white rounded-3xl p-6 sm:p-7 shadow-xl relative overflow-hidden">
             <div className="max-w-2xl space-y-2 relative z-10">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-[11px] font-black uppercase tracking-wider text-white border border-white/30">
-                <Zap className="w-3.5 h-3.5 fill-amber-300 text-amber-300" /> Professional Technical Ecosystem
+                <Zap className="w-3.5 h-3.5 fill-amber-300 text-amber-300" /> Three-Click Service Booking
               </div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
                 Book a Certified Technician
               </h1>
               <p className="text-xs sm:text-sm text-brand-100 leading-relaxed">
-                Schedule verified electricians, CCTV technicians, and computer specialists. Fast dispatch, digital job tracking, and 30-day workmanship warranty included.
+                Fast, 3-click service booking. Verified electricians, CCTV specialists, and computer technicians dispatched to your doorstep.
               </p>
             </div>
 
-            {/* Hotline Link */}
-            <div className="mt-4 pt-4 border-t border-white/20 flex flex-wrap items-center gap-3 text-xs">
-              <span className="text-brand-100 font-semibold">Need urgent emergency assistance?</span>
+            {/* Quick Hotline Strip */}
+            <div className="mt-4 pt-3 border-t border-white/20 flex flex-wrap items-center gap-3 text-xs">
+              <span className="text-brand-100 font-semibold">Emergency?</span>
               <a
                 href="tel:01733983752"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-brand-700 font-black hover:bg-brand-50 transition shadow-xs"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white text-brand-700 font-black hover:bg-brand-50 transition shadow-xs text-xs"
               >
-                <Phone className="w-3.5 h-3.5 text-brand-600" /> Hotline: 01733 983752
+                <Phone className="w-3.5 h-3.5 text-brand-600" /> 01733 983752
               </a>
               <a
-                href="https://wa.me/8801733983752?text=Hello%20NEED%20ELECTRO!%20I%20need%20a%20technician%20visit."
+                href="https://wa.me/8801733983752?text=Hello%20NEED%20ELECTRO!%20I%20need%20urgent%20service."
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 text-white font-bold hover:bg-emerald-600 transition shadow-xs"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500 text-white font-bold hover:bg-emerald-600 transition shadow-xs text-xs"
               >
                 <MessageCircle className="w-3.5 h-3.5" /> WhatsApp Support
               </a>
@@ -405,12 +416,12 @@ function BookingFormInner() {
                     Customer Account Required to Book Services
                   </h3>
                   <p className="text-xs text-amber-900 leading-relaxed">
-                    Under NEED ELECTRO security and warranty policies, bookings are linked to verified customer accounts. Please sign in or register to schedule a technician. Your selected trade and inputs will be preserved.
+                    Under NEED ELECTRO security and warranty policies, bookings are linked to verified customer accounts. Please sign in or register to schedule a technician. Your selected trade and problem description will be preserved.
                   </p>
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 pt-1 sm:pl-13">
+              <div className="flex flex-col sm:flex-row gap-3 pt-1">
                 <Link
                   href={`/customer/login?redirect=${encodeURIComponent(redirectTarget)}`}
                   className="btn-primary text-xs py-2.5 px-6 justify-center shadow-md shadow-brand-500/20"
@@ -432,7 +443,7 @@ function BookingFormInner() {
           {user && (
             <div className="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-emerald-900">
               <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-emerald-500 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
                   {user.name.charAt(0).toUpperCase()}
                 </div>
                 <div>
@@ -450,303 +461,174 @@ function BookingFormInner() {
             </div>
           )}
 
-          {/* Quick Problem Selector (1-Click Fill) */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-black text-slate-900 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-brand-500" />
-                Quick Select Common Issues (1-Click Fill)
-              </h2>
-              <span className="text-[11px] text-slate-400">Click to autofill description</span>
-            </div>
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-              {QUICK_ISSUES.map((issue, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => handleQuickIssueSelect(issue)}
-                  className={`text-xs px-3.5 py-2 rounded-xl border font-bold shrink-0 transition-all text-left ${
-                    form.description === issue.desc
-                      ? 'border-brand-500 bg-brand-50 text-brand-700 ring-2 ring-brand-500/20 shadow-xs'
-                      : 'border-slate-200 bg-white hover:border-slate-300 text-slate-700 hover:bg-slate-50'
-                  }`}
-                >
-                  {issue.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Main Booking Form Grid */}
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
-            {/* Left 7 Columns: Trade & Problem Details */}
-            <div className="lg:col-span-7 space-y-6">
-              {/* Category Selector */}
-              <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-sm space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-black text-slate-900">1. Select Service Category</h3>
-                  <span className="text-[11px] font-bold text-brand-600">Trade Selection</span>
+          {/* ═══ THREE-STEP INTERACTIVE BOOKING FORM ═══ */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* ── STEP 1: SERVICE SELECTION ── */}
+            <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-sm space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-brand-600 text-white text-xs font-bold flex items-center justify-center">1</span>
+                  <h3 className="text-sm font-black text-slate-900">Click 1: Service Trade Selection</h3>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                  {SERVICE_CATEGORIES.map((cat) => (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => setForm((p) => ({ ...p, categoryId: cat.id }))}
-                      className={`p-3 rounded-2xl border-2 text-left transition-all ${
-                        form.categoryId === cat.id
-                          ? 'border-brand-500 bg-brand-50 shadow-xs scale-[1.01]'
-                          : 'border-slate-200/90 hover:border-slate-300 bg-white'
-                      }`}
-                    >
-                      <span className="text-2xl block mb-1">{cat.icon}</span>
-                      <p className="text-xs font-black text-slate-900 leading-snug">{cat.label}</p>
-                      <p className="text-[10px] text-slate-500 line-clamp-1 mt-0.5">{cat.desc}</p>
-                    </button>
-                  ))}
-                </div>
-
-                {/* Specific Packages Dropdown / Radio if available */}
-                {filteredServices.length > 0 && (
-                  <div className="pt-3 border-t border-slate-100">
-                    <label className="block text-xs font-bold text-slate-700 mb-2">
-                      Specific Service Package (Optional):
-                    </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {filteredServices.slice(0, 6).map((svc) => (
-                        <label
-                          key={svc.id}
-                          className={`flex items-start justify-between p-2.5 rounded-xl border cursor-pointer transition text-xs ${
-                            form.serviceId === svc.id
-                              ? 'border-brand-500 bg-brand-50/70 font-bold text-brand-800'
-                              : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="radio"
-                              name="serviceId"
-                              checked={form.serviceId === svc.id}
-                              onChange={() => setForm((p) => ({ ...p, serviceId: svc.id }))}
-                              className="accent-brand-500"
-                            />
-                            <span className="truncate">{svc.name}</span>
-                          </div>
-                          <span className="text-[11px] font-black text-brand-600 shrink-0 ml-1">
-                            {svc.basePrice > 0 ? `৳${svc.basePrice}` : 'Free Quote'}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
+                {form.serviceId && (
+                  <span className="text-[11px] font-bold text-emerald-600 flex items-center gap-1">
+                    <Check className="w-3.5 h-3.5" /> Selected
+                  </span>
                 )}
               </div>
 
-              {/* Problem Description & Photo Upload */}
-              <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-sm space-y-4">
-                <h3 className="text-sm font-black text-slate-900">2. Describe The Issue</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                {SERVICE_CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setForm((p) => ({ ...p, categoryId: cat.id }))}
+                    className={`p-3 rounded-2xl border-2 text-left transition-all ${
+                      form.categoryId === cat.id
+                        ? 'border-brand-500 bg-brand-50 shadow-xs scale-[1.01]'
+                        : 'border-slate-200/90 hover:border-slate-300 bg-white'
+                    }`}
+                  >
+                    <span className="text-2xl block mb-1">{cat.icon}</span>
+                    <p className="text-xs font-black text-slate-900 leading-snug">{cat.label}</p>
+                    <p className="text-[10px] text-slate-500 line-clamp-1 mt-0.5">{cat.desc}</p>
+                  </button>
+                ))}
+              </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700 flex justify-between">
-                    <span>What needs to be fixed or installed? *</span>
-                    <span className="text-[11px] text-slate-400">Brief or detailed</span>
+              {/* Specific Packages Dropdown if available */}
+              {filteredServices.length > 0 && (
+                <div className="pt-2 border-t border-slate-100">
+                  <label className="block text-xs font-bold text-slate-700 mb-2">
+                    Specific Service Package:
                   </label>
-                  <textarea
-                    required
-                    rows={3}
-                    value={form.description}
-                    onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
-                    placeholder="e.g. Master bedroom AC is leaking water; need 2 ceiling fans installed; CCTV camera in front gate is showing black screen..."
-                    className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-brand-500"
-                  />
-                </div>
-
-                {/* Urgency Selector */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700">Urgency Level</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { value: 'NORMAL', label: 'Standard Schedule', sub: 'Standard dispatch' },
-                      { value: 'URGENT', label: 'Urgent (Same Day)', sub: 'Within 2-4 hours' },
-                      { value: 'EMERGENCY', label: '🚨 Emergency', sub: 'Immediate 30 min' },
-                    ].map((u) => (
-                      <button
-                        key={u.value}
-                        type="button"
-                        onClick={() => setForm((p) => ({ ...p, urgency: u.value }))}
-                        className={`text-left p-2.5 rounded-xl border text-xs font-bold transition ${
-                          form.urgency === u.value
-                            ? u.value === 'EMERGENCY'
-                              ? 'border-red-500 bg-red-50 text-red-700 ring-2 ring-red-500/20'
-                              : 'border-brand-500 bg-brand-50 text-brand-700 ring-2 ring-brand-500/20'
-                            : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {filteredServices.slice(0, 6).map((svc) => (
+                      <label
+                        key={svc.id}
+                        className={`flex items-start justify-between p-2.5 rounded-xl border cursor-pointer transition text-xs ${
+                          form.serviceId === svc.id
+                            ? 'border-brand-500 bg-brand-50/70 font-bold text-brand-800 ring-1 ring-brand-500'
+                            : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
                         }`}
                       >
-                        <p>{u.label}</p>
-                        <p className="text-[10px] text-slate-400 font-normal">{u.sub}</p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Photo Upload (Optional) */}
-                <div className="space-y-2 pt-2">
-                  <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                    <span>Attach Photos of equipment / board (Optional)</span>
-                    <span className="text-[10px] text-slate-400">Up to 4 images</span>
-                  </label>
-                  <div className="flex flex-wrap gap-2.5">
-                    {attachedImages.map((img, i) => (
-                      <div key={i} className="relative w-16 h-16 rounded-xl border border-slate-200 overflow-hidden group">
-                        <img src={img} alt="Attached" className="w-full h-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => removeImage(i)}
-                          className="absolute top-1 right-1 bg-red-600 text-white p-0.5 rounded-full"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
-                    {attachedImages.length < 4 && (
-                      <label className="w-16 h-16 rounded-xl border-2 border-dashed border-slate-300 hover:border-brand-500 bg-slate-50 hover:bg-brand-50/50 flex flex-col items-center justify-center cursor-pointer transition">
-                        <Camera className="w-4 h-4 text-slate-400" />
-                        <span className="text-[9px] font-bold text-slate-500 mt-0.5">Add</span>
-                        <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" />
-                      </label>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right 5 Columns: FLEXIBLE SERVICE LOCATION & REVIEW */}
-            <div className="lg:col-span-5 space-y-6">
-              <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-sm space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-black text-slate-900 flex items-center gap-1.5">
-                    <MapPin className="w-4 h-4 text-brand-600" />
-                    Where do you need the service?
-                  </h3>
-                  <span className="text-[11px] font-bold text-brand-600">Location</span>
-                </div>
-
-                {/* ═══ FLEXIBLE LOCATION MODE SELECTOR ═══ */}
-                {user && savedAddresses.length > 0 && (
-                  <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-2xl">
-                    <button
-                      type="button"
-                      onClick={() => setLocationMode('SAVED')}
-                      className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition ${
-                        locationMode === 'SAVED'
-                          ? 'bg-white text-brand-700 shadow-xs'
-                          : 'text-slate-600 hover:text-slate-900'
-                      }`}
-                    >
-                      <Home className="w-3.5 h-3.5" />
-                      Use Saved Address
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setLocationMode('CUSTOM')}
-                      className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition ${
-                        locationMode === 'CUSTOM'
-                          ? 'bg-white text-brand-700 shadow-xs'
-                          : 'text-slate-600 hover:text-slate-900'
-                      }`}
-                    >
-                      <Building className="w-3.5 h-3.5" />
-                      Use Another Address
-                    </button>
-                  </div>
-                )}
-
-                {/* ═══ MODE A: SAVED PROFILE ADDRESS ═══ */}
-                {locationMode === 'SAVED' && savedAddresses.length > 0 && (
-                  <div className="space-y-3">
-                    <label className="block text-xs font-bold text-slate-700">Select Saved Address:</label>
-                    <div className="space-y-2">
-                      {savedAddresses.map((addr) => (
-                        <label
-                          key={addr.id}
-                          className={`flex items-start gap-3 p-3 rounded-2xl border cursor-pointer transition ${
-                            selectedAddressId === addr.id
-                              ? 'border-brand-500 bg-brand-50/70 ring-1 ring-brand-500'
-                              : 'border-slate-200 bg-white hover:bg-slate-50'
-                          }`}
-                        >
+                        <div className="flex items-center gap-2">
                           <input
                             type="radio"
-                            name="savedAddress"
-                            checked={selectedAddressId === addr.id}
-                            onChange={() => setSelectedAddressId(addr.id)}
-                            className="mt-1 accent-brand-500"
+                            name="serviceId"
+                            checked={form.serviceId === svc.id}
+                            onChange={() => setForm((p) => ({ ...p, serviceId: svc.id }))}
+                            className="accent-brand-500"
                           />
-                          <div className="min-w-0 text-xs">
-                            <div className="flex items-center gap-1.5">
-                              <span className="font-extrabold text-slate-900">{addr.label || 'Home'}</span>
-                              {addr.isDefault && (
-                                <span className="text-[9px] font-bold bg-brand-100 text-brand-700 px-1.5 py-0.5 rounded">
-                                  Default
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-slate-700 mt-0.5 font-medium">{addr.addressLine}, {addr.upazila}</p>
-                            <p className="text-slate-500 text-[11px]">{addr.district}, {addr.division} • {addr.phone}</p>
-                          </div>
-                        </label>
-                      ))}
-                    </div>
+                          <span className="truncate">{svc.name}</span>
+                        </div>
+                        <span className="text-[11px] font-black text-brand-600 shrink-0 ml-1">
+                          {svc.basePrice > 0 ? `৳${svc.basePrice}` : 'Free Quote'}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
-                    <p className="text-[11px] text-slate-400 italic">
-                      Need technician at another location (e.g. office, shop, or relatives)? Click "Use Another Address" above.
-                    </p>
+            {/* ── STEP 2: PROBLEM DESCRIPTION & SAVED ADDRESS AUTOFILL ── */}
+            <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-sm space-y-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-brand-600 text-white text-xs font-bold flex items-center justify-center">2</span>
+                  <h3 className="text-sm font-black text-slate-900">Click 2: Describe Your Problem</h3>
+                </div>
+                <span className="text-[11px] text-slate-400 font-medium">Supports Bengali &amp; English</span>
+              </div>
+
+              {/* ═══ SAVED ADDRESS SELECTION (1-Click Switcher) ═══ */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-brand-600" />
+                    Service Address:
+                  </span>
+                  {user && savedAddresses.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setLocationMode(locationMode === 'SAVED' ? 'CUSTOM' : 'SAVED')}
+                      className="text-[11px] font-bold text-brand-600 hover:underline"
+                    >
+                      {locationMode === 'SAVED' ? '+ Use Another Location' : '← Back to Saved Addresses'}
+                    </button>
+                  )}
+                </label>
+
+                {/* MODE A: SAVED ADDRESS PILLS */}
+                {locationMode === 'SAVED' && savedAddresses.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {savedAddresses.map((addr) => (
+                      <label
+                        key={addr.id}
+                        className={`flex items-start gap-2.5 p-3 rounded-2xl border cursor-pointer transition ${
+                          selectedAddressId === addr.id
+                            ? 'border-brand-500 bg-brand-50/70 ring-1 ring-brand-500'
+                            : 'border-slate-200 bg-white hover:bg-slate-50'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="savedAddress"
+                          checked={selectedAddressId === addr.id}
+                          onChange={() => setSelectedAddressId(addr.id)}
+                          className="mt-0.5 accent-brand-500"
+                        />
+                        <div className="min-w-0 text-xs">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-extrabold text-slate-900">{addr.label || 'Home'}</span>
+                            {addr.isDefault && (
+                              <span className="text-[9px] font-bold bg-brand-100 text-brand-700 px-1.5 py-0.5 rounded">
+                                Default
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-slate-700 mt-0.5 font-medium truncate">{addr.addressLine}, {addr.upazila}</p>
+                          <p className="text-slate-500 text-[11px]">{addr.district} • {addr.phone}</p>
+                        </div>
+                      </label>
+                    ))}
                   </div>
                 )}
 
-                {/* ═══ MODE B: CUSTOM / DIFFERENT SERVICE LOCATION ═══ */}
+                {/* MODE B: CUSTOM LOCATION ENTRY */}
                 {locationMode === 'CUSTOM' && (
-                  <div className="space-y-3">
-                    {user && (
-                      <div className="p-3 bg-sky-50 border border-sky-100 rounded-xl text-[11px] text-sky-900 flex items-start gap-2">
-                        <Info className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
-                        <p>
-                          <strong>Flexible Location:</strong> Entering a different service location will <em>NOT</em> overwrite your permanent profile address.
-                        </p>
-                      </div>
-                    )}
+                  <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                    <div className="text-[11px] text-slate-600 flex items-center gap-1.5 font-medium">
+                      <Info className="w-3.5 h-3.5 text-brand-600 shrink-0" />
+                      Flexible Location: Entering a new address will not alter your permanent saved address.
+                    </div>
 
-                    {/* On-Site Contact Person & Phone */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Contact Person on Premises *
-                        </label>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Contact Person at Site *</label>
                         <input
                           type="text"
                           required
-                          placeholder="Name of person at site"
                           value={form.contactPersonName}
                           onChange={(e) => setForm((p) => ({ ...p, contactPersonName: e.target.value }))}
-                          className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+                          placeholder="Name of person on premises"
+                          className="w-full text-xs p-2.5 bg-white border border-slate-200 rounded-xl"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Contact Phone at Site *
-                        </label>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Contact Phone at Site *</label>
                         <input
                           type="tel"
                           required
-                          placeholder="01XXXXXXXXX"
                           value={form.contactPhone}
                           onChange={(e) => setForm((p) => ({ ...p, contactPhone: e.target.value }))}
-                          className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono"
+                          placeholder="01XXXXXXXXX"
+                          className="w-full text-xs p-2.5 bg-white border border-slate-200 rounded-xl font-mono"
                         />
                       </div>
                     </div>
 
-                    {/* Division & District */}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">Division *</label>
@@ -760,11 +642,11 @@ function BookingFormInner() {
                             setForm((p) => ({
                               ...p,
                               division: div,
-                              district: firstDist ? firstDist.name : 'Dhaka',
-                              upazila: `${firstDist ? firstDist.name : 'Dhaka'} Sadar`,
+                              district: firstDist ? firstDist.name : 'Moulvibazar',
+                              upazila: `${firstDist ? firstDist.name : 'Moulvibazar'} Sadar`,
                             }));
                           }}
-                          className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+                          className="w-full text-xs p-2.5 bg-white border border-slate-200 rounded-xl"
                         >
                           {BANGLADESH_DIVISIONS.map((d) => (
                             <option key={d} value={d}>{d}</option>
@@ -780,7 +662,7 @@ function BookingFormInner() {
                             const dist = e.target.value;
                             setForm((p) => ({ ...p, district: dist, upazila: `${dist} Sadar` }));
                           }}
-                          className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                          className="w-full text-xs p-2.5 bg-white border border-slate-200 rounded-xl font-semibold"
                         >
                           {availableDistricts.map((d) => (
                             <option key={d.id} value={d.name}>{d.name}</option>
@@ -789,47 +671,31 @@ function BookingFormInner() {
                       </div>
                     </div>
 
-                    {/* Upazila & Address Line */}
-                    <div className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">Upazila / Area *</label>
                         <input
                           type="text"
                           required
-                          placeholder="e.g. Moulvibazar Sadar, Mirpur, Uttara, Sreemangal..."
+                          placeholder="e.g. Moulvibazar Sadar, Kusumbag, Mirpur"
                           value={form.upazila}
                           onChange={(e) => setForm((p) => ({ ...p, upazila: e.target.value }))}
-                          className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+                          className="w-full text-xs p-2.5 bg-white border border-slate-200 rounded-xl"
                         />
                       </div>
-
                       <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Building / Flat / Road Address *
-                        </label>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Road / Building / Holding *</label>
                         <input
                           type="text"
                           required
-                          placeholder="Holding #, Road #, Building Name, Floor"
+                          placeholder="Holding #, Road #, Building Name"
                           value={form.addressLine}
                           onChange={(e) => setForm((p) => ({ ...p, addressLine: e.target.value }))}
-                          className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">Nearby Landmark (Optional)</label>
-                        <input
-                          type="text"
-                          placeholder="Near Central Mosque, Market, School or Junction"
-                          value={form.landmark}
-                          onChange={(e) => setForm((p) => ({ ...p, landmark: e.target.value }))}
-                          className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+                          className="w-full text-xs p-2.5 bg-white border border-slate-200 rounded-xl"
                         />
                       </div>
                     </div>
 
-                    {/* Optional: Save to profile checkbox */}
                     {user && (
                       <label className="flex items-center gap-2 pt-1 text-xs text-slate-600 cursor-pointer">
                         <input
@@ -838,105 +704,198 @@ function BookingFormInner() {
                           onChange={(e) => setSaveToProfile(e.target.checked)}
                           className="rounded accent-brand-500"
                         />
-                        <span>Save this address to my account for future bookings</span>
+                        <span>Save this address to my profile for future 1-click bookings</span>
                       </label>
                     )}
                   </div>
                 )}
+              </div>
 
-                {/* ═══ SERVICE AVAILABILITY VALIDATION BADGE ═══ */}
-                <div className="p-3 rounded-2xl border text-xs space-y-1">
-                  {currentDistrictInfo?.onSiteServiceAvailable ? (
-                    <div className="flex items-start gap-2 text-emerald-800 bg-emerald-50/70 p-2.5 rounded-xl border border-emerald-200/80">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-extrabold text-emerald-950">
-                          ✓ Verified Service Coverage in {currentDistrictName}
-                        </p>
-                        <p className="text-[11px] text-emerald-800 mt-0.5">
-                          Certified technicians available for scheduled on-site dispatch across {currentDistrictName}.
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-start gap-2 text-amber-800 bg-amber-50/70 p-2.5 rounded-xl border border-amber-200/80">
-                      <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-extrabold text-amber-950">
-                          Coverage Notice: Regional Confirmation Required
-                        </p>
-                        <p className="text-[11px] text-amber-800 mt-0.5">
-                          Technician dispatch to {currentDistrictName} will be confirmed by our regional coordinator within 30 minutes.
-                        </p>
-                      </div>
-                    </div>
-                  )}
+              {/* ═══ PROMINENT REQUIRED FIELD: DESCRIBE YOUR PROBLEM ═══ */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                    <FileText className="w-4 h-4 text-brand-600" />
+                    Describe Your Problem *
+                  </label>
+                  <span className="text-[11px] text-brand-600 font-bold">1-Click Quick Fill Below</span>
                 </div>
 
-                {/* Date & Time Slot */}
-                <div className="grid grid-cols-2 gap-3 pt-2">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Preferred Date *</label>
-                    <input
-                      type="date"
-                      required
-                      value={form.preferredDate}
-                      onChange={(e) => setForm((p) => ({ ...p, preferredDate: e.target.value }))}
-                      className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Time Slot *</label>
-                    <select
-                      value={form.preferredTimeSlot}
-                      onChange={(e) => setForm((p) => ({ ...p, preferredTimeSlot: e.target.value }))}
-                      className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+                {/* 1-Click Quick Issue Chips */}
+                <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                  {QUICK_ISSUES.map((issue, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleQuickIssueSelect(issue)}
+                      className={`text-[11px] px-2.5 py-1.5 rounded-xl border font-bold shrink-0 transition-all ${
+                        form.description === issue.desc
+                          ? 'border-brand-500 bg-brand-50 text-brand-700 ring-2 ring-brand-500/20'
+                          : 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700'
+                      }`}
                     >
-                      {TIME_SLOTS.map((t) => (
-                        <option key={t} value={t}>{t}</option>
-                      ))}
-                    </select>
-                  </div>
+                      {issue.label}
+                    </button>
+                  ))}
                 </div>
 
-                {/* Pricing & Warranty Guarantee Note */}
-                <div className="p-3 bg-brand-50/70 border border-brand-100 rounded-2xl space-y-1.5 text-[11px] text-slate-700">
-                  <div className="flex items-center gap-1.5 text-brand-800 font-bold">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                    <span>30-Day Workmanship Warranty Included</span>
-                  </div>
-                  <p className="text-slate-500">
-                    Transparent pricing. Standard inspection fee from ৳500. Parts billed at official catalog prices with genuine warranty.
-                  </p>
-                </div>
+                <textarea
+                  required
+                  rows={4}
+                  value={form.description}
+                  onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+                  placeholder="Describe the electrical or technical problem you need us to solve... / আপনার বৈদ্যুতিক বা প্রযুক্তিগত সমস্যাটি সংক্ষেপে লিখুন..."
+                  className="w-full text-xs sm:text-sm p-3.5 bg-slate-50 border border-slate-200 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-brand-500 leading-relaxed font-sans"
+                />
+              </div>
 
-                {/* Submit Action */}
-                {user ? (
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="btn-primary w-full py-3.5 text-sm font-black justify-center shadow-lg shadow-brand-500/25 active:scale-[0.99] transition"
-                  >
-                    {loading ? (
-                      'Registering Technician Booking...'
-                    ) : (
-                      <>
-                        <Zap className="w-4 h-4 mr-2 fill-white" />
-                        Confirm &amp; Request Technician
-                      </>
-                    )}
-                  </button>
-                ) : (
-                  <Link
-                    href={`/customer/login?redirect=${encodeURIComponent(redirectTarget)}`}
-                    className="btn-primary w-full py-3.5 text-sm font-black justify-center shadow-lg shadow-brand-500/25 active:scale-[0.99] transition"
-                  >
-                    <Lock className="w-4 h-4 mr-2" />
-                    Sign In to Confirm Booking
-                  </Link>
+              {/* ═══ COLLAPSIBLE ACCORDION: ADDITIONAL DETAILS (OPTIONAL) ═══ */}
+              <div className="border border-slate-200 rounded-2xl overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setShowAdditionalDetails(!showAdditionalDetails)}
+                  className="w-full flex items-center justify-between p-3.5 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-700 transition"
+                >
+                  <span className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-slate-500" />
+                    + Additional Details (Optional: Schedule, Photos, Urgency)
+                  </span>
+                  {showAdditionalDetails ? (
+                    <ChevronUp className="w-4 h-4 text-slate-500" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-slate-500" />
+                  )}
+                </button>
+
+                {showAdditionalDetails && (
+                  <div className="p-4 bg-white border-t border-slate-200 space-y-4 animate-in fade-in">
+                    {/* Preferred Date & Time */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Preferred Visit Date</label>
+                        <input
+                          type="date"
+                          value={form.preferredDate}
+                          onChange={(e) => setForm((p) => ({ ...p, preferredDate: e.target.value }))}
+                          className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Preferred Time Window</label>
+                        <select
+                          value={form.preferredTimeSlot}
+                          onChange={(e) => setForm((p) => ({ ...p, preferredTimeSlot: e.target.value }))}
+                          className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+                        >
+                          {TIME_SLOTS.map((t) => (
+                            <option key={t} value={t}>{t}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Urgency Level */}
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-bold text-slate-700">Urgency Level</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { value: 'NORMAL', label: 'Standard Schedule', sub: 'Standard dispatch' },
+                          { value: 'URGENT', label: 'Urgent (Same Day)', sub: 'Within 2-4 hours' },
+                          { value: 'EMERGENCY', label: '🚨 Emergency', sub: 'Immediate 30 min' },
+                        ].map((u) => (
+                          <button
+                            key={u.value}
+                            type="button"
+                            onClick={() => setForm((p) => ({ ...p, urgency: u.value }))}
+                            className={`text-left p-2.5 rounded-xl border text-xs font-bold transition ${
+                              form.urgency === u.value
+                                ? u.value === 'EMERGENCY'
+                                  ? 'border-red-500 bg-red-50 text-red-700 ring-2 ring-red-500/20'
+                                  : 'border-brand-500 bg-brand-50 text-brand-700 ring-2 ring-brand-500/20'
+                                : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                            }`}
+                          >
+                            <p>{u.label}</p>
+                            <p className="text-[10px] text-slate-400 font-normal">{u.sub}</p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Photo Upload */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                        <span>Attach Problem Photos / Board Photos</span>
+                        <span className="text-[10px] text-slate-400">Up to 4 images</span>
+                      </label>
+                      <div className="flex flex-wrap gap-2.5">
+                        {attachedImages.map((img, i) => (
+                          <div key={i} className="relative w-16 h-16 rounded-xl border border-slate-200 overflow-hidden">
+                            <img src={img} alt="Attached" className="w-full h-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => removeImage(i)}
+                              className="absolute top-1 right-1 bg-red-600 text-white p-0.5 rounded-full"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                        {attachedImages.length < 4 && (
+                          <label className="w-16 h-16 rounded-xl border-2 border-dashed border-slate-300 hover:border-brand-500 bg-slate-50 hover:bg-brand-50/50 flex flex-col items-center justify-center cursor-pointer transition">
+                            <Camera className="w-4 h-4 text-slate-400" />
+                            <span className="text-[9px] font-bold text-slate-500 mt-0.5">Add</span>
+                            <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
+            </div>
+
+            {/* ── STEP 3: CONFIRM & SUBMIT ── */}
+            <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-sm space-y-4">
+              <div className="flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-brand-600 text-white text-xs font-bold flex items-center justify-center">3</span>
+                <h3 className="text-sm font-black text-slate-900">Click 3: Confirm &amp; Submit Booking</h3>
+              </div>
+
+              {/* Workmanship Warranty & Pricing Strip */}
+              <div className="p-3 bg-brand-50/70 border border-brand-100 rounded-2xl flex items-center gap-3 text-xs text-brand-950">
+                <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+                <div>
+                  <p className="font-bold">30-Day Workmanship Warranty Included</p>
+                  <p className="text-[11px] text-slate-500">Transparent pricing. Standard inspection fee from ৳500. Genuine parts billing on-site.</p>
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              {user ? (
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn-primary w-full py-4 text-base font-black justify-center shadow-xl shadow-brand-500/25 active:scale-[0.99] transition"
+                >
+                  {loading ? (
+                    'Registering Technician Booking...'
+                  ) : (
+                    <>
+                      <Zap className="w-5 h-5 mr-2 fill-white" />
+                      Confirm &amp; Submit Booking
+                    </>
+                  )}
+                </button>
+              ) : (
+                <Link
+                  href={`/customer/login?redirect=${encodeURIComponent(redirectTarget)}`}
+                  className="btn-primary w-full py-4 text-base font-black justify-center shadow-xl shadow-brand-500/25 active:scale-[0.99] transition"
+                >
+                  <Lock className="w-5 h-5 mr-2" />
+                  Sign In to Confirm &amp; Submit Booking
+                </Link>
+              )}
             </div>
           </form>
         </>
