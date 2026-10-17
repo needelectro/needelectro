@@ -13,6 +13,8 @@ import {
   Check, Navigation
 } from 'lucide-react';
 
+import { fastFetch, invalidateFastCache, prefetchFastData } from '@/lib/fastFetch';
+
 const STATUS_COLORS: Record<string, string> = {
   AVAILABLE: 'bg-amber-100 text-amber-800',
   ASSIGNED: 'bg-purple-100 text-purple-800',
@@ -40,12 +42,40 @@ export default function AdvancedTechnicianDashboard() {
   const { user, logout } = useAuth();
   const router = useRouter();
 
-  const [profile, setProfile] = useState<any>(null);
-  const [jobs, setJobs] = useState<any[]>([]);
-  const [availableJobs, setAvailableJobs] = useState<any[]>([]);
+  // Instant warm cache initialization for 0ms initial render
+  const [profile, setProfile] = useState<any>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = sessionStorage.getItem('_ne_fast_/api/v1/technicians/me');
+        if (raw) return JSON.parse(raw).data?.technician || null;
+      } catch {}
+    }
+    return null;
+  });
+
+  const [jobs, setJobs] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = sessionStorage.getItem('_ne_fast_/api/v1/bookings?role=technician');
+        if (raw) return JSON.parse(raw).data?.bookings || [];
+      } catch {}
+    }
+    return [];
+  });
+
+  const [availableJobs, setAvailableJobs] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = sessionStorage.getItem('_ne_fast_/api/v1/bookings?status=AVAILABLE');
+        if (raw) return JSON.parse(raw).data?.bookings || [];
+      } catch {}
+    }
+    return [];
+  });
+
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [togglingStatus, setTogglingStatus] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
@@ -58,58 +88,68 @@ export default function AdvancedTechnicianDashboard() {
       router.push('/customer/dashboard');
       return;
     }
-    loadData();
+    loadData(false);
+
+    // Background prefetch for next likely technician screens
+    prefetchFastData([
+      '/api/v1/technicians/me',
+      '/api/v1/bookings?role=technician',
+      '/api/v1/bookings?status=AVAILABLE',
+    ]);
   }, [user]);
 
-  const loadData = async () => {
-    setLoading(true);
+  const loadData = async (showSpinner = false) => {
+    if (showSpinner) setLoading(true);
     try {
-      const [pRes, jRes, aRes, nRes] = await Promise.all([
-        fetch('/api/v1/technicians/me'),
-        fetch('/api/v1/bookings?role=technician'),
-        fetch('/api/v1/bookings?status=AVAILABLE'),
-        fetch('/api/v1/technicians/notifications'),
+      const [pData, jData, aData, nData] = await Promise.all([
+        fastFetch('/api/v1/technicians/me', { ttlMs: 30000 }),
+        fastFetch('/api/v1/bookings?role=technician', { ttlMs: 15000 }),
+        fastFetch('/api/v1/bookings?status=AVAILABLE', { ttlMs: 15000 }),
+        fastFetch('/api/v1/technicians/notifications', { ttlMs: 30000 }),
       ]);
 
-      if (pRes.ok) {
-        const d = await pRes.json();
-        setProfile(d.technician);
+      if (pData?.technician) {
+        setProfile(pData.technician);
       }
-      if (jRes.ok) {
-        const d = await jRes.json();
-        setJobs(d.bookings || []);
+      if (jData?.bookings) {
+        setJobs(jData.bookings);
       }
-      if (aRes.ok) {
-        const d = await aRes.json();
-        setAvailableJobs(d.bookings || []);
+      if (aData?.bookings) {
+        setAvailableJobs(aData.bookings);
       }
-      if (nRes.ok) {
-        const d = await nRes.json();
-        setNotifications(d.notifications?.slice(0, 5) || []);
-        setUnreadNotifications(d.unreadCount || 0);
+      if (nData?.notifications) {
+        setNotifications(nData.notifications.slice(0, 5) || []);
+        setUnreadNotifications(nData.unreadCount || 0);
       }
     } catch {
-      // ignore
+      // Background catch
     } finally {
       setLoading(false);
     }
   };
 
   const handleToggleAvailability = async () => {
-    if (!profile) return;
+    if (!profile || togglingStatus) return;
+    const prevStatus = profile.availableStatus;
+    const nextStatus = prevStatus === 'AVAILABLE' ? 'OFFLINE' : 'AVAILABLE';
+
+    // Zero-wait optimistic state update
+    setProfile((prev: any) => ({ ...prev, availableStatus: nextStatus }));
     setTogglingStatus(true);
-    const nextStatus = profile.availableStatus === 'AVAILABLE' ? 'OFFLINE' : 'AVAILABLE';
+
     try {
+      invalidateFastCache('/api/v1/technicians/me');
       const res = await fetch('/api/v1/technicians/me', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ availableStatus: nextStatus }),
       });
-      if (res.ok) {
-        setProfile((prev: any) => ({ ...prev, availableStatus: nextStatus }));
+      if (!res.ok) {
+        // Rollback
+        setProfile((prev: any) => ({ ...prev, availableStatus: prevStatus }));
       }
     } catch {
-      // ignore
+      setProfile((prev: any) => ({ ...prev, availableStatus: prevStatus }));
     } finally {
       setTogglingStatus(false);
     }
@@ -118,6 +158,7 @@ export default function AdvancedTechnicianDashboard() {
   const acceptJob = async (bookingId: string) => {
     setActionLoading(bookingId);
     try {
+      invalidateFastCache('/api/v1/bookings');
       const res = await fetch(`/api/v1/bookings/${bookingId}/accept`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -125,18 +166,25 @@ export default function AdvancedTechnicianDashboard() {
       if (res.ok) {
         router.push(`/technician/jobs/${bookingId}`);
       } else {
-        await loadData();
+        await loadData(false);
       }
     } catch {
-      // ignore
+      await loadData(false);
     } finally {
       setActionLoading(null);
     }
   };
 
   const handleQuickStatusUpdate = async (bookingId: string, nextStatus: string) => {
+    const prevJobs = [...jobs];
+    // Immediate optimistic UI transition
+    setJobs((current) =>
+      current.map((j) => (j.id === bookingId ? { ...j, status: nextStatus } : j))
+    );
     setActionLoading(bookingId);
+
     try {
+      invalidateFastCache('/api/v1/bookings');
       const isComplete = nextStatus === 'COMPLETED' || nextStatus === 'WORK_COMPLETED';
       const res = await fetch(`/api/v1/bookings/${bookingId}`, {
         method: 'PATCH',
@@ -150,11 +198,18 @@ export default function AdvancedTechnicianDashboard() {
           technicianNotes: 'Work executed and verified.',
         }),
       });
-      if (res.ok) {
-        await loadData();
+
+      if (!res.ok) {
+        // Rollback on rejection
+        setJobs(prevJobs);
+      } else {
+        // Authoritative background reconciliation
+        fastFetch('/api/v1/bookings?role=technician', { forceRefresh: true }).then((d) => {
+          if (d?.bookings) setJobs(d.bookings);
+        });
       }
     } catch {
-      // silent
+      setJobs(prevJobs);
     } finally {
       setActionLoading(null);
     }
@@ -397,13 +452,13 @@ export default function AdvancedTechnicianDashboard() {
 
         {/* Main Workspace Column */}
         <main className="flex-1 space-y-6 min-w-0">
-          {loading && (
+          {loading && !profile && jobs.length === 0 && (
             <div className="flex items-center justify-center h-48">
               <div className="w-8 h-8 border-4 border-slate-200 border-t-brand-600 rounded-full animate-spin" />
             </div>
           )}
 
-          {!loading && (
+          {(!loading || profile || jobs.length > 0) && (
             <>
               {/* Primary Financial & Operational KPIs */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">

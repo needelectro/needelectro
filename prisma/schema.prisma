@@ -103,6 +103,8 @@ model TechnicianProfile {
   serviceAreasList      TechnicianServiceArea[]
   availabilitySlots     AvailabilitySlot[]
   jobAssignments        JobAssignment[]
+
+  @@index([verificationStatus, availableStatus])
 }
 
 model ServiceCategory {
@@ -241,6 +243,9 @@ model Booking {
   @@index([status])
   @@index([customerId])
   @@index([technicianId])
+  @@index([technicianId, status])
+  @@index([createdAt])
+  @@index([serviceId])
 }
 
 model Quote {
@@ -432,6 +437,8 @@ model Product {
 
   @@index([categoryId, isActive])
   @@index([sellerId])
+  @@index([isFeatured, isActive])
+  @@index([createdAt])
 }
 
 model ProductSerial {
@@ -468,6 +475,8 @@ model Order {
 
   @@index([status])
   @@index([customerId])
+  @@index([customerId, status])
+  @@index([createdAt])
 }
 
 model OrderItem {
@@ -533,6 +542,9 @@ model TechnicianEarnings {
   technicianAmount Float
   status           String            @default("AVAILABLE") // PENDING, AVAILABLE, WITHDRAWN
   createdAt        DateTime          @default(now())
+
+  @@index([technicianId, status])
+  @@index([bookingId])
 }
 
 model WalletTransaction {
@@ -546,6 +558,8 @@ model WalletTransaction {
   status       String            @default("COMPLETED") // PENDING, COMPLETED, REJECTED
   referenceId  String?
   createdAt    DateTime          @default(now())
+
+  @@index([technicianId, createdAt])
 }
 
 model Review {
@@ -608,6 +622,9 @@ model Notification {
   read      Boolean  @default(false)
   link      String?
   createdAt DateTime @default(now())
+
+  @@index([userId, read])
+  @@index([createdAt])
 }
 
 model AuditLog {
@@ -622,6 +639,10 @@ model AuditLog {
   newData      String?  // JSON string
   ipAddress    String?
   createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([entity, entityId])
+  @@index([createdAt])
 }
 
 model SystemSetting {

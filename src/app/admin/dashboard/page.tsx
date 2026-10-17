@@ -55,13 +55,21 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [selectedRange, setSelectedRange] = useState<string>('all');
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<any>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = sessionStorage.getItem('_ne_fast_/api/v1/admin/stats?range=all');
+        if (raw) return JSON.parse(raw).data?.stats || JSON.parse(raw).data || null;
+      } catch {}
+    }
+    return null;
+  });
   const [bookings, setBookings] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [technicians, setTechnicians] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
   const [tickets, setTickets] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 

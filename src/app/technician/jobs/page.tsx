@@ -10,6 +10,8 @@ import {
   Check, Navigation, Play, Pause
 } from 'lucide-react';
 
+import { fastFetch, invalidateFastCache } from '@/lib/fastFetch';
+
 const STATUS_BADGES: Record<string, { label: string; color: string }> = {
   ASSIGNED: { label: 'Assigned', color: 'bg-purple-50 text-purple-700 border-purple-200' },
   ACCEPTED: { label: 'Accepted', color: 'bg-brand-50 text-brand-700 border-brand-200' },
@@ -32,10 +34,39 @@ export default function TechnicianJobsPage() {
   const { user } = useAuth();
 
   const [activeTab, setActiveTab] = useState<'active' | 'available' | 'completed'>('active');
-  const [profile, setProfile] = useState<any>(null);
-  const [assignedJobs, setAssignedJobs] = useState<any[]>([]);
-  const [availableJobs, setAvailableJobs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  // Instant warm cache initialization for zero-wait display
+  const [profile, setProfile] = useState<any>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = sessionStorage.getItem('_ne_fast_/api/v1/technicians/me');
+        if (raw) return JSON.parse(raw).data?.technician || null;
+      } catch {}
+    }
+    return null;
+  });
+
+  const [assignedJobs, setAssignedJobs] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = sessionStorage.getItem('_ne_fast_/api/v1/bookings?role=technician');
+        if (raw) return JSON.parse(raw).data?.bookings || [];
+      } catch {}
+    }
+    return [];
+  });
+
+  const [availableJobs, setAvailableJobs] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = sessionStorage.getItem('_ne_fast_/api/v1/bookings?status=AVAILABLE');
+        if (raw) return JSON.parse(raw).data?.bookings || [];
+      } catch {}
+    }
+    return [];
+  });
+
+  const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -49,33 +80,32 @@ export default function TechnicianJobsPage() {
       router.push('/customer/dashboard');
       return;
     }
-    loadData();
+    loadData(false);
   }, [user]);
 
-  const loadData = async () => {
-    setLoading(true);
+  const loadData = async (showSpinner = false) => {
+    if (showSpinner) setLoading(true);
     setError('');
     try {
-      const [profileRes, assignedRes, availableRes] = await Promise.all([
-        fetch('/api/v1/technicians/me'),
-        fetch('/api/v1/bookings?role=technician'),
-        fetch('/api/v1/bookings?status=AVAILABLE'),
+      const [pData, aData, avData] = await Promise.all([
+        fastFetch('/api/v1/technicians/me', { ttlMs: 30000 }),
+        fastFetch('/api/v1/bookings?role=technician', { ttlMs: 15000 }),
+        fastFetch('/api/v1/bookings?status=AVAILABLE', { ttlMs: 15000 }),
       ]);
 
-      if (profileRes.ok) {
-        const pData = await profileRes.json();
+      if (pData?.technician) {
         setProfile(pData.technician);
       }
-      if (assignedRes.ok) {
-        const aData = await assignedRes.json();
-        setAssignedJobs(aData.bookings || []);
+      if (aData?.bookings) {
+        setAssignedJobs(aData.bookings);
       }
-      if (availableRes.ok) {
-        const avData = await availableRes.json();
-        setAvailableJobs(avData.bookings || []);
+      if (avData?.bookings) {
+        setAvailableJobs(avData.bookings);
       }
     } catch (err: any) {
-      setError('Failed to load technician jobs.');
+      if (assignedJobs.length === 0 && availableJobs.length === 0) {
+        setError('Failed to load technician jobs.');
+      }
     } finally {
       setLoading(false);
     }
@@ -86,6 +116,7 @@ export default function TechnicianJobsPage() {
     setError('');
     setSuccessMsg('');
     try {
+      invalidateFastCache('/api/v1/bookings');
       const res = await fetch(`/api/v1/bookings/${bookingId}/accept`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -97,20 +128,27 @@ export default function TechnicianJobsPage() {
       }
 
       setSuccessMsg('Job successfully accepted and assigned to you!');
-      await loadData();
       router.push(`/technician/jobs/${bookingId}`);
     } catch (err: any) {
       setError(err.message || 'Could not claim job.');
+      await loadData(false);
     } finally {
       setActionLoading(null);
     }
   };
 
   const handleQuickStatusUpdate = async (bookingId: string, nextStatus: string) => {
+    const prevJobs = [...assignedJobs];
+    // Zero-latency optimistic update
+    setAssignedJobs((current) =>
+      current.map((j) => (j.id === bookingId ? { ...j, status: nextStatus } : j))
+    );
     setActionLoading(bookingId);
     setError('');
     setSuccessMsg('');
+
     try {
+      invalidateFastCache('/api/v1/bookings');
       const isComplete = nextStatus === 'COMPLETED' || nextStatus === 'WORK_COMPLETED';
       const res = await fetch(`/api/v1/bookings/${bookingId}`, {
         method: 'PATCH',
@@ -127,12 +165,18 @@ export default function TechnicianJobsPage() {
 
       const data = await res.json();
       if (!res.ok) {
+        // Rollback optimistic state
+        setAssignedJobs(prevJobs);
         throw new Error(data.error || 'Failed to update work status.');
       }
 
       setSuccessMsg(`Status updated to ${nextStatus.replace('_', ' ')}!`);
-      await loadData();
+      // Background revalidation
+      fastFetch('/api/v1/bookings?role=technician', { forceRefresh: true }).then((d) => {
+        if (d?.bookings) setAssignedJobs(d.bookings);
+      });
     } catch (err: any) {
+      setAssignedJobs(prevJobs);
       setError(err.message || 'Error updating status.');
     } finally {
       setActionLoading(null);
@@ -161,7 +205,7 @@ export default function TechnicianJobsPage() {
         </div>
 
         <button
-          onClick={loadData}
+          onClick={() => loadData(true)}
           disabled={loading}
           className="self-start sm:self-auto inline-flex items-center gap-2 px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 transition shadow-xs"
         >
@@ -243,14 +287,14 @@ export default function TechnicianJobsPage() {
       </div>
 
       {/* Loading Indicator */}
-      {loading && (
+      {loading && assignedJobs.length === 0 && availableJobs.length === 0 && (
         <div className="p-12 text-center text-xs text-slate-500 space-y-2">
           <div className="w-8 h-8 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin mx-auto" />
           <p>Loading jobs and assignments...</p>
         </div>
       )}
 
-      {!loading && activeTab === 'active' && (
+      {(!loading || assignedJobs.length > 0 || availableJobs.length > 0) && activeTab === 'active' && (
         <div className="space-y-4">
           {activeJobs.length === 0 ? (
             <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-3">
@@ -408,7 +452,7 @@ export default function TechnicianJobsPage() {
         </div>
       )}
 
-      {!loading && activeTab === 'available' && (
+      {(!loading || assignedJobs.length > 0 || availableJobs.length > 0) && activeTab === 'available' && (
         <div className="space-y-4">
           {availableJobs.length === 0 ? (
             <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-3">
@@ -481,7 +525,7 @@ export default function TechnicianJobsPage() {
         </div>
       )}
 
-      {!loading && activeTab === 'completed' && (
+      {(!loading || assignedJobs.length > 0 || availableJobs.length > 0) && activeTab === 'completed' && (
         <div className="space-y-4">
           {completedJobs.length === 0 ? (
             <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center text-xs text-slate-500">

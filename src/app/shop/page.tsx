@@ -22,14 +22,38 @@ import ProductCard from '@/components/common/ProductCard';
 
 export default function ShopPage() {
   const { addToCart } = useCart();
-  const [products, setProducts] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [brands, setBrands] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = sessionStorage.getItem('_ne_fast_/api/v1/products?limit=60&');
+        if (raw) return JSON.parse(raw).data?.products || [];
+      } catch {}
+    }
+    return [];
+  });
+  const [categories, setCategories] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = sessionStorage.getItem('_ne_fast_/api/v1/products?limit=60&');
+        if (raw) return JSON.parse(raw).data?.categories || [];
+      } catch {}
+    }
+    return [];
+  });
+  const [brands, setBrands] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = sessionStorage.getItem('_ne_fast_/api/v1/products?limit=60&');
+        if (raw) return JSON.parse(raw).data?.brands || [];
+      } catch {}
+    }
+    return [];
+  });
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedBrand, setSelectedBrand] = useState<string>('all');
   const [selectedCondition, setSelectedCondition] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [addedNotice, setAddedNotice] = useState<string | null>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -311,7 +335,7 @@ export default function ShopPage() {
 
       {/* Product Grid - Full Width */}
       <div className="space-y-6">
-        {loading ? (
+        {loading && products.length === 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
               <div key={i} className="card-premium h-80 bg-slate-100 animate-pulse rounded-2xl" />

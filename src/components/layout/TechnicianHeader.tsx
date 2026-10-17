@@ -24,6 +24,8 @@ import {
   Zap,
 } from 'lucide-react';
 
+import { fastFetch, invalidateFastCache } from '@/lib/fastFetch';
+
 export default function TechnicianHeader() {
   const { user, logout } = useAuth();
   const pathname = usePathname();
@@ -53,27 +55,23 @@ export default function TechnicianHeader() {
     };
   }, [mobileMenuOpen]);
 
-  // Load technician status & notification badge
+  // Load technician status & notification badge with stale-while-revalidate cache
   useEffect(() => {
     if (!user || user.role !== 'TECHNICIAN') return;
 
     let isMounted = true;
     async function fetchTechStatus() {
       try {
-        const [meRes, notifRes] = await Promise.all([
-          fetch('/api/v1/technicians/me'),
-          fetch('/api/v1/technicians/notifications'),
+        const [meData, notifData] = await Promise.all([
+          fastFetch('/api/v1/technicians/me', { ttlMs: 30000 }),
+          fastFetch('/api/v1/technicians/notifications', { ttlMs: 30000 }),
         ]);
 
-        if (meRes.ok && isMounted) {
-          const d = await meRes.json();
-          if (d.technician?.availableStatus) {
-            setAvailableStatus(d.technician.availableStatus);
-          }
+        if (meData?.technician?.availableStatus && isMounted) {
+          setAvailableStatus(meData.technician.availableStatus);
         }
-        if (notifRes.ok && isMounted) {
-          const nd = await notifRes.json();
-          setUnreadNotifications(nd.unreadCount || 0);
+        if (typeof notifData?.unreadCount === 'number' && isMounted) {
+          setUnreadNotifications(notifData.unreadCount);
         }
       } catch {
         // Silent catch for background poll
@@ -88,19 +86,26 @@ export default function TechnicianHeader() {
 
   const handleToggleAvailability = async () => {
     if (loadingStatus) return;
+    const prevStatus = availableStatus;
+    const nextStatus = prevStatus === 'AVAILABLE' ? 'OFFLINE' : 'AVAILABLE';
+
+    // Zero-wait optimistic UI transition
+    setAvailableStatus(nextStatus);
     setLoadingStatus(true);
-    const nextStatus = availableStatus === 'AVAILABLE' ? 'OFFLINE' : 'AVAILABLE';
+
     try {
+      invalidateFastCache('/api/v1/technicians/me');
       const res = await fetch('/api/v1/technicians/availability', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ availableStatus: nextStatus }),
       });
-      if (res.ok) {
-        setAvailableStatus(nextStatus);
+      if (!res.ok) {
+        // Rollback on rejection
+        setAvailableStatus(prevStatus);
       }
     } catch {
-      // silent
+      setAvailableStatus(prevStatus);
     } finally {
       setLoadingStatus(false);
     }

@@ -12,6 +12,8 @@ import {
   ChevronRight, LifeBuoy, Zap
 } from 'lucide-react';
 
+import { fastFetch, invalidateFastCache } from '@/lib/fastFetch';
+
 const STATUS_PROGRESSION_ORDER = [
   'ASSIGNED',
   'ACCEPTED',
@@ -47,8 +49,17 @@ export default function TechnicianJobControlCenter() {
   const jobId = params?.id as string;
   const { user } = useAuth();
 
-  const [booking, setBooking] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  // Warm cache initialization for zero-latency screen entry
+  const [booking, setBooking] = useState<any>(() => {
+    if (typeof window !== 'undefined' && jobId) {
+      try {
+        const raw = sessionStorage.getItem(`_ne_fast_/api/v1/bookings/${jobId}`);
+        if (raw) return JSON.parse(raw).data?.booking || null;
+      } catch {}
+    }
+    return null;
+  });
+  const [loading, setLoading] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -111,34 +122,31 @@ export default function TechnicianJobControlCenter() {
       router.push('/customer/dashboard');
       return;
     }
-    loadJobDetails();
+    loadJobDetails(false);
     loadCatalogParts();
   }, [jobId, user]);
 
-  const loadJobDetails = async () => {
-    setLoading(true);
+  const loadJobDetails = async (showSpinner = false) => {
+    if (showSpinner) setLoading(true);
     setError('');
     try {
-      const res = await fetch(`/api/v1/bookings/${jobId}`);
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || 'Failed to load job details');
-      }
-      const data = await res.json();
-      setBooking(data.booking);
+      const data = await fastFetch(`/api/v1/bookings/${jobId}`, { ttlMs: 15000 });
+      if (data?.booking) {
+        setBooking(data.booking);
 
-      // Pre-fill photos if already attached
-      if (data.booking.beforePhotos) {
-        setBeforePhotosList(data.booking.beforePhotos.split(',').map((s: string) => s.trim()).filter(Boolean));
-      }
-      if (data.booking.afterPhotos) {
-        setAfterPhotosList(data.booking.afterPhotos.split(',').map((s: string) => s.trim()).filter(Boolean));
+        // Pre-fill photos if already attached
+        if (data.booking.beforePhotos) {
+          setBeforePhotosList(data.booking.beforePhotos.split(',').map((s: string) => s.trim()).filter(Boolean));
+        }
+        if (data.booking.afterPhotos) {
+          setAfterPhotosList(data.booking.afterPhotos.split(',').map((s: string) => s.trim()).filter(Boolean));
+        }
       }
 
       // Load messages
       loadMessages();
     } catch (err: any) {
-      setError(err.message || 'Error loading job');
+      if (!booking) setError(err.message || 'Error loading job');
     } finally {
       setLoading(false);
     }
@@ -146,10 +154,9 @@ export default function TechnicianJobControlCenter() {
 
   const loadCatalogParts = async () => {
     try {
-      const res = await fetch('/api/v1/parts');
-      if (res.ok) {
-        const data = await res.json();
-        setCatalogParts(data.parts || []);
+      const data = await fastFetch('/api/v1/parts', { ttlMs: 60000 });
+      if (data?.parts) {
+        setCatalogParts(data.parts);
       }
     } catch {
       // ignore
@@ -158,10 +165,9 @@ export default function TechnicianJobControlCenter() {
 
   const loadMessages = async () => {
     try {
-      const res = await fetch(`/api/v1/bookings/${jobId}/messages`);
-      if (res.ok) {
-        const d = await res.json();
-        setMessages(d.messages || []);
+      const d = await fastFetch(`/api/v1/bookings/${jobId}/messages`, { ttlMs: 10000 });
+      if (d?.messages) {
+        setMessages(d.messages);
       }
     } catch {
       // ignore
@@ -169,10 +175,15 @@ export default function TechnicianJobControlCenter() {
   };
 
   const handleUpdateStatus = async (nextStatus: string, noteText?: string) => {
+    const prevBooking = booking;
+    // Zero-latency optimistic UI status progression
+    setBooking((prev: any) => (prev ? { ...prev, status: nextStatus } : prev));
     setUpdating(true);
     setError('');
     setSuccessMsg('');
+
     try {
+      invalidateFastCache('/api/v1/bookings');
       const isComplete = nextStatus === 'COMPLETED' || nextStatus === 'WORK_COMPLETED';
       const payload: any = {
         status: nextStatus,
@@ -194,6 +205,8 @@ export default function TechnicianJobControlCenter() {
 
       const data = await res.json();
       if (!res.ok) {
+        // Rollback
+        setBooking(prevBooking);
         throw new Error(data.error || 'Failed to update job status');
       }
 
@@ -201,8 +214,13 @@ export default function TechnicianJobControlCenter() {
       setStatusModal({ isOpen: false, targetStatus: '', title: '', requireReason: false });
       setModalReason('');
       setIsCompletionModalOpen(false);
-      await loadJobDetails();
+
+      // Background authoritative reconciliation
+      fastFetch(`/api/v1/bookings/${jobId}`, { forceRefresh: true }).then((d) => {
+        if (d?.booking) setBooking(d.booking);
+      });
     } catch (err: any) {
+      setBooking(prevBooking);
       setError(err.message || 'Failed to progress job');
     } finally {
       setUpdating(false);
@@ -349,7 +367,7 @@ export default function TechnicianJobControlCenter() {
     }
   };
 
-  if (loading) {
+  if (loading && !booking) {
     return (
       <div className="max-w-5xl mx-auto px-4 py-16 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-slate-200 border-t-brand-600 rounded-full animate-spin" />
@@ -416,7 +434,7 @@ export default function TechnicianJobControlCenter() {
 
         <div className="flex items-center gap-2 flex-wrap">
           <button
-            onClick={loadJobDetails}
+            onClick={() => loadJobDetails(true)}
             disabled={updating}
             className="p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition shadow-xs"
             title="Refresh"
