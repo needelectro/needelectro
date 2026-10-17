@@ -152,9 +152,93 @@ export default function JobsPage() {
     }
   };
 
+  const handleAutoAssign = async (jobId: string) => {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/v1/admin/jobs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "AUTO_ASSIGN",
+          bookingId: jobId,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert(data.message || "Auto-dispatch succeeded!");
+        fetchJobs();
+        if (selectedJob && selectedJob.id === jobId) {
+          setSelectedJob((prev) => prev ? { ...prev, status: "ASSIGNED", technician: data.booking?.technician } : null);
+        }
+      } else {
+        alert(data.message || data.error || "Auto-dispatch could not find an eligible technician.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to auto-dispatch job.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancelBooking = async (jobId: string) => {
+    const reason = window.prompt("Please enter administrative cancellation reason:");
+    if (!reason || reason.trim().length < 3) return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/v1/admin/jobs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "CANCEL_BOOKING",
+          bookingId: jobId,
+          reason: reason.trim(),
+        }),
+      });
+      if (res.ok) {
+        fetchJobs();
+        if (selectedJob && selectedJob.id === jobId) {
+          setSelectedJob((prev) => prev ? { ...prev, status: "CANCELLED" } : null);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleApproveCompletion = async (jobId: string) => {
+    if (!confirm("Confirm approval of completion report and settle technician 85% revenue share?")) return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/v1/admin/jobs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "APPROVE_COMPLETION",
+          bookingId: jobId,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.message || "Workmanship approved and earnings settled!");
+        fetchJobs();
+        if (selectedJob && selectedJob.id === jobId) {
+          setSelectedJob((prev) => prev ? { ...prev, status: "COMPLETED" } : null);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const filteredJobs = jobs.filter((j) => {
     const matchesSearch =
       j.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ((j as any).bookingNumber || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (j.service?.title || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (j.customer?.fullName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (j.customer?.phone || "").includes(searchTerm) ||
@@ -400,6 +484,16 @@ export default function JobsPage() {
                     </td>
                     <td className="px-4 py-3.5">{getStatusBadge(job.status)}</td>
                     <td className="px-4 py-3.5 text-right space-x-1.5 whitespace-nowrap">
+                      {!job.technician && (
+                        <button
+                          onClick={() => handleAutoAssign(job.id)}
+                          disabled={saving}
+                          className="px-2.5 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-md text-xs font-semibold transition"
+                          title="Instant Smart Match & Dispatch"
+                        >
+                          ⚡ Auto-Dispatch
+                        </button>
+                      )}
                       <button
                         onClick={() => {
                           setSelectedJob(job);
@@ -622,7 +716,53 @@ export default function JobsPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-end px-6 py-4 bg-slate-50 border-t border-slate-100">
+            <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 bg-slate-50 border-t border-slate-100">
+              <div className="flex flex-wrap items-center gap-2">
+                {!selectedJob.technician ? (
+                  <button
+                    type="button"
+                    onClick={() => handleAutoAssign(selectedJob.id)}
+                    disabled={saving}
+                    className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1.5"
+                  >
+                    ⚡ Auto-Assign (Smart Match)
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedTechId(selectedJob.technicianId || "");
+                      setAssignModalOpen(true);
+                    }}
+                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-xs"
+                  >
+                    Reassign Technician
+                  </button>
+                )}
+
+                {['IN_PROGRESS', 'ARRIVED', 'WORK_COMPLETED'].includes(selectedJob.status) && (
+                  <button
+                    type="button"
+                    onClick={() => handleApproveCompletion(selectedJob.id)}
+                    disabled={saving}
+                    className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow-xs"
+                  >
+                    ✓ Settle Completion (85%)
+                  </button>
+                )}
+
+                {selectedJob.status !== 'CANCELLED' && (
+                  <button
+                    type="button"
+                    onClick={() => handleCancelBooking(selectedJob.id)}
+                    disabled={saving}
+                    className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition"
+                  >
+                    Cancel Booking
+                  </button>
+                )}
+              </div>
+
               <button
                 type="button"
                 onClick={() => setSelectedJob(null)}

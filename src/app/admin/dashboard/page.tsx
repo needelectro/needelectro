@@ -54,6 +54,7 @@ export default function AdminDashboard() {
   const { user, isLoading: authLoading, logout } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
+  const [selectedRange, setSelectedRange] = useState<string>('all');
   const [stats, setStats] = useState<any>(null);
   const [bookings, setBookings] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
@@ -86,13 +87,14 @@ export default function AdminDashboard() {
     loadData();
   }, [user, authLoading]);
 
-  const loadData = async (forceRefresh = false) => {
+  const loadData = async (forceRefresh = false, rangeOverride?: string) => {
     setIsRefreshing(true);
     if (!stats) setLoading(true);
 
+    const rangeToUse = rangeOverride || selectedRange;
     try {
-      // 1. High-priority instant paint: Fetch stats + recent activity first
-      const sData = await fastFetch('/api/v1/admin/stats', { forceRefresh, ttlMs: 20000, timeoutMs: 6000 });
+      // 1. High-priority instant paint: Fetch stats with range filter
+      const sData = await fastFetch(`/api/v1/admin/stats?range=${rangeToUse}`, { forceRefresh, ttlMs: 15000, timeoutMs: 6000 });
       if (sData) {
         setStats(sData.stats || sData);
         if (sData.recentBookings && Array.isArray(sData.recentBookings)) {
@@ -370,22 +372,48 @@ export default function AdminDashboard() {
       <main className="space-y-6 min-w-0">
         {activeTab === 'overview' && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h1 className="text-xl font-black text-slate-950">Admin Dashboard</h1>
-                <p className="text-xs text-slate-500">Live operational metrics and service performance</p>
+                <h1 className="text-xl font-black text-slate-950">Executive Operations Dashboard</h1>
+                <p className="text-xs text-slate-500">Live consolidated metrics across services, workforce, marketplace & finance</p>
               </div>
-              <button
-                onClick={() => {
-                  invalidateFastCache();
-                  loadData(true);
-                }}
-                disabled={isRefreshing}
-                className="btn-secondary text-xs py-2 gap-1.5"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-brand-600' : ''}`} />
-                {isRefreshing ? 'Syncing...' : 'Refresh'}
-              </button>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center bg-slate-100 p-1 rounded-xl text-xs font-semibold">
+                  {[
+                    { id: 'all', label: 'All Time' },
+                    { id: 'today', label: 'Today' },
+                    { id: '7d', label: '7 Days' },
+                    { id: 'this_month', label: 'This Month' },
+                  ].map((r) => (
+                    <button
+                      key={r.id}
+                      onClick={() => {
+                        setSelectedRange(r.id);
+                        invalidateFastCache();
+                        loadData(true, r.id);
+                      }}
+                      className={`px-3 py-1 rounded-lg transition ${
+                        selectedRange === r.id
+                          ? 'bg-white text-slate-900 shadow-xs font-bold'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      {r.label}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => {
+                    invalidateFastCache();
+                    loadData(true);
+                  }}
+                  disabled={isRefreshing}
+                  className="btn-secondary text-xs py-1.5 px-3 gap-1.5"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-brand-600' : ''}`} />
+                  {isRefreshing ? 'Syncing...' : 'Refresh'}
+                </button>
+              </div>
             </div>
 
             {loading && !stats ? (
@@ -436,7 +464,7 @@ export default function AdminDashboard() {
                   </div>
                 )}
 
-                {/* Stats Grid */}
+                {/* Primary Stats Grid */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   {[
                     {
@@ -475,6 +503,139 @@ export default function AdminDashboard() {
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{label}</p>
                     </div>
                   ))}
+                </div>
+
+                {/* Operational Command Center Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Service Dispatch Card */}
+                  <div className="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-xs space-y-3">
+                    <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                      <span className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                        <Wrench className="w-4 h-4 text-brand-600" /> Service Dispatch
+                      </span>
+                      <Link href="/admin/jobs" className="text-[11px] font-bold text-brand-600 hover:underline">
+                        Inbox &rarr;
+                      </Link>
+                    </div>
+                    <div className="space-y-1.5 text-xs">
+                      <Link href="/admin/jobs?status=REQUESTED" className="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 transition">
+                        <span className="text-slate-600">Awaiting Assignment:</span>
+                        <span className="font-mono font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                          {stats?.requestedBookings ?? 0}
+                        </span>
+                      </Link>
+                      <Link href="/admin/jobs?status=IN_PROGRESS" className="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 transition">
+                        <span className="text-slate-600">Active in Field:</span>
+                        <span className="font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                          {stats?.activeJobs ?? 0}
+                        </span>
+                      </Link>
+                      <Link href="/admin/jobs?status=COMPLETED" className="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 transition">
+                        <span className="text-slate-600">Completed Services:</span>
+                        <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                          {stats?.completedJobs ?? 0}
+                        </span>
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Workforce Readiness Card */}
+                  <div className="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-xs space-y-3">
+                    <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                      <span className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                        <Users className="w-4 h-4 text-emerald-600" /> Technician Force
+                      </span>
+                      <Link href="/admin/technicians" className="text-[11px] font-bold text-brand-600 hover:underline">
+                        Manage &rarr;
+                      </Link>
+                    </div>
+                    <div className="space-y-1.5 text-xs">
+                      <Link href="/admin/technicians?status=VERIFIED" className="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 transition">
+                        <span className="text-slate-600">Verified Electricians:</span>
+                        <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                          {stats?.verifiedTechnicians ?? 0}
+                        </span>
+                      </Link>
+                      <Link href="/admin/technicians?status=PENDING" className="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 transition">
+                        <span className="text-slate-600">Pending Review:</span>
+                        <span className="font-mono font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                          {stats?.pendingTechnicians ?? 0}
+                        </span>
+                      </Link>
+                      <div className="flex items-center justify-between p-1.5 rounded-lg">
+                        <span className="text-slate-600">Available on Call:</span>
+                        <span className="font-mono font-bold text-slate-900">
+                          {stats?.availableTechnicians ?? 0}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Marketplace Orders & Inventory */}
+                  <div className="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-xs space-y-3">
+                    <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                      <span className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                        <Package className="w-4 h-4 text-purple-600" /> Orders &amp; Inventory
+                      </span>
+                      <Link href="/admin/orders" className="text-[11px] font-bold text-brand-600 hover:underline">
+                        Orders &rarr;
+                      </Link>
+                    </div>
+                    <div className="space-y-1.5 text-xs">
+                      <Link href="/admin/orders?status=PENDING" className="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 transition">
+                        <span className="text-slate-600">Pending Fulfillment:</span>
+                        <span className="font-mono font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
+                          {stats?.pendingOrders ?? 0}
+                        </span>
+                      </Link>
+                      <Link href="/admin/inventory" className="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 transition">
+                        <span className="text-slate-600">Low Stock Alerts:</span>
+                        <span className={`font-mono font-bold px-2 py-0.5 rounded-full border ${
+                          (stats?.lowStockProducts ?? 0) > 0 ? 'text-red-700 bg-red-50 border-red-200' : 'text-slate-700 bg-slate-50 border-slate-200'
+                        }`}>
+                          {stats?.lowStockProducts ?? 0}
+                        </span>
+                      </Link>
+                      <Link href="/admin/orders?status=DELIVERED" className="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 transition">
+                        <span className="text-slate-600">Delivered Orders:</span>
+                        <span className="font-mono font-bold text-emerald-700">
+                          {stats?.deliveredOrders ?? 0}
+                        </span>
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Finance & Payout Ledger */}
+                  <div className="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-xs space-y-3">
+                    <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                      <span className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                        <DollarSign className="w-4 h-4 text-amber-600" /> Revenue &amp; Ledger
+                      </span>
+                      <Link href="/admin/payments" className="text-[11px] font-bold text-brand-600 hover:underline">
+                        Ledger &rarr;
+                      </Link>
+                    </div>
+                    <div className="space-y-1.5 text-xs">
+                      <div className="flex items-center justify-between p-1.5 rounded-lg">
+                        <span className="text-slate-600">Technician Share (85%):</span>
+                        <span className="font-mono font-bold text-emerald-700">
+                          ৳{(stats?.technicianCommissions ?? 0).toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between p-1.5 rounded-lg">
+                        <span className="text-slate-600">Platform Comm. (15%):</span>
+                        <span className="font-mono font-bold text-brand-600">
+                          ৳{(stats?.platformCommissions ?? 0).toLocaleString()}
+                        </span>
+                      </div>
+                      <Link href="/admin/payments" className="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 transition">
+                        <span className="text-slate-600">Pending Payouts:</span>
+                        <span className="font-mono font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                          ৳{(stats?.pendingPayoutLiabilities ?? 0).toLocaleString()}
+                        </span>
+                      </Link>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Recent Bookings */}
