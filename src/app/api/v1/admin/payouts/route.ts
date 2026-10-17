@@ -62,27 +62,32 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // If marked as PAID, deduct from technician wallet balance and add wallet transaction record
+      // When payout request was created, wallet balance was already decremented.
+      // On PAID: increment totalWithdrawn and mark walletTransaction as COMPLETED.
+      // On REJECTED: refund walletBalance and mark walletTransaction as REJECTED.
       if (status === 'PAID') {
-        const newBalance = Math.max(0, payout.technician.walletBalance - payout.amount);
         await tx.technicianProfile.update({
           where: { id: payout.technicianId },
           data: {
-            walletBalance: newBalance,
             totalWithdrawn: { increment: payout.amount },
           },
         });
 
-        await tx.walletTransaction.create({
+        await tx.walletTransaction.updateMany({
+          where: { referenceId: payout.id },
+          data: { status: 'COMPLETED' },
+        });
+      } else if (status === 'REJECTED') {
+        await tx.technicianProfile.update({
+          where: { id: payout.technicianId },
           data: {
-            technicianId: payout.technicianId,
-            type: 'WITHDRAWAL',
-            amount: -payout.amount,
-            balanceAfter: newBalance,
-            description: `Payout processed via ${payout.paymentMethod} (Trx: ${trxId || 'N/A'})`,
-            status: 'COMPLETED',
-            referenceId: payout.id,
+            walletBalance: { increment: payout.amount },
           },
+        });
+
+        await tx.walletTransaction.updateMany({
+          where: { referenceId: payout.id },
+          data: { status: 'REJECTED' },
         });
       }
 

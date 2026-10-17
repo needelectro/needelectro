@@ -126,8 +126,16 @@ export default function TechniciansPage() {
   };
 
   const handleProcessPayout = async (payoutId: string, status: "APPROVED" | "REJECTED") => {
-    const txnRef = status === "APPROVED" ? prompt("Enter bKash/Nagad/Bank Transaction Reference ID:") : "";
-    if (status === "APPROVED" && !txnRef) return;
+    let txnRef = "";
+    let adminNotes = "";
+
+    if (status === "APPROVED") {
+      txnRef = prompt("Enter bKash/Nagad/Bank Transaction Reference ID:") || "";
+      if (!txnRef) return;
+    } else {
+      adminNotes = prompt("Enter rejection reason (balance will be refunded to technician):") || "Verification failed";
+      if (!adminNotes) return;
+    }
 
     try {
       const res = await fetch("/api/v1/admin/payouts", {
@@ -137,6 +145,8 @@ export default function TechniciansPage() {
           payoutId,
           status,
           transactionRef: txnRef,
+          trxId: txnRef,
+          adminNotes,
         }),
       });
       if (res.ok) {

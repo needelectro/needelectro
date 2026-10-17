@@ -75,7 +75,31 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
-    return NextResponse.json({ success: true, bookings });
+    // Module 5.1 Privacy Protection: Never reveal customer private contact before assignment
+    const sanitized = bookings.map((b: any) => {
+      if (availableJobs || (b.status === 'AVAILABLE' && !b.technicianId)) {
+        return {
+          ...b,
+          customer: {
+            user: {
+              name: 'Verified Customer',
+              phone: 'Hidden until accepted',
+              email: null,
+            },
+          },
+          address: b.address ? {
+            division: b.address.division,
+            district: b.address.district,
+            upazila: b.address.upazila,
+            area: b.address.area,
+            addressLine: 'Full address revealed upon job acceptance',
+          } : null,
+        };
+      }
+      return b;
+    });
+
+    return NextResponse.json({ success: true, bookings: sanitized });
   } catch (error) {
     console.error('Fetch bookings error:', error);
     return NextResponse.json({ error: 'Failed to load bookings' }, { status: 500 });

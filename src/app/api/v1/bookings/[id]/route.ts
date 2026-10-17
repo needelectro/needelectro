@@ -9,6 +9,14 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const cookieStore = await cookies();
+    const token = cookieStore.get('need_electro_token')?.value;
+    const session = token ? verifyToken(token) : null;
+
+    if (!session) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
     const booking = await prisma.booking.findUnique({
       where: { id },
       include: {
@@ -52,6 +60,55 @@ export async function GET(
 
     if (!booking) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
+    }
+
+    // Role-based record ownership enforcement
+    if (session.role === 'CUSTOMER') {
+      const customer = await prisma.customerProfile.findUnique({
+        where: { userId: session.id },
+      });
+      if (!customer || booking.customerId !== customer.id) {
+        return NextResponse.json({ error: 'Access denied to this booking' }, { status: 403 });
+      }
+    } else if (session.role === 'TECHNICIAN') {
+      const tech = await prisma.technicianProfile.findUnique({
+        where: { userId: session.id },
+      });
+      if (!tech) {
+        return NextResponse.json({ error: 'Technician profile not found' }, { status: 404 });
+      }
+      
+      const isAssigned = booking.technicianId === tech.id;
+      const isUnclaimed = !booking.technicianId && ['MATCHING', 'REQUESTED', 'CONFIRMED', 'OFFERED', 'AVAILABLE'].includes(booking.status);
+
+      if (!isAssigned && !isUnclaimed) {
+        return NextResponse.json({ error: 'Access denied: You are not assigned to this job' }, { status: 403 });
+      }
+
+      // If viewing unclaimed job, sanitize customer private contact details
+      if (isUnclaimed) {
+        return NextResponse.json({
+          success: true,
+          booking: {
+            ...booking,
+            customer: {
+              user: {
+                name: 'Verified Customer',
+                phone: 'Hidden until accepted',
+              },
+            },
+            address: booking.address ? {
+              division: booking.address.division,
+              district: booking.address.district,
+              upazila: booking.address.upazila,
+              area: booking.address.area,
+              addressLine: 'Full address revealed upon job acceptance',
+            } : null,
+          },
+        });
+      }
+    } else if (session.role !== 'ADMIN' && session.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     return NextResponse.json({ success: true, booking });
@@ -101,11 +158,47 @@ export async function PATCH(
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
     }
 
+    // Role-based authorization & tamper guard
+    if (session.role === 'TECHNICIAN') {
+      const tech = await prisma.technicianProfile.findUnique({
+        where: { userId: session.id },
+      });
+      if (!tech || booking.technicianId !== tech.id) {
+        return NextResponse.json(
+          { error: 'Forbidden: You are not the assigned technician for this booking' },
+          { status: 403 }
+        );
+      }
+      if (booking.status === 'CANCELLED') {
+        return NextResponse.json(
+          { error: 'Cannot update a cancelled booking without administrative authorization' },
+          { status: 400 }
+        );
+      }
+    } else if (session.role === 'CUSTOMER') {
+      const customer = await prisma.customerProfile.findUnique({
+        where: { userId: session.id },
+      });
+      if (!customer || booking.customerId !== customer.id) {
+        return NextResponse.json(
+          { error: 'Forbidden: You cannot modify this booking' },
+          { status: 403 }
+        );
+      }
+    } else if (session.role !== 'ADMIN' && session.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized role' }, { status: 403 });
+    }
+
     const updated = await prisma.$transaction(async (tx: any) => {
       const updateData: any = {};
       if (status) updateData.status = status;
-      if (paymentStatus) updateData.paymentStatus = paymentStatus;
-      if (technicianId) updateData.technicianId = technicianId;
+      
+      // Only admins can alter payment status or reassign technician
+      if (session.role === 'ADMIN' || session.role === 'SUPER_ADMIN') {
+        if (paymentStatus) updateData.paymentStatus = paymentStatus;
+        if (technicianId) updateData.technicianId = technicianId;
+      }
+
       if (technicianNotes !== undefined) updateData.technicianNotes = technicianNotes;
       if (customerNotes !== undefined) updateData.customerNotes = customerNotes;
       if (beforePhotos !== undefined) updateData.beforePhotos = beforePhotos;

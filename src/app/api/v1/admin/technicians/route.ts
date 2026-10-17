@@ -127,7 +127,124 @@ export async function PATCH(req: NextRequest) {
     if (!auth.authorized) return auth.response!;
 
     const body = await req.json();
-    const { technicianId, isVerified, verificationStatus, isAvailable, availableStatus, rating, ratingOverall } = body;
+    const {
+      technicianId,
+      isVerified,
+      verificationStatus,
+      verificationNotes,
+      isAvailable,
+      availableStatus,
+      rating,
+      ratingOverall,
+      userStatus,
+      payoutRequestId,
+      payoutAction,
+      payoutTrxId,
+      payoutNotes,
+    } = body;
+
+    // 1. Payout Processing Workflow
+    if (payoutRequestId && payoutAction) {
+      const payout = await prisma.payoutRequest.findUnique({
+        where: { id: payoutRequestId },
+        include: { technician: { include: { user: true } } },
+      });
+
+      if (!payout) {
+        return NextResponse.json({ success: false, error: 'Payout request not found' }, { status: 404 });
+      }
+
+      if (payoutAction === 'APPROVE') {
+        const updatedPayout = await prisma.payoutRequest.update({
+          where: { id: payoutRequestId },
+          data: {
+            status: 'APPROVED',
+            approvedBy: auth.session?.id,
+            adminNotes: payoutNotes || 'Approved by administrator',
+          },
+        });
+        return NextResponse.json({ success: true, payout: updatedPayout });
+      }
+
+      if (payoutAction === 'PAID') {
+        const updatedPayout = await prisma.$transaction(async (tx: any) => {
+          const res = await tx.payoutRequest.update({
+            where: { id: payoutRequestId },
+            data: {
+              status: 'PAID',
+              paidAt: new Date(),
+              trxId: payoutTrxId || `TRX-MANUAL-${Date.now().toString().slice(-6)}`,
+              adminNotes: payoutNotes || 'Settled and disbursed',
+            },
+          });
+
+          await tx.technicianProfile.update({
+            where: { id: payout.technicianId },
+            data: {
+              totalWithdrawn: { increment: payout.amount },
+            },
+          });
+
+          await tx.walletTransaction.updateMany({
+            where: { referenceId: payoutRequestId },
+            data: { status: 'COMPLETED' },
+          });
+
+          await tx.notification.create({
+            data: {
+              userId: payout.technician.userId,
+              title: 'Payout Disbursed Successfully',
+              message: `Your payout of ৳${payout.amount} has been paid via ${payout.paymentMethod} (TrxID: ${res.trxId}).`,
+              type: 'WALLET',
+              link: '/technician/earnings',
+            },
+          });
+
+          return res;
+        });
+
+        return NextResponse.json({ success: true, payout: updatedPayout });
+      }
+
+      if (payoutAction === 'REJECT') {
+        const updatedPayout = await prisma.$transaction(async (tx: any) => {
+          const res = await tx.payoutRequest.update({
+            where: { id: payoutRequestId },
+            data: {
+              status: 'REJECTED',
+              adminNotes: payoutNotes || 'Rejected by administrator',
+            },
+          });
+
+          // Refund balance back to technician
+          await tx.technicianProfile.update({
+            where: { id: payout.technicianId },
+            data: {
+              walletBalance: { increment: payout.amount },
+            },
+          });
+
+          await tx.walletTransaction.updateMany({
+            where: { referenceId: payoutRequestId },
+            data: { status: 'REJECTED' },
+          });
+
+          await tx.notification.create({
+            data: {
+              userId: payout.technician.userId,
+              title: 'Payout Request Declined',
+              message: `Your payout request of ৳${payout.amount} was rejected. Reason: ${payoutNotes || 'Information verification failed'}. Balance has been refunded to your wallet.`,
+              type: 'WALLET',
+              link: '/technician/earnings',
+            },
+          });
+
+          return res;
+        });
+
+        return NextResponse.json({ success: true, payout: updatedPayout });
+      }
+    }
 
     if (!technicianId) {
       return NextResponse.json({ success: false, error: "technicianId is required" }, { status: 400 });
@@ -148,6 +265,12 @@ export async function PATCH(req: NextRequest) {
     }
     if (verificationStatus) {
       updateData.verificationStatus = verificationStatus;
+      if (verificationStatus === 'VERIFIED') {
+        updateData.verifiedAt = new Date();
+      }
+    }
+    if (verificationNotes !== undefined) {
+      updateData.verificationNotes = verificationNotes;
     }
     if (typeof isAvailable === "boolean") {
       updateData.availableStatus = isAvailable ? "AVAILABLE" : "BUSY";
@@ -162,11 +285,46 @@ export async function PATCH(req: NextRequest) {
       updateData.ratingOverall = ratingOverall;
     }
 
+    // Account suspension/reactivation
+    if (userStatus && (userStatus === 'ACTIVE' || userStatus === 'SUSPENDED')) {
+      await prisma.user.update({
+        where: { id: previousProfile.userId },
+        data: { status: userStatus },
+      });
+      if (userStatus === 'SUSPENDED') {
+        updateData.verificationStatus = 'SUSPENDED';
+        updateData.availableStatus = 'OFFLINE';
+      }
+    }
+
     const updated = await prisma.technicianProfile.update({
       where: { id: technicianId },
       data: updateData,
       include: { user: true },
     });
+
+    // Notify technician of verification or account decision
+    if (verificationStatus && verificationStatus !== previousProfile.verificationStatus) {
+      const decisionTitle = verificationStatus === 'VERIFIED'
+        ? 'Account Verified & Activated!'
+        : verificationStatus === 'REJECTED'
+        ? 'Application Review Decision'
+        : 'Application Status Updated';
+
+      const decisionMsg = verificationStatus === 'VERIFIED'
+        ? 'Congratulations! Your technician profile has been approved and verified by NEED ELECTRO. You can now accept live job orders across Bangladesh.'
+        : `Your application status is now ${verificationStatus}.${verificationNotes ? ` Note: ${verificationNotes}` : ''}`;
+
+      await prisma.notification.create({
+        data: {
+          userId: previousProfile.userId,
+          title: decisionTitle,
+          message: decisionMsg,
+          type: 'VERIFICATION',
+          link: '/technician/dashboard',
+        },
+      });
+    }
 
     await recordAuditLog({
       userId: auth.session?.id,
