@@ -129,7 +129,7 @@ export default function TechnicianHeader() {
     <>
       {/* ═══ TOP DISPATCH HOTLINE BAR (Desktop Only) ═══ */}
       <div className="bg-slate-950/90 backdrop-blur-md text-slate-300 text-xs py-1.5 px-4 hidden md:block border-b border-white/10 relative z-50">
-        <div className="max-w-7xl mx-auto flex items-center justify-between text-[11px] xl:text-xs">
+        <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 flex items-center justify-between text-[11px] xl:text-xs">
           <div className="flex items-center gap-4">
             <a href="tel:01733983752" className="flex items-center gap-1.5 text-slate-300 hover:text-white transition">
               <PhoneCall className="w-3.5 h-3.5 text-amber-400 shrink-0" />
@@ -289,7 +289,7 @@ export default function TechnicianHeader() {
 
       {/* ═══ DESKTOP HEADER ═══ */}
       <header className="hidden lg:block sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-[0_2px_15px_rgba(15,23,42,0.04)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
           <div className="flex items-center justify-between h-18 gap-4">
             {/* Logo */}
             <Link href="/technician/dashboard" className="flex items-center gap-3 shrink-0 group">

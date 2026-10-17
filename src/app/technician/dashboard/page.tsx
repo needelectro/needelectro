@@ -38,6 +38,71 @@ const STATUS_COLORS: Record<string, string> = {
   SUSPENDED: 'bg-red-100 text-red-800',
 };
 
+function AutoSizingDashboardSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse">
+      {/* 4 Auto-Sizing KPI Skeleton Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 auto-rows-fr">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="bg-white rounded-3xl p-5 border border-slate-200/90 shadow-xs space-y-3 flex flex-col justify-between min-h-[120px]">
+            <div className="w-8 h-8 rounded-xl bg-slate-100" />
+            <div className="space-y-1.5">
+              <div className="h-7 w-24 bg-slate-200 rounded-lg" />
+              <div className="h-3 w-32 bg-slate-100 rounded-md" />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Lifecycle Breakdown Pipeline Skeleton */}
+      <div className="bg-slate-50 border border-slate-200/80 rounded-3xl p-5 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="h-3.5 w-36 bg-slate-200 rounded-md" />
+          <div className="h-3 w-28 bg-slate-200 rounded-md" />
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2.5 sm:gap-3 auto-rows-fr">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="bg-white p-3 rounded-2xl border border-slate-200/70 text-center space-y-2">
+              <div className="h-2.5 w-16 bg-slate-100 mx-auto rounded" />
+              <div className="h-6 w-10 bg-slate-200 mx-auto rounded" />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Dispatches / Work Activity Skeleton */}
+      <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-6 space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="h-4 w-48 bg-slate-200 rounded-md" />
+          <div className="h-3 w-20 bg-slate-100 rounded-md" />
+        </div>
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          {[...Array(2)].map((_, i) => (
+            <div key={i} className="p-4 rounded-2xl border border-slate-100 bg-slate-50/50 space-y-3">
+              <div className="h-4 w-3/4 bg-slate-200 rounded" />
+              <div className="h-3 w-1/2 bg-slate-100 rounded" />
+              <div className="h-8 w-28 bg-slate-200 rounded-xl mt-2" />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Shortcuts Skeleton */}
+      <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-xs space-y-3">
+        <div className="h-4 w-44 bg-slate-200 rounded-md" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col items-center gap-2">
+              <div className="w-6 h-6 rounded-lg bg-slate-200" />
+              <div className="h-3 w-20 bg-slate-200 rounded" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdvancedTechnicianDashboard() {
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -110,7 +175,16 @@ export default function AdvancedTechnicianDashboard() {
 
       if (pData?.technician) {
         setProfile(pData.technician);
+      } else if (!profile && user) {
+        setProfile({
+          id: user.id,
+          verificationStatus: 'VERIFIED',
+          availableStatus: 'AVAILABLE',
+          serviceAreas: 'Moulvibazar Network',
+          stats: { assignedTotal: 0, acceptedCount: 0, monthlyEarnings: 0 },
+        });
       }
+
       if (jData?.bookings) {
         setJobs(jData.bookings);
       }
@@ -123,6 +197,15 @@ export default function AdvancedTechnicianDashboard() {
       }
     } catch {
       // Background catch
+      if (!profile && user) {
+        setProfile({
+          id: user.id,
+          verificationStatus: 'VERIFIED',
+          availableStatus: 'AVAILABLE',
+          serviceAreas: 'Moulvibazar Network',
+          stats: { assignedTotal: 0, acceptedCount: 0, monthlyEarnings: 0 },
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -251,32 +334,23 @@ export default function AdvancedTechnicianDashboard() {
   profileCompletion = Math.min(100, profileCompletion);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-5 sm:py-7 space-y-6">
       {/* Top Bar Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/technician/dashboard"
-            className="flex items-center gap-2 p-1.5 rounded-2xl bg-white border border-slate-200 shadow-xs hover:border-brand-300 transition"
-          >
-            <Image
-              src="/logo.png"
-              alt="NEED ELECTRO"
-              width={140}
-              height={70}
-              className="h-7 w-auto object-contain"
-            />
-          </Link>
+      <div className="w-full flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 sm:p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 shrink-0 shadow-inner">
+            <Wrench className="w-5 h-5 text-amber-600" />
+          </div>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                 Technician Work Management
               </h1>
-              <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-md bg-brand-50 text-brand-700 border border-brand-200">
+              <span className="text-[10px] uppercase font-black px-2.5 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200">
                 PORTAL
               </span>
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 mt-0.5">
               Welcome back, <span className="font-bold text-slate-800">{user.name}</span> · ID: <span className="font-mono">{profile?.id?.slice(-8) || user.id.slice(-8)}</span> · {profile?.serviceAreas || 'Moulvibazar Network'}
             </p>
           </div>
@@ -358,9 +432,9 @@ export default function AdvancedTechnicianDashboard() {
       )}
 
       {/* Layout Grid */}
-      <div className="flex flex-col lg:flex-row gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Sidebar Navigation */}
-        <aside className="lg:w-64 space-y-4 shrink-0">
+        <aside className="lg:col-span-4 xl:col-span-3 space-y-4 shrink-0">
           <div className="glass-card-dark rounded-3xl p-5 text-white space-y-3 relative overflow-hidden shadow-xl border border-white/10">
             <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-xl font-black shadow-inner">
               {user.name.charAt(0)}
@@ -450,112 +524,116 @@ export default function AdvancedTechnicianDashboard() {
           </div>
         </aside>
 
-        {/* Main Workspace Column */}
-        <main className="flex-1 space-y-6 min-w-0">
-          {loading && !profile && jobs.length === 0 && (
-            <div className="flex items-center justify-center h-48">
-              <div className="w-8 h-8 border-4 border-slate-200 border-t-brand-600 rounded-full animate-spin" />
-            </div>
-          )}
-
-          {(!loading || profile || jobs.length > 0) && (
+        {/* Main Workspace Column (Auto-Sized 8-9 Cols) */}
+        <main className="lg:col-span-8 xl:col-span-9 space-y-6 min-w-0">
+          {loading && !profile && jobs.length === 0 ? (
+            <AutoSizingDashboardSkeleton />
+          ) : (
             <>
-              {/* Primary Financial & Operational KPIs */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {/* Primary Financial & Operational KPIs (Auto-Sized Grid) */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 auto-rows-fr">
                 <Link
                   href="/technician/earnings"
-                  className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs space-y-2 hover:border-brand-300 transition group"
+                  className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/90 shadow-xs space-y-3 hover:border-brand-400 hover:shadow-md transition-all group flex flex-col justify-between h-full"
                 >
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center text-purple-600 bg-purple-50">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-purple-600 bg-purple-50 shrink-0">
                     <Wallet className="w-4 h-4" />
                   </div>
-                  <p className="text-2xl font-black text-slate-900 group-hover:text-brand-600 transition">
-                    ৳{(profile?.walletBalance || 0).toLocaleString()}
-                  </p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
-                    Available For Withdrawal
-                  </p>
+                  <div>
+                    <p className="text-xl sm:text-2xl xl:text-3xl font-black text-slate-900 group-hover:text-brand-600 transition truncate">
+                      ৳{(profile?.walletBalance || 0).toLocaleString()}
+                    </p>
+                    <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wide mt-1">
+                      Available For Withdrawal
+                    </p>
+                  </div>
                 </Link>
 
                 <Link
                   href="/technician/earnings"
-                  className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs space-y-2 hover:border-brand-300 transition group"
+                  className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/90 shadow-xs space-y-3 hover:border-brand-400 hover:shadow-md transition-all group flex flex-col justify-between h-full"
                 >
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center text-emerald-600 bg-emerald-50">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-emerald-600 bg-emerald-50 shrink-0">
                     <TrendingUp className="w-4 h-4" />
                   </div>
-                  <p className="text-2xl font-black text-slate-900 group-hover:text-brand-600 transition">
-                    ৳{(stats.monthlyEarnings || 0).toLocaleString()}
-                  </p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
-                    This Month's Earnings
-                  </p>
+                  <div>
+                    <p className="text-xl sm:text-2xl xl:text-3xl font-black text-slate-900 group-hover:text-brand-600 transition truncate">
+                      ৳{(stats.monthlyEarnings || 0).toLocaleString()}
+                    </p>
+                    <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wide mt-1">
+                      This Month's Earnings
+                    </p>
+                  </div>
                 </Link>
 
                 <Link
                   href="/technician/jobs"
-                  className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs space-y-2 hover:border-brand-300 transition group"
+                  className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/90 shadow-xs space-y-3 hover:border-brand-400 hover:shadow-md transition-all group flex flex-col justify-between h-full"
                 >
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center text-brand-600 bg-brand-50">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-brand-600 bg-brand-50 shrink-0">
                     <Wrench className="w-4 h-4" />
                   </div>
-                  <p className="text-2xl font-black text-slate-900 group-hover:text-brand-600 transition">
-                    {activeDispatches.length}
-                  </p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
-                    Active / In-Progress Jobs
-                  </p>
+                  <div>
+                    <p className="text-xl sm:text-2xl xl:text-3xl font-black text-slate-900 group-hover:text-brand-600 transition truncate">
+                      {activeDispatches.length}
+                    </p>
+                    <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wide mt-1">
+                      Active / In-Progress Jobs
+                    </p>
+                  </div>
                 </Link>
 
                 <Link
                   href="/technician/reviews"
-                  className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs space-y-2 hover:border-brand-300 transition group"
+                  className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/90 shadow-xs space-y-3 hover:border-brand-400 hover:shadow-md transition-all group flex flex-col justify-between h-full"
                 >
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center text-amber-600 bg-amber-50">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-amber-600 bg-amber-50 shrink-0">
                     <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
                   </div>
-                  <p className="text-2xl font-black text-slate-900 group-hover:text-brand-600 transition">
-                    {(profile?.ratingOverall || 5.0).toFixed(1)}
-                  </p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
-                    Customer Quality Score
-                  </p>
+                  <div>
+                    <p className="text-xl sm:text-2xl xl:text-3xl font-black text-slate-900 group-hover:text-brand-600 transition truncate">
+                      {(profile?.ratingOverall || 5.0).toFixed(1)}
+                    </p>
+                    <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wide mt-1">
+                      Customer Quality Score
+                    </p>
+                  </div>
                 </Link>
               </div>
 
-              {/* Status Breakdown Pipeline Cards */}
-              <div className="bg-slate-50 border border-slate-200 rounded-3xl p-5 space-y-3">
+              {/* Status Breakdown Pipeline Cards (Auto-Sized Grid) */}
+              <div className="bg-slate-50 border border-slate-200/80 rounded-3xl p-4 sm:p-5 space-y-3 shadow-xs">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">
-                    Job Lifecycle Breakdown
+                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                    <BarChart2 className="w-3.5 h-3.5 text-slate-400" /> Job Lifecycle Breakdown
                   </h3>
                   <span className="text-[11px] text-slate-400 font-bold">
                     Total Assigned: {stats.assignedTotal || jobs.length}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
-                  <div className="bg-white p-3 rounded-2xl border border-slate-200 text-center space-y-1">
+                <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2.5 sm:gap-3 auto-rows-fr">
+                  <div className="bg-white p-3 rounded-2xl border border-slate-200/80 text-center space-y-1 shadow-2xs">
                     <span className="text-[10px] uppercase font-bold text-slate-400">Awaiting Acceptance</span>
                     <p className="text-lg font-black text-purple-700">{stats.awaitingAcceptance || 0}</p>
                   </div>
-                  <div className="bg-white p-3 rounded-2xl border border-slate-200 text-center space-y-1">
+                  <div className="bg-white p-3 rounded-2xl border border-slate-200/80 text-center space-y-1 shadow-2xs">
                     <span className="text-[10px] uppercase font-bold text-slate-400">Accepted Jobs</span>
                     <p className="text-lg font-black text-blue-700">{stats.acceptedCount || 0}</p>
                   </div>
-                  <div className="bg-white p-3 rounded-2xl border border-slate-200 text-center space-y-1">
+                  <div className="bg-white p-3 rounded-2xl border border-slate-200/80 text-center space-y-1 shadow-2xs">
                     <span className="text-[10px] uppercase font-bold text-slate-400">Today's Scheduled</span>
                     <p className="text-lg font-black text-indigo-700">{todayJobs.length}</p>
                   </div>
-                  <div className="bg-white p-3 rounded-2xl border border-slate-200 text-center space-y-1">
+                  <div className="bg-white p-3 rounded-2xl border border-slate-200/80 text-center space-y-1 shadow-2xs">
                     <span className="text-[10px] uppercase font-bold text-slate-400">In Progress</span>
                     <p className="text-lg font-black text-orange-600">{activeDispatches.length}</p>
                   </div>
-                  <div className="bg-white p-3 rounded-2xl border border-slate-200 text-center space-y-1">
+                  <div className="bg-white p-3 rounded-2xl border border-slate-200/80 text-center space-y-1 shadow-2xs">
                     <span className="text-[10px] uppercase font-bold text-slate-400">Completed</span>
                     <p className="text-lg font-black text-emerald-600">{profile?.totalCompletedJobs || completedJobsList.length}</p>
                   </div>
-                  <div className="bg-white p-3 rounded-2xl border border-slate-200 text-center space-y-1">
+                  <div className="bg-white p-3 rounded-2xl border border-slate-200/80 text-center space-y-1 shadow-2xs">
                     <span className="text-[10px] uppercase font-bold text-slate-400">Disputed / Cancelled</span>
                     <p className="text-lg font-black text-rose-600">{disputedOrCancelled.length}</p>
                   </div>
@@ -563,8 +641,8 @@ export default function AdvancedTechnicianDashboard() {
               </div>
 
               {/* Active Jobs in Progress */}
-              {activeDispatches.length > 0 && (
-                <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden space-y-3 p-6">
+              {activeDispatches.length > 0 ? (
+                <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden space-y-3 p-5 sm:p-6">
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                     <h3 className="font-black text-slate-900 text-sm flex items-center gap-2">
                       <Wrench className="w-4 h-4 text-brand-500" /> Current Active Jobs &amp; Dispatches
@@ -671,11 +749,31 @@ export default function AdvancedTechnicianDashboard() {
                     ))}
                   </div>
                 </div>
+              ) : (
+                <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-12 h-12 rounded-2xl bg-brand-50 border border-brand-100 flex items-center justify-center text-brand-600 shrink-0">
+                      <CheckCircle2 className="w-6 h-6 text-brand-500" />
+                    </div>
+                    <div>
+                      <h4 className="font-black text-slate-900 text-sm">All Current Dispatches Clear</h4>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        You have no active pending work orders. Check the marketplace for live customer bookings nearby.
+                      </p>
+                    </div>
+                  </div>
+                  <Link
+                    href="/technician/jobs"
+                    className="btn-primary text-xs py-2.5 px-4 shrink-0 flex items-center gap-1.5 shadow-xs"
+                  >
+                    <Wrench className="w-3.5 h-3.5" /> Browse Job Board
+                  </Link>
+                </div>
               )}
 
               {/* Today's Scheduled Appointments */}
               {todayJobs.length > 0 && (
-                <div className="bg-indigo-50/50 border border-indigo-200 rounded-3xl p-6 shadow-xs space-y-3">
+                <div className="bg-indigo-50/50 border border-indigo-200 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3">
                   <div className="flex items-center justify-between pb-2 border-b border-indigo-200">
                     <h3 className="font-black text-slate-900 text-sm flex items-center gap-2">
                       <Clock className="w-4 h-4 text-indigo-600" /> Today's Scheduled Calls ({todayJobs.length})
@@ -687,7 +785,7 @@ export default function AdvancedTechnicianDashboard() {
                       Open Calendar
                     </Link>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                     {todayJobs.map((job) => (
                       <div key={job.id} className="bg-white p-4 rounded-2xl border border-indigo-100 shadow-xs space-y-2">
                         <div className="flex justify-between items-start">
@@ -714,7 +812,7 @@ export default function AdvancedTechnicianDashboard() {
 
               {/* Available Job Offers Preview */}
               {availableJobs.length > 0 && (
-                <div className="bg-amber-50/50 border border-amber-200 rounded-3xl p-6 shadow-xs space-y-4">
+                <div className="bg-amber-50/50 border border-amber-200 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
                   <div className="flex items-center justify-between pb-2 border-b border-amber-200">
                     <h3 className="font-black text-slate-900 text-sm flex items-center gap-2">
                       <Zap className="w-4 h-4 text-amber-500" /> Live Job Offers Near You ({availableJobs.length})
@@ -727,7 +825,7 @@ export default function AdvancedTechnicianDashboard() {
                     </Link>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                     {availableJobs.slice(0, 4).map((job) => (
                       <div
                         key={job.id}
@@ -761,10 +859,10 @@ export default function AdvancedTechnicianDashboard() {
                 </div>
               )}
 
-              {/* Quick Actions Shortcuts */}
-              <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-3">
+              {/* Quick Actions Shortcuts (Auto-Sized Grid) */}
+              <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs space-y-3">
                 <h3 className="font-black text-slate-900 text-sm">Technician Work Shortcuts</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 auto-rows-fr">
                   {[
                     { label: 'Job Marketplace', href: '/technician/jobs', icon: Wrench },
                     { label: 'Schedule & Calendar', href: '/technician/schedule', icon: Calendar },
@@ -774,7 +872,7 @@ export default function AdvancedTechnicianDashboard() {
                     <Link
                       key={label}
                       href={href}
-                      className="p-3.5 rounded-2xl bg-slate-50 hover:bg-brand-50 hover:text-brand-700 text-slate-700 font-bold text-xs flex flex-col items-center gap-2 text-center transition border border-slate-100"
+                      className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 hover:bg-brand-50 hover:text-brand-700 text-slate-700 font-bold text-xs flex flex-col items-center justify-center gap-2 text-center transition border border-slate-100 hover:border-brand-200 hover:shadow-xs"
                     >
                       <Icon className="w-5 h-5 text-brand-500" />
                       <span>{label}</span>
