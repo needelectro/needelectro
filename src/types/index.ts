@@ -56,6 +56,7 @@ export interface UserSession {
   role: UserRole;
   status: UserStatus;
   avatarUrl?: string | null;
+  createdAt?: string | Date;
   technicianProfileId?: string | null;
   customerProfileId?: string | null;
   customerProfile?: {

@@ -307,9 +307,14 @@ export default function Header() {
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   {user.role === 'CUSTOMER' && (
-                    <Link href="/customer/dashboard" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-brand-700 bg-white rounded-xl border border-brand-200 app-tap">
-                      <LayoutDashboard className="w-3.5 h-3.5" /> My Account
-                    </Link>
+                    <>
+                      <Link href="/customer/dashboard" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-brand-700 bg-white rounded-xl border border-brand-200 app-tap">
+                        <LayoutDashboard className="w-3.5 h-3.5" /> Portal
+                      </Link>
+                      <Link href="/customer/profile" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-slate-700 bg-white rounded-xl border border-slate-200 app-tap">
+                        <UserIcon className="w-3.5 h-3.5 text-brand-600" /> My Profile
+                      </Link>
+                    </>
                   )}
                   {user.role === 'TECHNICIAN' && (
                     <Link href="/technician/dashboard" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-emerald-700 bg-white rounded-xl border border-emerald-200 app-tap">
@@ -593,6 +598,9 @@ export default function Header() {
                             <>
                               <Link href="/customer/dashboard" onClick={() => setAccountMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brand-600 transition">
                                 <LayoutDashboard className="w-4 h-4 text-brand-500" /> Customer Portal
+                              </Link>
+                              <Link href="/customer/profile" onClick={() => setAccountMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brand-600 transition">
+                                <UserIcon className="w-4 h-4 text-brand-500" /> My Profile
                               </Link>
                               <Link href="/customer/dashboard?tab=bookings" onClick={() => setAccountMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brand-600 transition">
                                 <CalendarCheck className="w-4 h-4 text-brand-500" /> My Service Bookings

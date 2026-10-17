@@ -77,3 +77,35 @@ test('Customer Addresses: Default address toggling and sorting rules', () => {
   assert.equal(sorted[1].id, 'addr_3');
   assert.equal(sorted[2].id, 'addr_1');
 });
+
+test('Customer Profile Redesign: Standalone route and component export structure', async () => {
+  const fs = await import('fs');
+  const profilePageExists = fs.existsSync('src/app/customer/profile/page.tsx');
+  assert.equal(profilePageExists, true, 'Standalone /customer/profile page must exist');
+
+  const pageContent = fs.readFileSync('src/app/customer/profile/page.tsx', 'utf-8');
+  assert.ok(pageContent.includes('CustomerProfileView'), 'Must render CustomerProfileView');
+  assert.ok(pageContent.includes('My Profile | NEED ELECTRO Customer Portal'), 'Must define customer portal metadata');
+});
+
+test('Customer Profile Redesign: Component architecture supports standalone and embedded modes', async () => {
+  const fs = await import('fs');
+  const viewContent = fs.readFileSync('src/components/profile/CustomerProfileView.tsx', 'utf-8');
+
+  // Verify core sections and brand identity requirements
+  assert.ok(viewContent.includes('Breadcrumb'), 'Header must contain accessible breadcrumb');
+  assert.ok(viewContent.includes('Personal Information'), 'Section C: Personal Information Card must exist');
+  assert.ok(viewContent.includes('SAVED DELIVERY ADDRESSES CARD'), 'Section D: Address Information Card must exist');
+  assert.ok(viewContent.includes('Account Security'), 'Section E: Account Security Card must exist');
+  assert.ok(viewContent.includes('isStandalonePage'), 'Must support both standalone and embedded dashboard tabs');
+  assert.ok(viewContent.includes('BANGLADESH_DISTRICTS'), 'Must support Bangladesh districts in address selector');
+});
+
+test('Customer Profile Redesign: Header navigation includes direct profile links', async () => {
+  const fs = await import('fs');
+  const headerContent = fs.readFileSync('src/components/layout/Header.tsx', 'utf-8');
+
+  assert.ok(headerContent.includes('/customer/profile'), 'Header must link to /customer/profile');
+  assert.ok(headerContent.includes('My Profile'), 'Customer dropdown must include My Profile');
+});
+

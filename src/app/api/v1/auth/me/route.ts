@@ -62,6 +62,7 @@ export async function GET(req: NextRequest) {
         role: user.role,
         status: user.status,
         avatarUrl: user.avatarUrl,
+        createdAt: user.createdAt,
         customerProfileId: user.customerProfile?.id ?? null,
         technicianProfileId: user.technicianProfile?.id ?? null,
         customerProfile: user.customerProfile
@@ -220,6 +221,7 @@ export async function PATCH(req: NextRequest) {
         role: updatedUser.role,
         status: updatedUser.status,
         avatarUrl: updatedUser.avatarUrl,
+        createdAt: updatedUser.createdAt,
         customerProfileId: updatedUser.customerProfile?.id ?? null,
         technicianProfileId: updatedUser.technicianProfile?.id ?? null,
         customerProfile: updatedUser.customerProfile
