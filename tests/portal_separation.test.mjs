@@ -126,3 +126,53 @@ test('Client Protection: Cart, Checkout and Orders pages redirect technicians on
   assert.ok(dashContent.includes("user.role === 'TECHNICIAN'") && dashContent.includes('/technician/dashboard'),
     'Customer dashboard must redirect technicians');
 });
+
+test('Technician Confinement: Prevents browsing customer side and enforces workspace header', () => {
+  // 1. Verify Edge Middleware Confinement
+  const middlewarePath = path.resolve(process.cwd(), 'src/middleware.ts');
+  const middlewareContent = fs.readFileSync(middlewarePath, 'utf-8');
+  assert.ok(middlewareContent.includes("if (isTechnician) {"), 'Middleware must check isTechnician');
+  assert.ok(
+    middlewareContent.includes("!pathname.startsWith('/technician') && !pathname.startsWith('/api/')"),
+    'Middleware must confine technician to /technician and APIs'
+  );
+  assert.ok(
+    middlewareContent.includes("NextResponse.redirect(new URL('/technician/dashboard', request.url))"),
+    'Middleware must redirect technician to /technician/dashboard'
+  );
+
+  // 2. Verify Client-Side Admin/Technician Guard
+  const guardPath = path.resolve(process.cwd(), 'src/components/common/AdminGuard.tsx');
+  const guardContent = fs.readFileSync(guardPath, 'utf-8');
+  assert.ok(guardContent.includes("user.role === 'TECHNICIAN'"), 'Guard must check TECHNICIAN role');
+  assert.ok(
+    guardContent.includes("!pathname?.startsWith('/technician')") &&
+    guardContent.includes("router.replace('/technician/dashboard')"),
+    'Guard must immediately replace route with /technician/dashboard on any customer route'
+  );
+
+  // 3. Verify Dedicated TechnicianHeader
+  const techHeaderPath = path.resolve(process.cwd(), 'src/components/layout/TechnicianHeader.tsx');
+  assert.ok(fs.existsSync(techHeaderPath), 'TechnicianHeader component must exist');
+  const techHeaderContent = fs.readFileSync(techHeaderPath, 'utf-8');
+  assert.ok(techHeaderContent.includes('/technician/dashboard'), 'TechnicianHeader must link to dashboard');
+  assert.ok(techHeaderContent.includes('/technician/jobs'), 'TechnicianHeader must link to jobs');
+  assert.ok(techHeaderContent.includes('/technician/earnings'), 'TechnicianHeader must link to earnings');
+  assert.ok(!techHeaderContent.includes('Book a Service Now'), 'TechnicianHeader must not contain customer booking CTA');
+
+  // 4. Verify Header & Footer Isolation
+  const headerPath = path.resolve(process.cwd(), 'src/components/layout/Header.tsx');
+  const headerContent = fs.readFileSync(headerPath, 'utf-8');
+  assert.ok(
+    headerContent.includes("pathname?.startsWith('/technician') || isTechnician"),
+    'Header must isolate technician routes and users'
+  );
+  assert.ok(headerContent.includes('<TechnicianHeader />'), 'Header must render TechnicianHeader for technicians');
+
+  const footerPath = path.resolve(process.cwd(), 'src/components/layout/Footer.tsx');
+  const footerContent = fs.readFileSync(footerPath, 'utf-8');
+  assert.ok(
+    footerContent.includes("pathname?.startsWith('/technician') || isTechnician"),
+    'Footer must isolate technician routes and users'
+  );
+});

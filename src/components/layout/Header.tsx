@@ -7,6 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/context/AuthContext';
 import { useCart } from '@/lib/context/CartContext';
 import BrandLogo from '@/components/common/BrandLogo';
+import TechnicianHeader from '@/components/layout/TechnicianHeader';
 import {
   Home,
   Search,
@@ -116,6 +117,15 @@ export default function Header() {
   const isAdmin = user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN');
   if (pathname?.startsWith('/admin') || isAdmin) {
     return null;
+  }
+
+  // Isolate Technician: Do not render the public customer header for technician users or on /technician routes
+  const isTechnician = user && user.role === 'TECHNICIAN';
+  if (pathname?.startsWith('/technician') || isTechnician) {
+    if (pathname === '/technician/login' || pathname === '/technician/register') {
+      return null;
+    }
+    return <TechnicianHeader />;
   }
 
   return (

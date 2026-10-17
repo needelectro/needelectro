@@ -216,6 +216,15 @@ export async function middleware(request: NextRequest) {
     pathname === '/orders' ||
     pathname.startsWith('/orders/');
 
+  // STRICT TECHNICIAN CONFINEMENT:
+  // When logged in as a technician, ANY non-technician page (home, shop, services, bookings, customer accounts, etc.)
+  // is strictly forbidden — redirect immediately to technician dashboard.
+  if (isTechnician) {
+    if (!pathname.startsWith('/technician') && !pathname.startsWith('/api/')) {
+      return NextResponse.redirect(new URL('/technician/dashboard', request.url));
+    }
+  }
+
   if (isCustomerOnlyPage) {
     // A technician visiting ANY customer page is immediately redirected to Technician Dashboard
     if (isTechnician) {

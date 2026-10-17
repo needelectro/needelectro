@@ -11,9 +11,10 @@ export default function Footer() {
   const pathname = usePathname();
   const { user } = useAuth();
 
-  // Isolate Admin: Do not render the public footer for admin users or on /admin routes
+  // Isolate Admin & Technician: Do not render public customer footer on admin or technician routes or for those roles
   const isAdmin = user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN');
-  if (pathname?.startsWith('/admin') || isAdmin) {
+  const isTechnician = user && user.role === 'TECHNICIAN';
+  if (pathname?.startsWith('/admin') || isAdmin || pathname?.startsWith('/technician') || isTechnician) {
     return null;
   }
   return (

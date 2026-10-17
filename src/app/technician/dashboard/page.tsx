@@ -135,7 +135,7 @@ export default function AdvancedTechnicianDashboard() {
 
   const handleLogout = async () => {
     await logout();
-    router.push('/');
+    router.push('/technician/login');
   };
 
   if (!user) return null;
@@ -174,7 +174,7 @@ export default function AdvancedTechnicianDashboard() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div className="flex items-center gap-3">
           <Link
-            href="/"
+            href="/technician/dashboard"
             className="flex items-center gap-2 p-1.5 rounded-2xl bg-white border border-slate-200 shadow-xs hover:border-brand-300 transition"
           >
             <Image
