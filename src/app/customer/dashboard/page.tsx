@@ -101,6 +101,10 @@ function CustomerDashboardContent() {
       router.push('/customer/login?redirect=/customer/dashboard');
       return;
     }
+    if (user.role === 'TECHNICIAN') {
+      router.replace('/technician/dashboard');
+      return;
+    }
     loadData();
     // Initialize profile form values
     setName(user.name || '');

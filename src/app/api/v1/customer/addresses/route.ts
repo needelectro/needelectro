@@ -3,7 +3,11 @@ import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/auth';
 import prisma from '@/lib/db';
 
-async function resolveCustomer(req: NextRequest) {
+type ResolveResult =
+  | { success: true; userId: string; customerProfileId: string }
+  | { success: false; status: 401 | 403; error: string };
+
+async function resolveCustomer(req: NextRequest): Promise<ResolveResult> {
   let token: string | undefined;
   try {
     const cookieStore = await cookies();
@@ -17,9 +21,23 @@ async function resolveCustomer(req: NextRequest) {
     }
   }
 
-  if (!token) return null;
+  if (!token) {
+    return { success: false, status: 401, error: 'Unauthorized: Authentication required.' };
+  }
+
   const payload = verifyToken(token);
-  if (!payload?.id) return null;
+  if (!payload?.id) {
+    return { success: false, status: 401, error: 'Unauthorized: Session invalid or expired.' };
+  }
+
+  // Strict separation: Technicians cannot manage customer delivery addresses
+  if (payload.role === 'TECHNICIAN') {
+    return {
+      success: false,
+      status: 403,
+      error: 'Forbidden: Technician accounts cannot manage customer delivery addresses.',
+    };
+  }
 
   let cp = await prisma.customerProfile.findUnique({
     where: { userId: payload.id },
@@ -31,14 +49,14 @@ async function resolveCustomer(req: NextRequest) {
     });
   }
 
-  return { userId: payload.id, customerProfileId: cp.id };
+  return { success: true, userId: payload.id, customerProfileId: cp.id };
 }
 
 export async function GET(req: NextRequest) {
   try {
     const auth = await resolveCustomer(req);
-    if (!auth) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    if (!auth.success) {
+      return NextResponse.json({ success: false, error: auth.error }, { status: auth.status });
     }
 
     const addresses = await prisma.address.findMany({
@@ -56,8 +74,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const auth = await resolveCustomer(req);
-    if (!auth) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    if (!auth.success) {
+      return NextResponse.json({ success: false, error: auth.error }, { status: auth.status });
     }
 
     const body = await req.json();
@@ -74,14 +92,13 @@ export async function POST(req: NextRequest) {
       isDefault = false,
     } = body;
 
-    if (!recipientName?.trim() || !phone?.trim() || !area?.trim() || !addressLine?.trim()) {
+    if (!recipientName || !phone || !area || !addressLine) {
       return NextResponse.json(
-        { success: false, error: 'Recipient name, phone number, area, and street address are required.' },
+        { success: false, error: 'Recipient name, phone, area, and address line are required.' },
         { status: 400 }
       );
     }
 
-    // If marked as default, unset other addresses
     if (isDefault) {
       await prisma.address.updateMany({
         where: { customerId: auth.customerProfileId, isDefault: true },
@@ -115,8 +132,8 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const auth = await resolveCustomer(req);
-    if (!auth) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    if (!auth.success) {
+      return NextResponse.json({ success: false, error: auth.error }, { status: auth.status });
     }
 
     const body = await req.json();
@@ -165,8 +182,8 @@ export async function PATCH(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     const auth = await resolveCustomer(req);
-    if (!auth) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    if (!auth.success) {
+      return NextResponse.json({ success: false, error: auth.error }, { status: auth.status });
     }
 
     const url = new URL(req.url);

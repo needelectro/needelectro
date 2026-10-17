@@ -149,6 +149,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (session.role === 'TECHNICIAN') {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Forbidden: Technician accounts cannot book customer services. Please use a customer account.',
+        },
+        { status: 403 }
+      );
+    }
+
     // Resolve customer profile for authenticated user
     let customerProfileId = session.customerProfileId;
     if (!customerProfileId) {

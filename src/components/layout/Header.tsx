@@ -21,6 +21,7 @@ import {
   ChevronDown,
   LayoutDashboard,
   LogOut,
+  DollarSign,
   GraduationCap,
   Building2,
   Store,
@@ -194,20 +195,22 @@ export default function Header() {
               <Search className="w-[18px] h-[18px]" />
             </button>
 
-            {/* Cart */}
-            <Link
-              href="/cart"
-              className="relative p-2 text-slate-600 hover:text-brand-600 rounded-xl app-tap"
-              title="View Cart"
-              aria-label="View Cart"
-            >
-              <ShoppingCart className="w-[18px] h-[18px]" />
-              {itemCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-brand-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs animate-in zoom-in">
-                  {itemCount > 9 ? '9+' : itemCount}
-                </span>
-              )}
-            </Link>
+            {/* Cart (Hidden for Technician) */}
+            {user?.role !== 'TECHNICIAN' && (
+              <Link
+                href="/cart"
+                className="relative p-2 text-slate-600 hover:text-brand-600 rounded-xl app-tap"
+                title="View Cart"
+                aria-label="View Cart"
+              >
+                <ShoppingCart className="w-[18px] h-[18px]" />
+                {itemCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 bg-brand-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs animate-in zoom-in">
+                    {itemCount > 9 ? '9+' : itemCount}
+                  </span>
+                )}
+              </Link>
+            )}
 
             {/* Hamburger Menu */}
             <button
@@ -323,22 +326,33 @@ export default function Header() {
               </div>
             )}
 
-            {/* Navigation Links */}
+            {/* Navigation Links - Role Segregated */}
             <nav className="flex-1 px-3 py-3 space-y-0.5">
-              {[
-                { href: '/', label: 'Home', icon: Home, color: 'text-brand-500 bg-brand-50' },
-                { href: '/services', label: 'Services', icon: Zap, color: 'text-amber-500 bg-amber-50' },
-                { href: '/booking', label: 'Book a Service', icon: CalendarCheck, color: 'text-brand-600 bg-brand-50' },
-                { href: '/shop', label: 'Shop', icon: ShoppingBag, color: 'text-indigo-500 bg-indigo-50' },
-                { href: '/technician/dashboard', label: 'Technician Portal', icon: Wrench, color: 'text-amber-600 bg-amber-50' },
-                { href: '/admin', label: 'Admin Control Center', icon: LayoutDashboard, color: 'text-slate-700 bg-slate-100' },
-                { href: '/support', label: 'Support & Hotline', icon: LifeBuoy, color: 'text-sky-500 bg-sky-50' },
-                { href: '/parts', label: 'Parts & Materials', icon: ShoppingBag, color: 'text-purple-500 bg-purple-50' },
-                { href: '/warranty', label: 'Service Warranty', icon: ShieldCheck, color: 'text-emerald-500 bg-emerald-50' },
-                { href: '/technicians', label: 'Verified Technicians', icon: Users, color: 'text-teal-500 bg-teal-50' },
-                { href: '/locations', label: '64 Districts Coverage', icon: MapPin, color: 'text-rose-500 bg-rose-50' },
-                { href: '/training', label: 'Skills Academy', icon: GraduationCap, color: 'text-blue-500 bg-blue-50' },
-              ].map(({ href, label, icon: Icon, color }) => {
+              {(user?.role === 'TECHNICIAN'
+                ? [
+                    { href: '/technician/dashboard', label: 'Technician Portal', icon: LayoutDashboard, color: 'text-brand-600 bg-brand-50' },
+                    { href: '/technician/jobs', label: 'Job Marketplace & Orders', icon: Wrench, color: 'text-amber-600 bg-amber-50' },
+                    { href: '/technician/earnings', label: 'Earnings & Payouts', icon: ShoppingBag, color: 'text-emerald-600 bg-emerald-50' },
+                    { href: '/technician/availability', label: 'Working Schedule', icon: CalendarCheck, color: 'text-blue-600 bg-blue-50' },
+                    { href: '/technician/profile', label: 'Professional Profile', icon: UserIcon, color: 'text-purple-600 bg-purple-50' },
+                    { href: '/technician/reviews', label: 'Ratings & Performance', icon: ShieldCheck, color: 'text-teal-600 bg-teal-50' },
+                    { href: '/technician/support', label: 'Support & Disputes', icon: LifeBuoy, color: 'text-sky-600 bg-sky-50' },
+                  ]
+                : [
+                    { href: '/', label: 'Home', icon: Home, color: 'text-brand-500 bg-brand-50' },
+                    { href: '/services', label: 'Services', icon: Zap, color: 'text-amber-500 bg-amber-50' },
+                    { href: '/booking', label: 'Book a Service', icon: CalendarCheck, color: 'text-brand-600 bg-brand-50' },
+                    { href: '/shop', label: 'Shop', icon: ShoppingBag, color: 'text-indigo-500 bg-indigo-50' },
+                    ...(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN'
+                      ? [{ href: '/admin', label: 'Admin Control Center', icon: LayoutDashboard, color: 'text-slate-700 bg-slate-100' }]
+                      : []),
+                    { href: '/support', label: 'Support & Hotline', icon: LifeBuoy, color: 'text-sky-500 bg-sky-50' },
+                    { href: '/parts', label: 'Parts & Materials', icon: ShoppingBag, color: 'text-purple-500 bg-purple-50' },
+                    { href: '/warranty', label: 'Service Warranty', icon: ShieldCheck, color: 'text-emerald-500 bg-emerald-50' },
+                    { href: '/locations', label: '64 Districts Coverage', icon: MapPin, color: 'text-rose-500 bg-rose-50' },
+                    { href: '/training', label: 'Skills Academy', icon: GraduationCap, color: 'text-blue-500 bg-blue-50' },
+                  ]
+              ).map(({ href, label, icon: Icon, color }) => {
                 const isActive = pathname === href || (href !== '/' && pathname?.startsWith(href));
                 return (
                   <Link
@@ -361,9 +375,15 @@ export default function Header() {
 
             {/* CTA Footer */}
             <div className="px-4 pb-6 pt-3 border-t border-slate-100 space-y-2 shrink-0">
-              <Link href="/services" onClick={() => setMobileMenuOpen(false)} className="btn-primary w-full justify-center py-3 app-tap">
-                <Zap className="w-4 h-4 mr-2 fill-white" /> Book a Service Now
-              </Link>
+              {user?.role === 'TECHNICIAN' ? (
+                <Link href="/technician/jobs" onClick={() => setMobileMenuOpen(false)} className="btn-primary w-full justify-center py-3 app-tap">
+                  <Wrench className="w-4 h-4 mr-2" /> View Assigned Jobs
+                </Link>
+              ) : (
+                <Link href="/services" onClick={() => setMobileMenuOpen(false)} className="btn-primary w-full justify-center py-3 app-tap">
+                  <Zap className="w-4 h-4 mr-2 fill-white" /> Book a Service Now
+                </Link>
+              )}
               <a href="tel:01733983752" className="flex items-center justify-center gap-2 w-full py-2.5 text-sm font-semibold text-slate-600 bg-slate-50 rounded-xl border border-slate-200 app-tap">
                 <PhoneCall className="w-4 h-4 text-brand-500" /> 01733 983752
               </a>
@@ -510,20 +530,22 @@ export default function Header() {
                 <Search className="w-4 h-4 xl:w-5 xl:h-5" />
               </button>
 
-              {/* Cart */}
-              <Link
-                href="/cart"
-                className="relative p-2 xl:p-2.5 text-slate-600 hover:text-brand-500 hover:bg-slate-100 rounded-xl transition-all"
-                title="View Cart"
-                aria-label="View Cart"
-              >
-                <ShoppingCart className="w-4 h-4 xl:w-5 xl:h-5" />
-                {itemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-brand-500 text-white text-[10px] font-black w-4 h-4 xl:w-5 xl:h-5 rounded-full flex items-center justify-center shadow-xs animate-in zoom-in">
-                    {itemCount > 9 ? '9+' : itemCount}
-                  </span>
-                )}
-              </Link>
+              {/* Cart (Hidden for Technician) */}
+              {user?.role !== 'TECHNICIAN' && (
+                <Link
+                  href="/cart"
+                  className="relative p-2 xl:p-2.5 text-slate-600 hover:text-brand-500 hover:bg-slate-100 rounded-xl transition-all"
+                  title="View Cart"
+                  aria-label="View Cart"
+                >
+                  <ShoppingCart className="w-4 h-4 xl:w-5 xl:h-5" />
+                  {itemCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-brand-500 text-white text-[10px] font-black w-4 h-4 xl:w-5 xl:h-5 rounded-full flex items-center justify-center shadow-xs animate-in zoom-in">
+                      {itemCount > 9 ? '9+' : itemCount}
+                    </span>
+                  )}
+                </Link>
+              )}
 
               {/* Account */}
               <div className="relative">
@@ -556,14 +578,33 @@ export default function Header() {
                             </span>
                           </div>
                           {user.role === 'CUSTOMER' && (
-                            <Link href="/customer/dashboard" onClick={() => setAccountMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brand-600 transition">
-                              <LayoutDashboard className="w-4 h-4 text-brand-500" /> Customer Portal
-                            </Link>
+                            <>
+                              <Link href="/customer/dashboard" onClick={() => setAccountMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brand-600 transition">
+                                <LayoutDashboard className="w-4 h-4 text-brand-500" /> Customer Portal
+                              </Link>
+                              <Link href="/customer/dashboard?tab=bookings" onClick={() => setAccountMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brand-600 transition">
+                                <CalendarCheck className="w-4 h-4 text-brand-500" /> My Service Bookings
+                              </Link>
+                              <Link href="/customer/dashboard?tab=orders" onClick={() => setAccountMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brand-600 transition">
+                                <ShoppingBag className="w-4 h-4 text-brand-500" /> My Orders
+                              </Link>
+                            </>
                           )}
                           {user.role === 'TECHNICIAN' && (
-                            <Link href="/technician/dashboard" onClick={() => setAccountMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-emerald-600 transition">
-                              <LayoutDashboard className="w-4 h-4 text-emerald-500" /> Technician Workspace
-                            </Link>
+                            <>
+                              <Link href="/technician/dashboard" onClick={() => setAccountMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brand-600 transition">
+                                <LayoutDashboard className="w-4 h-4 text-brand-500" /> Technician Dashboard
+                              </Link>
+                              <Link href="/technician/jobs" onClick={() => setAccountMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brand-600 transition">
+                                <Wrench className="w-4 h-4 text-brand-500" /> My Jobs &amp; Offers
+                              </Link>
+                              <Link href="/technician/earnings" onClick={() => setAccountMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-emerald-600 transition">
+                                <DollarSign className="w-4 h-4 text-emerald-500" /> Earnings &amp; Wallet
+                              </Link>
+                              <Link href="/technician/profile" onClick={() => setAccountMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brand-600 transition">
+                                <UserIcon className="w-4 h-4 text-purple-500" /> Profile Settings
+                              </Link>
+                            </>
                           )}
                           {(user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') && (
                             <Link href="/admin" onClick={() => setAccountMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-amber-600 transition">

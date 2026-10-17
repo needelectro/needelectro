@@ -9,20 +9,27 @@ export async function GET(req: NextRequest) {
     const token = cookieStore.get('need_electro_token')?.value;
     const session = token ? verifyToken(token) : null;
 
-    let whereClause: any = {};
-
-    if (session) {
-      if (session.role === 'CUSTOMER') {
-        const customer = await prisma.customerProfile.findUnique({
-          where: { userId: session.id },
-        });
-        if (!customer) return NextResponse.json({ orders: [] });
-        whereClause.customerId = customer.id;
-      }
-      // ADMIN sees all orders
-    } else {
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    if (session.role === 'TECHNICIAN') {
+      return NextResponse.json(
+        { success: false, error: 'Forbidden: Technician accounts cannot view customer order history.' },
+        { status: 403 }
+      );
+    }
+
+    let whereClause: any = {};
+
+    if (session.role === 'CUSTOMER') {
+      const customer = await prisma.customerProfile.findUnique({
+        where: { userId: session.id },
+      });
+      if (!customer) return NextResponse.json({ orders: [] });
+      whereClause.customerId = customer.id;
+    }
+    // ADMIN / STAFF sees all orders
 
     const { searchParams } = new URL(req.url);
     const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
@@ -96,6 +103,16 @@ export async function POST(req: NextRequest) {
           redirectUrl: '/customer/login?redirect=/checkout',
         },
         { status: 401 }
+      );
+    }
+
+    if (session.role === 'TECHNICIAN') {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Forbidden: Technician accounts cannot place customer product orders. Please use a customer account.',
+        },
+        { status: 403 }
       );
     }
 

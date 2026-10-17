@@ -71,7 +71,7 @@ async function verifyJwtInEdge(token: string): Promise<any> {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Ignore static assets, icons, brand images, and Next.js internal files
+  // 1. Ignore static assets, media, and Next.js internal files
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/brand') ||
@@ -84,9 +84,82 @@ export async function middleware(request: NextRequest) {
 
   const token = request.cookies.get('need_electro_token')?.value;
   const user = token ? await verifyJwtInEdge(token) : null;
+  const isSuspended = user && user.status === 'SUSPENDED';
   const isStaff = user && user.status === 'ACTIVE' && STAFF_ROLES.has(user.role);
+  const isTechnician = user && user.status === 'ACTIVE' && user.role === 'TECHNICIAN';
+  const isCustomer = user && user.status === 'ACTIVE' && user.role === 'CUSTOMER';
 
-  // 1. Admin login route handling
+  // 2. Suspended User Gate
+  if (isSuspended) {
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json(
+        { success: false, error: 'Your account has been suspended. Please contact NEED ELECTRO administration.' },
+        { status: 403 }
+      );
+    }
+    // Allow logout or redirect to suspended message/login
+    if (pathname !== '/customer/login' && pathname !== '/technician/login' && pathname !== '/') {
+      const suspendedUrl = new URL('/customer/login', request.url);
+      suspendedUrl.searchParams.set('error', 'suspended');
+      return NextResponse.redirect(suspendedUrl);
+    }
+  }
+
+  // 3. API Route Level Security & Role Boundary Enforcement
+  if (pathname.startsWith('/api/v1/')) {
+    // 3a. Admin APIs
+    if (pathname.startsWith('/api/v1/admin')) {
+      if (!isStaff) {
+        return NextResponse.json(
+          { success: false, error: 'Forbidden: Administrative credentials required.' },
+          { status: user ? 403 : 401 }
+        );
+      }
+      return NextResponse.next();
+    }
+
+    // 3b. Technician APIs
+    if (pathname.startsWith('/api/v1/technicians')) {
+      if (!isTechnician && !isStaff) {
+        return NextResponse.json(
+          { success: false, error: 'Forbidden: Only authorized technician accounts can access technician resources.' },
+          { status: user ? 403 : 401 }
+        );
+      }
+      return NextResponse.next();
+    }
+
+    // 3c. Job Claim API
+    if (pathname.includes('/accept')) {
+      if (!isTechnician) {
+        return NextResponse.json(
+          { success: false, error: 'Forbidden: Only verified technician accounts can accept jobs.' },
+          { status: 403 }
+        );
+      }
+    }
+
+    // 3d. Customer-Only Purchasing & Account APIs: Orders & Delivery Addresses
+    if (
+      pathname.startsWith('/api/v1/customer') ||
+      pathname === '/api/v1/orders' ||
+      pathname.startsWith('/api/v1/orders/')
+    ) {
+      if (isTechnician) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Forbidden: Technician accounts cannot access customer account data, cart, or purchasing operations.',
+          },
+          { status: 403 }
+        );
+      }
+    }
+
+    return NextResponse.next();
+  }
+
+  // 4. Admin Portal Page Route Protection
   if (pathname === '/admin/login') {
     if (isStaff) {
       return NextResponse.redirect(new URL('/admin/dashboard', request.url));
@@ -94,7 +167,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2. Protect all /admin routes
   if (pathname.startsWith('/admin')) {
     if (!isStaff) {
       const loginUrl = new URL('/admin/login', request.url);
@@ -103,6 +175,66 @@ export async function middleware(request: NextRequest) {
       }
       return NextResponse.redirect(loginUrl);
     }
+    return NextResponse.next();
+  }
+
+  // 5. Technician Portal Page Route Protection (/technician/*)
+  const isTechnicianPublic = pathname === '/technician/login' || pathname === '/technician/register';
+  if (pathname.startsWith('/technician')) {
+    // If technician is already authenticated and visits login/register, redirect to dashboard
+    if (isTechnicianPublic && isTechnician) {
+      return NextResponse.redirect(new URL('/technician/dashboard', request.url));
+    }
+
+    // If it's a protected technician route (/technician/dashboard, /technician/jobs, etc.)
+    if (!isTechnicianPublic) {
+      if (isCustomer) {
+        // Customer attempting to access technician portal -> redirect to Customer Dashboard
+        return NextResponse.redirect(new URL('/customer/dashboard', request.url));
+      }
+      if (!user) {
+        // Unauthenticated visitor -> redirect to technician login
+        const loginUrl = new URL('/technician/login', request.url);
+        loginUrl.searchParams.set('redirect', pathname);
+        return NextResponse.redirect(loginUrl);
+      }
+    }
+
+    return NextResponse.next();
+  }
+
+  // 6. Strict Customer Portal Protection & Technician Restriction
+  // Customer-only pages that technicians MUST NEVER access:
+  const isCustomerOnlyPage =
+    pathname.startsWith('/customer') ||
+    pathname === '/account' ||
+    pathname.startsWith('/account/') ||
+    pathname === '/cart' ||
+    pathname.startsWith('/cart/') ||
+    pathname === '/checkout' ||
+    pathname.startsWith('/checkout/') ||
+    pathname === '/orders' ||
+    pathname.startsWith('/orders/');
+
+  if (isCustomerOnlyPage) {
+    // A technician visiting ANY customer page is immediately redirected to Technician Dashboard
+    if (isTechnician) {
+      return NextResponse.redirect(new URL('/technician/dashboard', request.url));
+    }
+
+    // Unauthenticated handling for protected customer account & checkout pages
+    const isCustomerPublic = pathname === '/customer/login' || pathname === '/customer/register' || pathname === '/cart' || pathname === '/orders';
+    if (!isCustomerPublic && !user) {
+      const loginUrl = new URL('/customer/login', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // If customer is already authenticated and visits customer login/register
+    if (user && (pathname === '/customer/login' || pathname === '/customer/register')) {
+      return NextResponse.redirect(new URL('/customer/dashboard', request.url));
+    }
+
     return NextResponse.next();
   }
 

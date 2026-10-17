@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/context/AuthContext';
 import { 
   Package, 
@@ -41,6 +42,7 @@ function getStepIndex(status: string): number {
 }
 
 export default function OrdersPage() {
+  const router = useRouter();
   const { user } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,12 +55,16 @@ export default function OrdersPage() {
   const [trackError, setTrackError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (user?.role === 'TECHNICIAN') {
+      router.replace('/technician/dashboard');
+      return;
+    }
     if (user) {
       fetchUserOrders();
     } else {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, router]);
 
   const fetchUserOrders = async () => {
     setLoading(true);

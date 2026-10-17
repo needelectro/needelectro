@@ -95,6 +95,11 @@ export default function CheckoutPage() {
 
   // Auto-populate user info and fetch saved addresses when authenticated
   useEffect(() => {
+    if (user?.role === 'TECHNICIAN') {
+      router.replace('/technician/dashboard');
+      return;
+    }
+
     if (user) {
       setForm((prev) => ({
         ...prev,
@@ -237,6 +242,14 @@ export default function CheckoutPage() {
       setSubmitting(false);
     }
   };
+
+  if (user?.role === 'TECHNICIAN') {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="w-8 h-8 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (items.length === 0 && step !== 'done') {
     return (

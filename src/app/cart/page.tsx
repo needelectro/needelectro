@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
   ShoppingBag, 
   Trash2, 
@@ -16,7 +17,22 @@ import { useCart } from '@/lib/context/CartContext';
 import { useAuth } from '@/lib/context/AuthContext';
 
 export default function CartPage() {
+  const router = useRouter();
   const { user } = useAuth();
+
+  useEffect(() => {
+    if (user?.role === 'TECHNICIAN') {
+      router.replace('/technician/dashboard');
+    }
+  }, [user, router]);
+
+  if (user?.role === 'TECHNICIAN') {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="w-8 h-8 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin" />
+      </div>
+    );
+  }
   const {
     items,
     updateQuantity,

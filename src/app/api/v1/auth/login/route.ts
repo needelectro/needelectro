@@ -148,18 +148,51 @@ export async function POST(req: NextRequest) {
       maxAge: 7 * 24 * 60 * 60, // 7 days
     });
 
-    // Determine default destination
-    let defaultRedirect = '/customer/dashboard';
+    // Determine validated and role-safe destination
+    const requestedRedirect = body.redirect || body.redirectUrl;
+    let safeRedirect = '/customer/dashboard';
+
     if (user.role === 'TECHNICIAN') {
-      defaultRedirect = '/technician/dashboard';
+      safeRedirect = '/technician/dashboard';
+      if (
+        requestedRedirect &&
+        typeof requestedRedirect === 'string' &&
+        requestedRedirect.startsWith('/technician/') &&
+        !requestedRedirect.startsWith('/technician/login') &&
+        !requestedRedirect.startsWith('/technician/register') &&
+        !requestedRedirect.includes('//')
+      ) {
+        safeRedirect = requestedRedirect;
+      }
     } else if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
-      defaultRedirect = '/admin/dashboard';
+      safeRedirect = '/admin/dashboard';
+      if (
+        requestedRedirect &&
+        typeof requestedRedirect === 'string' &&
+        requestedRedirect.startsWith('/admin') &&
+        !requestedRedirect.includes('//')
+      ) {
+        safeRedirect = requestedRedirect;
+      }
+    } else {
+      // Customer
+      safeRedirect = '/customer/dashboard';
+      if (
+        requestedRedirect &&
+        typeof requestedRedirect === 'string' &&
+        !requestedRedirect.startsWith('/technician') &&
+        !requestedRedirect.startsWith('/admin') &&
+        !requestedRedirect.includes('//') &&
+        requestedRedirect.startsWith('/')
+      ) {
+        safeRedirect = requestedRedirect;
+      }
     }
 
     return NextResponse.json({
       success: true,
       user: sessionData,
-      redirectUrl: defaultRedirect,
+      redirectUrl: safeRedirect,
     });
   } catch (error: any) {
     console.error('Login error:', error);
