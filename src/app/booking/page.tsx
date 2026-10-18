@@ -12,6 +12,7 @@ import {
 import { useAuth } from '@/lib/context/AuthContext';
 import { useLanguage } from '@/lib/context/LanguageContext';
 import { BANGLADESH_DISTRICTS, DistrictData } from '@/lib/data/districts';
+import { fastFetch } from '@/lib/fastFetch';
 
 const BANGLADESH_DIVISIONS = [
   'Sylhet',
@@ -60,14 +61,30 @@ function BookingFormInner() {
   const searchParams = useSearchParams();
 
   const [loading, setLoading] = useState(false);
-  const [services, setServices] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = sessionStorage.getItem('_ne_fast_/api/v1/services');
+        if (raw) return JSON.parse(raw).data?.services || [];
+      } catch {}
+    }
+    return [];
+  });
   const [bookingResult, setBookingResult] = useState<any>(null);
   const [attachedImages, setAttachedImages] = useState<string[]>([]);
   const [bookingComplete, setBookingComplete] = useState(false);
   const [showAdditionalDetails, setShowAdditionalDetails] = useState(false);
 
-  // Saved addresses from customer profile
-  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+  // Saved addresses from customer profile with warm cache support
+  const [savedAddresses, setSavedAddresses] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = sessionStorage.getItem('_ne_fast_/api/v1/customer/addresses');
+        if (raw) return JSON.parse(raw).data?.addresses || [];
+      } catch {}
+    }
+    return [];
+  });
   const [loadingAddresses, setLoadingAddresses] = useState(false);
 
   // Location mode: 'SAVED' vs 'CUSTOM' (Flexible location)
@@ -99,12 +116,11 @@ function BookingFormInner() {
   const currentQuery = searchParams.toString();
   const redirectTarget = `/booking${currentQuery ? `?${currentQuery}` : ''}`;
 
-  // Fetch services catalog
+  // Fetch services catalog with fastFetch
   useEffect(() => {
-    fetch('/api/v1/services')
-      .then((r) => r.json())
+    fastFetch('/api/v1/services', { ttlMs: 120000 })
       .then((d) => {
-        const svcs = d.services || [];
+        const svcs = d?.services || [];
         setServices(svcs);
         const preselected = searchParams.get('service');
         if (preselected && svcs.some((s: any) => s.id === preselected)) {
@@ -123,12 +139,11 @@ function BookingFormInner() {
         contactPhone: p.contactPhone || user.phone || '',
       }));
 
-      // Fetch saved addresses from customer profile
-      setLoadingAddresses(true);
-      fetch('/api/v1/customer/addresses')
-        .then((r) => r.json())
+      // Fetch saved addresses from customer profile with fastFetch
+      if (savedAddresses.length === 0) setLoadingAddresses(true);
+      fastFetch('/api/v1/customer/addresses', { ttlMs: 30000 })
         .then((data) => {
-          if (data.success && Array.isArray(data.addresses) && data.addresses.length > 0) {
+          if (data?.success && Array.isArray(data.addresses) && data.addresses.length > 0) {
             setSavedAddresses(data.addresses);
             const defaultAddr = data.addresses.find((a: any) => a.isDefault) || data.addresses[0];
             setSelectedAddressId(defaultAddr.id);

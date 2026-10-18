@@ -24,6 +24,7 @@ import {
 import { useCart } from '@/lib/context/CartContext';
 import { useAuth } from '@/lib/context/AuthContext';
 import { BANGLADESH_DISTRICTS, DistrictData } from '@/lib/data/districts';
+import { fastFetch } from '@/lib/fastFetch';
 
 const BANGLADESH_DIVISIONS = [
   'Sylhet',
@@ -72,8 +73,16 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [orderResult, setOrderResult] = useState<any | null>(null);
 
-  // Saved addresses state
-  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+  // Saved addresses state with warm cache support
+  const [savedAddresses, setSavedAddresses] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = sessionStorage.getItem('_ne_fast_/api/v1/customer/addresses');
+        if (raw) return JSON.parse(raw).data?.addresses || [];
+      } catch {}
+    }
+    return [];
+  });
   const [loadingAddresses, setLoadingAddresses] = useState(false);
   const [addressMode, setAddressMode] = useState<'SAVED' | 'CUSTOM'>('SAVED');
   const [selectedAddressId, setSelectedAddressId] = useState<string>('');
@@ -107,12 +116,11 @@ export default function CheckoutPage() {
         phone: prev.phone || user.phone || '',
       }));
 
-      // Fetch saved profile addresses
-      setLoadingAddresses(true);
-      fetch('/api/v1/customer/addresses')
-        .then((res) => res.json())
+      // Fetch saved profile addresses with fastFetch
+      if (savedAddresses.length === 0) setLoadingAddresses(true);
+      fastFetch('/api/v1/customer/addresses', { ttlMs: 30000 })
         .then((data) => {
-          if (data.success && Array.isArray(data.addresses) && data.addresses.length > 0) {
+          if (data?.success && Array.isArray(data.addresses) && data.addresses.length > 0) {
             setSavedAddresses(data.addresses);
             const defaultAddr = data.addresses.find((a: any) => a.isDefault) || data.addresses[0];
             setSelectedAddressId(defaultAddr.id);
