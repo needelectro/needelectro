@@ -357,9 +357,6 @@ export default function TechnicianHeader() {
 
             {/* Right Controls */}
             <div className="flex items-center gap-2 xl:gap-3 shrink-0">
-              {/* Language Switcher Desktop */}
-              <LanguageSwitcher variant="header-desktop" />
-
               {/* Online/Offline Toggle */}
               <button
                 onClick={handleToggleAvailability}

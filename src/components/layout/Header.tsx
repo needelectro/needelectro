@@ -548,9 +548,6 @@ export default function Header() {
 
             {/* Desktop Right Actions */}
             <div className="flex items-center gap-1.5 xl:gap-2 shrink-0">
-              {/* Language Switcher Desktop */}
-              <LanguageSwitcher variant="header-desktop" />
-
               {/* Search */}
               <button
                 onClick={() => setSearchOpen(!searchOpen)}
