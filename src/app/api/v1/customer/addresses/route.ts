@@ -64,7 +64,14 @@ export async function GET(req: NextRequest) {
       orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }],
     });
 
-    return NextResponse.json({ success: true, addresses });
+    return NextResponse.json(
+      { success: true, addresses },
+      {
+        headers: {
+          'Cache-Control': 'private, max-age=15, stale-while-revalidate=45',
+        },
+      }
+    );
   } catch (error: any) {
     console.error('Fetch addresses error:', error);
     return NextResponse.json({ success: false, error: 'Failed to fetch addresses' }, { status: 500 });

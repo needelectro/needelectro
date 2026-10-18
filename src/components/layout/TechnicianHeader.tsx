@@ -37,7 +37,20 @@ export default function TechnicianHeader() {
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const [availableStatus, setAvailableStatus] = useState<string>('AVAILABLE');
+  const [availableStatus, setAvailableStatus] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = sessionStorage.getItem('_ne_fast_/api/v1/technicians/me');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed?.data?.technician?.availableStatus) {
+            return parsed.data.technician.availableStatus;
+          }
+        }
+      } catch {}
+    }
+    return 'AVAILABLE';
+  });
   const [loadingStatus, setLoadingStatus] = useState(false);
 
   // Close menus on route change
@@ -58,7 +71,7 @@ export default function TechnicianHeader() {
     };
   }, [mobileMenuOpen]);
 
-  // Load technician status & notification badge with stale-while-revalidate cache
+  // Load technician status & notification badge with stale-while-revalidate cache (no repeat fetches on route transitions)
   useEffect(() => {
     if (!user || user.role !== 'TECHNICIAN') return;
 
@@ -85,7 +98,7 @@ export default function TechnicianHeader() {
     return () => {
       isMounted = false;
     };
-  }, [user, pathname]);
+  }, [user?.id]);
 
   const handleToggleAvailability = async () => {
     if (loadingStatus) return;

@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/context/AuthContext';
 import { useLanguage } from '@/lib/context/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import CustomerProfileView from '@/components/profile/CustomerProfileView';
+import { fastFetch, invalidateFastCache } from '@/lib/fastFetch';
 import {
   LayoutDashboard, ShoppingBag, Wrench, Shield, LifeBuoy, LogOut,
   User, ChevronRight, Package, Clock, CheckCircle2, AlertCircle,
@@ -56,12 +57,54 @@ function CustomerDashboardContent() {
       setActiveTab(tabParam);
     }
   }, [tabParam]);
-  const [bookings, setBookings] = useState<any[]>([]);
-  const [orders, setOrders] = useState<any[]>([]);
-  const [warranties, setWarranties] = useState<any[]>([]);
-  const [tickets, setTickets] = useState<any[]>([]);
-  const [addresses, setAddresses] = useState<AddressItem[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  // Warm cache initialization for 0ms initial render
+  const [bookings, setBookings] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = sessionStorage.getItem('_ne_fast_/api/v1/bookings');
+        if (raw) return JSON.parse(raw).data?.bookings || [];
+      } catch {}
+    }
+    return [];
+  });
+  const [orders, setOrders] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = sessionStorage.getItem('_ne_fast_/api/v1/orders');
+        if (raw) return JSON.parse(raw).data?.orders || [];
+      } catch {}
+    }
+    return [];
+  });
+  const [warranties, setWarranties] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = sessionStorage.getItem('_ne_fast_/api/v1/warranty');
+        if (raw) return JSON.parse(raw).data?.warranties || [];
+      } catch {}
+    }
+    return [];
+  });
+  const [tickets, setTickets] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = sessionStorage.getItem('_ne_fast_/api/v1/support');
+        if (raw) return JSON.parse(raw).data?.tickets || [];
+      } catch {}
+    }
+    return [];
+  });
+  const [addresses, setAddresses] = useState<AddressItem[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = sessionStorage.getItem('_ne_fast_/api/v1/customer/addresses');
+        if (raw) return JSON.parse(raw).data?.addresses || [];
+      } catch {}
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
@@ -108,50 +151,41 @@ function CustomerDashboardContent() {
       router.replace('/technician/dashboard');
       return;
     }
-    loadData();
+    loadData(false);
     // Initialize profile form values
     setName(user.name || '');
     setPhone(user.phone || '');
   }, [user]);
 
-  const loadData = async () => {
-    setLoading(true);
+  const loadData = async (showSpinner = false) => {
+    if (showSpinner) setLoading(true);
     try {
-      const [bRes, oRes, wRes, tRes, meRes, addrRes] = await Promise.all([
-        fetch('/api/v1/bookings'),
-        fetch('/api/v1/orders'),
-        fetch('/api/v1/warranty'),
-        fetch('/api/v1/support'),
-        fetch('/api/v1/auth/me'),
-        fetch('/api/v1/customer/addresses'),
+      const [bData, oData, wData, tData, meData] = await Promise.all([
+        fastFetch('/api/v1/bookings', { ttlMs: 30000 }),
+        fastFetch('/api/v1/orders', { ttlMs: 30000 }),
+        fastFetch('/api/v1/warranty', { ttlMs: 30000 }),
+        fastFetch('/api/v1/support', { ttlMs: 30000 }),
+        fastFetch('/api/v1/auth/me', { ttlMs: 30000 }),
       ]);
 
-      if (bRes.ok) { const d = await bRes.json(); setBookings(d.bookings || []); }
-      if (oRes.ok) { const d = await oRes.json(); setOrders(d.orders || []); }
-      if (wRes.ok) { const d = await wRes.json(); setWarranties(d.warranties || []); }
-      if (tRes.ok) { const d = await tRes.json(); setTickets(d.tickets || []); }
+      if (bData?.bookings) setBookings(bData.bookings);
+      if (oData?.orders) setOrders(oData.orders);
+      if (wData?.warranties) setWarranties(wData.warranties);
+      if (tData?.tickets) setTickets(tData.tickets);
 
-      if (meRes.ok) {
-        const d = await meRes.json();
-        if (d.user) {
-          setName(d.user.name || '');
-          setPhone(d.user.phone || '');
-          setAvatarUrl(d.user.avatarUrl || '');
-          if (d.user.customerProfile) {
-            setAlternativePhone(d.user.customerProfile.alternativePhone || '');
-            if (d.user.customerProfile.addresses) {
-              setAddresses(d.user.customerProfile.addresses);
-            }
+      if (meData?.user) {
+        setName(meData.user.name || '');
+        setPhone(meData.user.phone || '');
+        setAvatarUrl(meData.user.avatarUrl || '');
+        if (meData.user.customerProfile) {
+          setAlternativePhone(meData.user.customerProfile.alternativePhone || '');
+          if (meData.user.customerProfile.addresses) {
+            setAddresses(meData.user.customerProfile.addresses);
           }
         }
       }
-
-      if (addrRes.ok) {
-        const d = await addrRes.json();
-        if (d.addresses) setAddresses(d.addresses);
-      }
     } catch {
-      /* ignore */
+      /* background catch */
     } finally {
       setLoading(false);
     }
@@ -184,6 +218,7 @@ function CustomerDashboardContent() {
       if (!res.ok) {
         setProfileMsg({ type: 'error', text: data.error || 'Failed to update profile.' });
       } else {
+        invalidateFastCache('/api/v1/auth/me');
         setProfileMsg({ type: 'success', text: 'Profile updated successfully!' });
         await refreshUser();
         setTimeout(() => setProfileMsg(null), 4000);
@@ -257,6 +292,8 @@ function CustomerDashboardContent() {
       if (!res.ok) {
         setAddressMsg({ type: 'error', text: data.error || 'Failed to save address.' });
       } else {
+        invalidateFastCache('/api/v1/customer/addresses');
+        invalidateFastCache('/api/v1/auth/me');
         setAddressMsg({ type: 'success', text: 'Delivery address added successfully!' });
         setShowAddressForm(false);
         setAddressForm({
@@ -295,6 +332,8 @@ function CustomerDashboardContent() {
         body: JSON.stringify({ id, isDefault: true }),
       });
       if (res.ok) {
+        invalidateFastCache('/api/v1/customer/addresses');
+        invalidateFastCache('/api/v1/auth/me');
         setAddresses((prev) =>
           prev.map((a) => ({
             ...a,
@@ -315,6 +354,8 @@ function CustomerDashboardContent() {
         method: 'DELETE',
       });
       if (res.ok) {
+        invalidateFastCache('/api/v1/customer/addresses');
+        invalidateFastCache('/api/v1/auth/me');
         setAddresses((prev) => prev.filter((a) => a.id !== id));
       }
     } catch {
@@ -454,14 +495,14 @@ function CustomerDashboardContent() {
 
         {/* Main Content */}
         <main className="flex-1 space-y-6 min-w-0">
-          {loading && (
+          {loading && bookings.length === 0 && orders.length === 0 && (
             <div className="flex items-center justify-center h-40">
               <div className="w-8 h-8 border-4 border-brand-200 border-t-brand-500 rounded-full animate-spin" />
             </div>
           )}
 
           {/* OVERVIEW TAB */}
-          {!loading && activeTab === 'overview' && (
+          {activeTab === 'overview' && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h1 className="text-xl font-black text-slate-950">
@@ -580,15 +621,17 @@ function CustomerDashboardContent() {
           )}
 
           {/* MY PROFILE TAB (REDESIGNED) */}
-          {!loading && activeTab === 'profile' && (
+          {activeTab === 'profile' && (
             <CustomerProfileView
               onTabChange={(tab) => setActiveTab(tab as TabKey)}
               isStandalonePage={false}
+              initialUser={user}
+              initialAddresses={addresses}
             />
           )}
 
           {/* BOOKINGS TAB */}
-          {!loading && activeTab === 'bookings' && (
+          {activeTab === 'bookings' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-black text-slate-900">My Bookings</h2>
@@ -629,7 +672,7 @@ function CustomerDashboardContent() {
           )}
 
           {/* ORDERS TAB (ORDER DETAILS & WARRANTY VERIFICATION) */}
-          {!loading && activeTab === 'orders' && (
+          {activeTab === 'orders' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -825,7 +868,7 @@ function CustomerDashboardContent() {
           )}
 
           {/* WARRANTY TAB */}
-          {!loading && activeTab === 'warranty' && (
+          {activeTab === 'warranty' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-black text-slate-900">My Warranties</h2>
@@ -856,7 +899,7 @@ function CustomerDashboardContent() {
           )}
 
           {/* SUPPORT TAB */}
-          {!loading && activeTab === 'support' && (
+          {activeTab === 'support' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-black text-slate-900">Support Tickets</h2>

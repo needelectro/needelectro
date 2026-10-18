@@ -12,6 +12,8 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const status = searchParams.get('status');
     const availableJobs = searchParams.get('available') === 'true';
+    const limitParam = searchParams.get('limit');
+    const limit = limitParam ? Math.min(100, Math.max(1, parseInt(limitParam, 10))) : 60;
 
     let whereClause: any = {};
 
@@ -73,6 +75,7 @@ export async function GET(req: NextRequest) {
         },
       },
       orderBy: { createdAt: 'desc' },
+      take: limit,
     });
 
     // Module 5.1 Privacy Protection: Never reveal customer private contact before assignment
@@ -99,7 +102,14 @@ export async function GET(req: NextRequest) {
       return b;
     });
 
-    return NextResponse.json({ success: true, bookings: sanitized });
+    return NextResponse.json(
+      { success: true, bookings: sanitized },
+      {
+        headers: {
+          'Cache-Control': 'private, max-age=10, stale-while-revalidate=30',
+        },
+      }
+    );
   } catch (error) {
     console.error('Fetch bookings error:', error);
     return NextResponse.json({ error: 'Failed to load bookings' }, { status: 500 });

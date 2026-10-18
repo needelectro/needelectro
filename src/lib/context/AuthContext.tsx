@@ -21,20 +21,50 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<UserSession | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<UserSession | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = sessionStorage.getItem('_ne_user_session');
+        if (stored) return JSON.parse(stored);
+      } catch {}
+    }
+    return null;
+  });
+
+  const [isLoading, setIsLoading] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        if (sessionStorage.getItem('_ne_user_session')) return false;
+      } catch {}
+    }
+    return true;
+  });
+
+  const syncUser = (nextUser: UserSession | null) => {
+    setUser(nextUser);
+    if (typeof window !== 'undefined') {
+      try {
+        if (nextUser) {
+          sessionStorage.setItem('_ne_user_session', JSON.stringify(nextUser));
+        } else {
+          sessionStorage.removeItem('_ne_user_session');
+        }
+      } catch {}
+    }
+  };
 
   const refreshUser = async () => {
     try {
       const res = await fetch('/api/v1/auth/me');
       if (res.ok) {
         const data = await res.json();
-        setUser(data.user);
+        syncUser(data.user);
       } else {
-        setUser(null);
+        syncUser(null);
       }
     } catch {
-      setUser(null);
+      // Retain existing session on transient network errors, only clear if definitively unauthenticated
+      if (!user) syncUser(null);
     } finally {
       setIsLoading(false);
     }
@@ -56,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!res.ok) {
         return { success: false, error: data.error || 'Failed to sign in', redirectUrl: data.redirectUrl };
       }
-      setUser(data.user);
+      syncUser(data.user);
       return { success: true, redirectUrl: data.redirectUrl };
     } catch {
       return { success: false, error: 'Network error. Please try again.' };
@@ -77,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!res.ok) {
         return { success: false, error: data.error || 'Registration failed' };
       }
-      setUser(data.user);
+      syncUser(data.user);
       return { success: true, redirectUrl: data.redirectUrl };
     } catch {
       return { success: false, error: 'Network error during registration.' };
@@ -90,7 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await fetch('/api/v1/auth/logout', { method: 'POST' });
     } finally {
-      setUser(null);
+      syncUser(null);
     }
   };
 

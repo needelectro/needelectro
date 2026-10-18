@@ -14,6 +14,7 @@ import {
   PhoneCall, ExternalLink, Globe
 } from 'lucide-react';
 import { BANGLADESH_DISTRICTS } from '@/lib/data/districts';
+import { fastFetch, invalidateFastCache } from '@/lib/fastFetch';
 
 interface AddressItem {
   id: string;
@@ -44,13 +45,18 @@ const BANGLADESH_DIVISIONS = [
 interface CustomerProfileViewProps {
   onTabChange?: (tab: string) => void;
   isStandalonePage?: boolean;
+  initialUser?: any;
+  initialAddresses?: AddressItem[];
 }
 
 export default function CustomerProfileView({
   onTabChange,
   isStandalonePage = true,
+  initialUser,
+  initialAddresses,
 }: CustomerProfileViewProps) {
   const { user, logout, refreshUser } = useAuth();
+  const currentUser = initialUser || user;
   const { t, formatNumber } = useLanguage();
   const router = useRouter();
 
@@ -58,18 +64,22 @@ export default function CustomerProfileView({
   const [isEditingProfile, setIsEditingProfile] = useState(false);
 
   // Profile Form States
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [alternativePhone, setAlternativePhone] = useState('');
+  const [name, setName] = useState(currentUser?.name || '');
+  const [phone, setPhone] = useState(currentUser?.phone || '');
+  const [alternativePhone, setAlternativePhone] = useState(currentUser?.customerProfile?.alternativePhone || '');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [gender, setGender] = useState('PREFER_NOT_TO_SAY');
   const [language, setLanguage] = useState('English');
-  const [avatarUrl, setAvatarUrl] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState(currentUser?.avatarUrl || '');
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMsg, setProfileMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Address States
-  const [addresses, setAddresses] = useState<AddressItem[]>([]);
+  const [addresses, setAddresses] = useState<AddressItem[]>(() => {
+    if (initialAddresses && initialAddresses.length > 0) return initialAddresses;
+    if (currentUser?.customerProfile?.addresses) return currentUser.customerProfile.addresses;
+    return [];
+  });
   const [loadingAddresses, setLoadingAddresses] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [addressSaving, setAddressSaving] = useState(false);
@@ -127,28 +137,24 @@ export default function CustomerProfileView({
   const loadFreshProfileData = async () => {
     try {
       const [meRes, addrRes] = await Promise.all([
-        fetch('/api/v1/auth/me'),
-        fetch('/api/v1/customer/addresses'),
+        fastFetch('/api/v1/auth/me', { ttlMs: 30000 }),
+        fastFetch('/api/v1/customer/addresses', { ttlMs: 30000 }),
       ]);
 
-      if (meRes.ok) {
-        const d = await meRes.json();
-        if (d.user) {
-          setName(d.user.name || '');
-          setPhone(d.user.phone || '');
-          setAvatarUrl(d.user.avatarUrl || '');
-          if (d.user.customerProfile?.alternativePhone) {
-            setAlternativePhone(d.user.customerProfile.alternativePhone);
-          }
-          if (d.user.customerProfile?.addresses) {
-            setAddresses(d.user.customerProfile.addresses);
-          }
+      if (meRes?.user) {
+        setName(meRes.user.name || '');
+        setPhone(meRes.user.phone || '');
+        setAvatarUrl(meRes.user.avatarUrl || '');
+        if (meRes.user.customerProfile?.alternativePhone) {
+          setAlternativePhone(meRes.user.customerProfile.alternativePhone);
+        }
+        if (meRes.user.customerProfile?.addresses) {
+          setAddresses(meRes.user.customerProfile.addresses);
         }
       }
 
-      if (addrRes.ok) {
-        const d = await addrRes.json();
-        if (d.addresses) setAddresses(d.addresses);
+      if (addrRes?.addresses) {
+        setAddresses(addrRes.addresses);
       }
     } catch {
       // Background catch
@@ -178,6 +184,7 @@ export default function CustomerProfileView({
         throw new Error(data.error || 'Failed to update profile.');
       }
 
+      invalidateFastCache('/api/v1/auth/me');
       setProfileMsg({ type: 'success', text: 'Personal details updated successfully.' });
       setIsEditingProfile(false);
       await refreshUser();
@@ -214,6 +221,9 @@ export default function CustomerProfileView({
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to save address.');
+
+      invalidateFastCache('/api/v1/customer/addresses');
+      invalidateFastCache('/api/v1/auth/me');
 
       setAddresses((prev) => {
         if (addressForm.isDefault) {
@@ -254,6 +264,8 @@ export default function CustomerProfileView({
         body: JSON.stringify({ addressId: id, isDefault: true }),
       });
       if (res.ok) {
+        invalidateFastCache('/api/v1/customer/addresses');
+        invalidateFastCache('/api/v1/auth/me');
         setAddresses((prev) =>
           prev.map((a) => ({ ...a, isDefault: a.id === id }))
         );
@@ -271,6 +283,8 @@ export default function CustomerProfileView({
         method: 'DELETE',
       });
       if (res.ok) {
+        invalidateFastCache('/api/v1/customer/addresses');
+        invalidateFastCache('/api/v1/auth/me');
         setAddresses((prev) => prev.filter((a) => a.id !== id));
       }
     } catch {

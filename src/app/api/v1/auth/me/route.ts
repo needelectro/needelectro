@@ -53,28 +53,35 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ user: null });
     }
 
-    return NextResponse.json({
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        role: user.role,
-        status: user.status,
-        avatarUrl: user.avatarUrl,
-        createdAt: user.createdAt,
-        customerProfileId: user.customerProfile?.id ?? null,
-        technicianProfileId: user.technicianProfile?.id ?? null,
-        customerProfile: user.customerProfile
-          ? {
-              id: user.customerProfile.id,
-              alternativePhone: user.customerProfile.alternativePhone,
-              addresses: user.customerProfile.addresses,
-              createdAt: user.customerProfile.createdAt,
-            }
-          : null,
+    return NextResponse.json(
+      {
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          role: user.role,
+          status: user.status,
+          avatarUrl: user.avatarUrl,
+          createdAt: user.createdAt,
+          customerProfileId: user.customerProfile?.id ?? null,
+          technicianProfileId: user.technicianProfile?.id ?? null,
+          customerProfile: user.customerProfile
+            ? {
+                id: user.customerProfile.id,
+                alternativePhone: user.customerProfile.alternativePhone,
+                addresses: user.customerProfile.addresses,
+                createdAt: user.customerProfile.createdAt,
+              }
+            : null,
+        },
       },
-    });
+      {
+        headers: {
+          'Cache-Control': 'private, max-age=10, stale-while-revalidate=30',
+        },
+      }
+    );
   } catch (error) {
     console.error('Auth me error:', error);
     return NextResponse.json({ user: null });

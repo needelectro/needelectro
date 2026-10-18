@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -18,6 +18,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import ProductCard from '@/components/common/ProductCard';
+import { fastFetch } from '@/lib/fastFetch';
 
 const POPULAR_SUGGESTIONS = [
   'Laptops',
@@ -43,6 +44,7 @@ function SearchContent() {
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const currentSearchRef = useRef<string>('');
 
   // Load recent searches from localStorage
   useEffect(() => {
@@ -77,6 +79,7 @@ function SearchContent() {
   // Trigger search on query change
   useEffect(() => {
     if (!query.trim()) {
+      currentSearchRef.current = '';
       setProducts([]);
       setServices([]);
       setLoading(false);
@@ -91,25 +94,34 @@ function SearchContent() {
   }, [query]);
 
   const fetchResults = async (searchTerm: string) => {
+    const searchId = searchTerm.trim();
+    currentSearchRef.current = searchId;
     setLoading(true);
+
     try {
-      const [prodRes, servRes] = await Promise.all([
-        fetch(`/api/v1/products?limit=40&search=${encodeURIComponent(searchTerm)}`),
-        fetch(`/api/v1/services?search=${encodeURIComponent(searchTerm)}`),
+      const [prodData, servData] = await Promise.all([
+        fastFetch(`/api/v1/products?limit=40&search=${encodeURIComponent(searchId)}`, { ttlMs: 30000 }),
+        fastFetch(`/api/v1/services?search=${encodeURIComponent(searchId)}`, { ttlMs: 30000 }),
       ]);
-      if (prodRes.ok) {
-        const d = await prodRes.json();
-        setProducts(d.products || []);
+
+      // Guard against race conditions / outdated requests overwriting newer results
+      if (currentSearchRef.current !== searchId) return;
+
+      if (prodData?.products) {
+        setProducts(prodData.products);
       }
-      if (servRes.ok) {
-        const d = await servRes.json();
-        setServices(d.services || []);
+      if (servData?.services) {
+        setServices(servData.services);
       }
-      saveRecentSearch(searchTerm);
+      saveRecentSearch(searchId);
     } catch (e) {
-      console.error('Search fetch error:', e);
+      if (currentSearchRef.current === searchId) {
+        console.error('Search fetch error:', e);
+      }
     } finally {
-      setLoading(false);
+      if (currentSearchRef.current === searchId) {
+        setLoading(false);
+      }
     }
   };
 

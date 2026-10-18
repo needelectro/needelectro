@@ -17,6 +17,57 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized technician access' }, { status: 401 });
     }
 
+    const isLean = req.nextUrl.searchParams.get('lean') === 'true';
+
+    if (isLean) {
+      const [tech, unreadNotifCount] = await Promise.all([
+        prisma.technicianProfile.findUnique({
+          where: { userId: payload.id },
+          select: {
+            id: true,
+            userId: true,
+            availableStatus: true,
+            emergencyAvailable: true,
+            verificationStatus: true,
+            ratingOverall: true,
+            walletBalance: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                phone: true,
+                avatarUrl: true,
+                status: true,
+              },
+            },
+          },
+        }),
+        prisma.notification.count({
+          where: { userId: payload.id, read: false },
+        }),
+      ]);
+
+      if (tech) {
+        return NextResponse.json(
+          {
+            success: true,
+            technician: {
+              ...tech,
+              stats: {
+                unreadNotifications: unreadNotifCount,
+              },
+            },
+          },
+          {
+            headers: {
+              'Cache-Control': 'private, max-age=15, stale-while-revalidate=30',
+            },
+          }
+        );
+      }
+    }
+
     let technician = await prisma.technicianProfile.findUnique({
       where: { userId: payload.id },
       include: {
@@ -102,29 +153,18 @@ export async function GET(req: NextRequest) {
     const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
     const todayDateStr = new Date().toISOString().slice(0, 10);
 
-    // Count statistics from real database records
+    // Optimized aggregation: single groupBy query replaces 6 separate count queries
     const [
-      assignedCount,
-      awaitingCount,
-      acceptedCount,
-      inProgressCount,
-      completedCount,
-      cancelledDisputedCount,
+      statusGroups,
       todayScheduledCount,
       monthlyEarningsAgg,
       unreadNotifCount,
     ] = await Promise.all([
-      prisma.booking.count({ where: { technicianId: technician.id } }),
-      prisma.booking.count({ where: { technicianId: technician.id, status: 'ASSIGNED' } }),
-      prisma.booking.count({ where: { technicianId: technician.id, status: 'ACCEPTED' } }),
-      prisma.booking.count({
-        where: {
-          technicianId: technician.id,
-          status: { in: ['ON_THE_WAY', 'ARRIVED', 'INSPECTION_STARTED', 'AWAITING_APPROVAL', 'IN_PROGRESS', 'WORK_STARTED', 'ON_HOLD'] },
-        },
+      prisma.booking.groupBy({
+        by: ['status'],
+        where: { technicianId: technician.id },
+        _count: { status: true },
       }),
-      prisma.booking.count({ where: { technicianId: technician.id, status: { in: ['COMPLETED', 'WORK_COMPLETED'] } } }),
-      prisma.booking.count({ where: { technicianId: technician.id, status: { in: ['CANCELLED', 'DISPUTED', 'REJECTED'] } } }),
       prisma.booking.count({
         where: {
           technicianId: technician.id,
@@ -144,27 +184,61 @@ export async function GET(req: NextRequest) {
       }),
     ]);
 
+    let assignedCount = 0;
+    let awaitingCount = 0;
+    let acceptedCount = 0;
+    let inProgressCount = 0;
+    let completedCount = 0;
+    let cancelledDisputedCount = 0;
+
+    for (const group of statusGroups) {
+      const count = group._count.status;
+      assignedCount += count;
+      if (group.status === 'ASSIGNED') awaitingCount += count;
+      if (group.status === 'ACCEPTED') acceptedCount += count;
+      if (
+        ['ON_THE_WAY', 'ARRIVED', 'INSPECTION_STARTED', 'AWAITING_APPROVAL', 'IN_PROGRESS', 'WORK_STARTED', 'ON_HOLD'].includes(
+          group.status
+        )
+      ) {
+        inProgressCount += count;
+      }
+      if (['COMPLETED', 'WORK_COMPLETED'].includes(group.status)) {
+        completedCount += count;
+      }
+      if (['CANCELLED', 'DISPUTED', 'REJECTED'].includes(group.status)) {
+        cancelledDisputedCount += count;
+      }
+    }
+
     const monthlyEarnings = monthlyEarningsAgg._sum.technicianAmount || 0;
 
-    return NextResponse.json({
-      success: true,
-      technician: {
-        ...technician,
-        parsedSkills,
-        stats: {
-          assignedTotal: assignedCount,
-          awaitingAcceptance: awaitingCount,
-          acceptedCount,
-          activeTotal: inProgressCount,
-          inProgressTotal: inProgressCount,
-          completedTotal: completedCount,
-          cancelledOrDisputedTotal: cancelledDisputedCount,
-          todayScheduledTotal: todayScheduledCount,
-          monthlyEarnings,
-          unreadNotifications: unreadNotifCount,
+    return NextResponse.json(
+      {
+        success: true,
+        technician: {
+          ...technician,
+          parsedSkills,
+          stats: {
+            assignedTotal: assignedCount,
+            awaitingAcceptance: awaitingCount,
+            acceptedCount,
+            activeTotal: inProgressCount,
+            inProgressTotal: inProgressCount,
+            completedTotal: completedCount,
+            cancelledOrDisputedTotal: cancelledDisputedCount,
+            todayScheduledTotal: todayScheduledCount,
+            monthlyEarnings,
+            unreadNotifications: unreadNotifCount,
+          },
         },
       },
-    });
+      {
+        headers: {
+          'Cache-Control': 'private, max-age=15, stale-while-revalidate=30',
+        },
+      }
+    );
   } catch (error) {
     console.error('Error in technicians/me GET:', error);
     return NextResponse.json({ error: 'Failed to fetch technician profile' }, { status: 500 });
