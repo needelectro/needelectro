@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import { LanguageProvider } from '@/lib/context/LanguageContext';
 import { AuthProvider } from '@/lib/context/AuthContext';
 import { CartProvider } from '@/lib/context/CartContext';
 import Header from '@/components/layout/Header';
@@ -174,17 +175,19 @@ export default function RootLayout({
           <div className="absolute -bottom-24 left-1/3 w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(6,182,212,0.08)_0%,rgba(6,182,212,0)_70%)] pointer-events-none" />
         </div>
 
-        <AuthProvider>
-          <CartProvider>
-            <AdminGuard>
-              <Header />
-              <main className="flex-1 pb-24 md:pb-0 relative min-w-0 w-full">{children}</main>
-              <Footer />
-              <MobileNav />
-              <PwaInstallPrompt />
-            </AdminGuard>
-          </CartProvider>
-        </AuthProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <CartProvider>
+              <AdminGuard>
+                <Header />
+                <main className="flex-1 pb-24 md:pb-0 relative min-w-0 w-full">{children}</main>
+                <Footer />
+                <MobileNav />
+                <PwaInstallPrompt />
+              </AdminGuard>
+            </CartProvider>
+          </AuthProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

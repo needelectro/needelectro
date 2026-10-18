@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/context/AuthContext';
+import { useLanguage } from '@/lib/context/LanguageContext';
 import {
   User, Mail, Phone, MapPin, ShieldCheck, Lock, Calendar,
   Building, Clock, Sparkles, Plus, Trash2, Edit3, Save, Check,
@@ -50,6 +51,7 @@ export default function CustomerProfileView({
   isStandalonePage = true,
 }: CustomerProfileViewProps) {
   const { user, logout, refreshUser } = useAuth();
+  const { t, formatNumber } = useLanguage();
   const router = useRouter();
 
   // Mode: View vs Edit
@@ -360,7 +362,7 @@ export default function CustomerProfileView({
                 </div>
                 <div>
                   <h3 className="font-black text-slate-900 text-sm sm:text-base">
-                    Personal Information
+                    {t('customer.personalInfo', 'Personal Information')}
                   </h3>
                   <p className="text-xs text-slate-500">
                     Your authenticated legal details and customer contact profile
@@ -374,7 +376,7 @@ export default function CustomerProfileView({
                   onClick={() => setIsEditingProfile(true)}
                   className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-xl transition"
                 >
-                  <Edit3 className="w-3.5 h-3.5" /> Edit
+                  <Edit3 className="w-3.5 h-3.5" /> {t('common.edit', 'Edit')}
                 </button>
               )}
             </div>
@@ -563,7 +565,7 @@ export default function CustomerProfileView({
                     disabled={profileSaving}
                     className="btn-secondary text-xs py-2 px-4"
                   >
-                    Cancel
+                    {t('common.cancel', 'Cancel')}
                   </button>
                   <button
                     type="submit"
@@ -573,11 +575,11 @@ export default function CustomerProfileView({
                     {profileSaving ? (
                       <>
                         <div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                        Saving Changes...
+                        {t('common.saving', 'Saving...')}
                       </>
                     ) : (
                       <>
-                        <Save className="w-3.5 h-3.5" /> Save Changes
+                        <Save className="w-3.5 h-3.5" /> {t('common.save', 'Save Changes')}
                       </>
                     )}
                   </button>
@@ -911,7 +913,7 @@ export default function CustomerProfileView({
               </div>
               <div>
                 <h3 className="font-black text-slate-900 text-sm sm:text-base">
-                  Account Security &amp; Credentials
+                  {t('customer.securityTab', 'Account Security & Credentials')}
                 </h3>
                 <p className="text-xs text-slate-500">
                   Update your account password and review authentication safety
@@ -1054,7 +1056,7 @@ export default function CustomerProfileView({
                 <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
                   <h2 className="text-lg sm:text-xl font-black text-slate-900">{user.name}</h2>
                   <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1">
-                    <ShieldCheck className="w-3 h-3 text-emerald-600" /> Verified Customer
+                    <ShieldCheck className="w-3 h-3 text-emerald-600" /> {t('customer.verifiedCustomer', 'Verified Customer')}
                   </span>
                   <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-brand-50 text-brand-700 border border-brand-200">
                     Active Account
@@ -1121,10 +1123,10 @@ export default function CustomerProfileView({
           <div>
             <div className="flex items-center gap-2.5 flex-wrap">
               <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                My Profile
+                {t('customer.myProfile', 'My Profile')}
               </h1>
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200">
-                <ShieldCheck className="w-3 h-3 text-emerald-600" /> Verified Customer
+                <ShieldCheck className="w-3 h-3 text-emerald-600" /> {t('customer.verifiedCustomer', 'Verified Customer')}
               </span>
             </div>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">

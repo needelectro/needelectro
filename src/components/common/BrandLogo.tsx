@@ -1,6 +1,9 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useLanguage } from '@/lib/context/LanguageContext';
 
 export interface BrandLogoProps {
   /**
@@ -67,6 +70,7 @@ export default function BrandLogo({
 }: BrandLogoProps) {
   const isDark = theme === 'dark';
   const cfg = SIZE_CONFIGS[size] || SIZE_CONFIGS.md;
+  const { t } = useLanguage();
 
   const content = (() => {
     if (variant === 'symbol') {
@@ -115,7 +119,7 @@ export default function BrandLogo({
                 isDark ? 'text-slate-300' : 'text-slate-600'
               } ${cfg.subtitleMargin} leading-none block whitespace-nowrap ${subtitleClassName}`}
             >
-              Trusted Electrical and Technological Solutions
+              {t('common.tagline', 'Trusted Electrical and Technological Solutions')}
             </span>
           )}
         </div>
@@ -125,7 +129,7 @@ export default function BrandLogo({
 
   if (href) {
     return (
-      <Link href={href} className="inline-flex shrink-0 no-underline" title="NEED ELECTRO — Trusted Electrical and Technological Solutions">
+      <Link href={href} className="inline-flex shrink-0 no-underline" title={`NEED ELECTRO — ${t('common.tagline', 'Trusted Electrical and Technological Solutions')}`}>
         {content}
       </Link>
     );

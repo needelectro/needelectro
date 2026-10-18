@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/context/AuthContext';
+import { useLanguage } from '@/lib/context/LanguageContext';
 import { 
   Home, 
   LayoutGrid, 
@@ -21,6 +22,7 @@ import {
 export default function MobileNav() {
   const pathname = usePathname();
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   // Hide on admin views and for admin users
   const isAdmin = user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN');
@@ -33,31 +35,31 @@ export default function MobileNav() {
   // Navigation items for Service Marketplace Customer / Guest
   const customerNavItems = [
     {
-      label: 'Home',
+      label: t('navigation.home', 'Home'),
       href: '/',
       icon: Home,
       isActive: pathname === '/',
     },
     {
-      label: 'Services',
+      label: t('navigation.services', 'Services'),
       href: '/services',
       icon: Zap,
       isActive: pathname?.startsWith('/services'),
     },
     {
-      label: 'Book Now',
+      label: t('navigation.bookService', 'Book Now'),
       href: '/booking',
       icon: CalendarCheck,
       isActive: pathname?.startsWith('/booking'),
     },
     {
-      label: 'Shop',
+      label: t('navigation.shop', 'Shop'),
       href: '/shop',
       icon: ShoppingBag,
       isActive: pathname?.startsWith('/shop') || pathname?.startsWith('/parts'),
     },
     {
-      label: user ? 'Account' : 'Sign In',
+      label: user ? t('navigation.customerPortal', 'Account') : t('navigation.signIn', 'Sign In'),
       href: user ? '/customer/dashboard' : '/customer/login',
       icon: User,
       isActive: pathname?.startsWith('/customer') || pathname === '/login',
@@ -67,25 +69,25 @@ export default function MobileNav() {
   // Navigation items for Verified Technician
   const technicianNavItems = [
     {
-      label: 'Home',
+      label: t('navigation.home', 'Home'),
       href: '/technician/dashboard',
       icon: Home,
       isActive: pathname === '/technician/dashboard',
     },
     {
-      label: 'Jobs',
+      label: t('technician.jobQueue', 'Jobs'),
       href: '/technician/jobs',
       icon: Briefcase,
       isActive: pathname === '/technician/jobs',
     },
     {
-      label: 'Earnings',
+      label: t('technician.earnings', 'Earnings'),
       href: '/technician/earnings',
       icon: Wallet,
       isActive: pathname === '/technician/earnings',
     },
     {
-      label: 'Profile',
+      label: t('navigation.myProfile', 'Profile'),
       href: '/technician/profile',
       icon: User,
       isActive: pathname === '/technician/profile',

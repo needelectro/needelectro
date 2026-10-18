@@ -25,6 +25,7 @@ import {
   HardDrive
 } from 'lucide-react';
 import { fastFetch } from '@/lib/fastFetch';
+import { useLanguage } from '@/lib/context/LanguageContext';
 import ProductCard from '@/components/common/ProductCard';
 
 const DEFAULT_FEATURED_SERVICES = [
@@ -79,6 +80,7 @@ const DEFAULT_FEATURED_SERVICES = [
 ];
 
 export default function HomePage() {
+  const { t, formatPrice } = useLanguage();
   const [activeTab, setActiveTab] = useState<'all' | 'electrical' | 'cctv' | 'computer'>('all');
   const [services, setServices] = useState<any[]>(DEFAULT_FEATURED_SERVICES);
   const [loadingServices, setLoadingServices] = useState(true);
@@ -153,20 +155,20 @@ export default function HomePage() {
                 className="w-4.5 h-4.5 object-contain"
                 priority
               />
-              <span className="text-slate-600 font-medium">Verified Electrical &amp; Technology Platform &bull; Founded 2023</span>
+              <span className="text-slate-600 font-medium">{t('home.heroBadge', 'Verified Electrical & Technology Platform • All 64 Districts')}</span>
             </div>
 
             {/* Headline */}
             <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-slate-950 tracking-tight leading-[1.2] sm:leading-[1.15] break-words">
               NEED ELECTRO &mdash; <br className="hidden sm:inline" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 via-brand-500 to-sky-400">
-                Laptops, Computers, CCTV &amp; Electrical Services in Bangladesh
+                {t('home.heroTitle', 'Laptops, Computers, CCTV & Electrical Services in Bangladesh')}
               </span>
             </h1>
 
             {/* Supporting Text */}
             <p className="text-sm sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed px-1">
-              Book professional electrical and technical services, explore genuine technology products, and manage your warranties through one unified, trusted platform.
+              {t('home.heroSubtitle', 'Book professional electrical and technical services, explore genuine technology products, and manage your warranties through one unified, trusted platform.')}
             </p>
 
             {/* CTA Buttons with Glass Sheen */}
@@ -176,21 +178,21 @@ export default function HomePage() {
                 className="btn-primary w-full sm:w-auto text-sm sm:text-base py-3 px-6 shadow-lg shadow-brand-500/25 justify-center"
               >
                 <Zap className="w-5 h-5 mr-2 fill-white shrink-0" />
-                Book a Service
+                {t('home.ctaBookService', 'Book a Service')}
               </Link>
               <Link
                 href="/shop"
                 className="btn-secondary w-full sm:w-auto text-sm sm:text-base py-3 px-6 justify-center"
               >
                 <ShoppingBag className="w-5 h-5 mr-2 text-slate-700 shrink-0" />
-                Shop Products
+                {t('home.ctaShopHardware', 'Shop Products')}
               </Link>
               <Link
                 href="/become-a-technician"
                 className="btn-outline w-full sm:w-auto text-sm sm:text-base py-3 px-5 justify-center"
               >
                 <Wrench className="w-4 h-4 mr-2 shrink-0" />
-                Become a Technician
+                {t('navigation.becomeTechnician', 'Become a Technician')}
               </Link>
             </div>
 
@@ -201,8 +203,8 @@ export default function HomePage() {
                   <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 <div className="min-w-0">
-                  <h4 className="text-xs font-bold text-slate-900 truncate sm:whitespace-normal">Verified Specialists</h4>
-                  <p className="text-[10px] sm:text-[11px] text-slate-500 truncate sm:whitespace-normal">NID &amp; Skill Checked</p>
+                  <h4 className="text-xs font-bold text-slate-900 truncate sm:whitespace-normal">{t('home.trustVerifiedTitle', 'Verified Specialists')}</h4>
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 truncate sm:whitespace-normal">{t('home.trustVerifiedSub', 'NID & Skill Checked')}</p>
                 </div>
               </div>
 
@@ -211,8 +213,8 @@ export default function HomePage() {
                   <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 <div className="min-w-0">
-                  <h4 className="text-xs font-bold text-slate-900 truncate sm:whitespace-normal">Rapid Response</h4>
-                  <p className="text-[10px] sm:text-[11px] text-slate-500 truncate sm:whitespace-normal">Moulvibazar &amp; Region</p>
+                  <h4 className="text-xs font-bold text-slate-900 truncate sm:whitespace-normal">{t('home.trustRapidTitle', 'Rapid Response')}</h4>
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 truncate sm:whitespace-normal">{t('home.trustRapidSub', 'Moulvibazar & Region')}</p>
                 </div>
               </div>
 
@@ -221,8 +223,8 @@ export default function HomePage() {
                   <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 <div className="min-w-0">
-                  <h4 className="text-xs font-bold text-slate-900 truncate sm:whitespace-normal">Digital Warranty</h4>
-                  <p className="text-[10px] sm:text-[11px] text-slate-500 truncate sm:whitespace-normal">Track &amp; Claim Easily</p>
+                  <h4 className="text-xs font-bold text-slate-900 truncate sm:whitespace-normal">{t('home.trustWarrantyTitle', 'Digital Warranty')}</h4>
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 truncate sm:whitespace-normal">{t('home.trustWarrantySub', 'Track & Claim Easily')}</p>
                 </div>
               </div>
 
@@ -231,8 +233,8 @@ export default function HomePage() {
                   <PhoneCall className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 <div className="min-w-0">
-                  <h4 className="text-xs font-bold text-slate-900 truncate sm:whitespace-normal">Direct Branch</h4>
-                  <p className="text-[10px] sm:text-[11px] text-slate-500 truncate sm:whitespace-normal">Moulvibazar Hub</p>
+                  <h4 className="text-xs font-bold text-slate-900 truncate sm:whitespace-normal">{t('home.trustBranchTitle', 'Direct Branch')}</h4>
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 truncate sm:whitespace-normal">{t('home.trustBranchSub', 'Moulvibazar Hub')}</p>
                 </div>
               </div>
             </div>
@@ -250,13 +252,13 @@ export default function HomePage() {
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-50 border border-brand-200/80 text-brand-700 text-xs font-bold mb-2">
                 <Zap className="w-3.5 h-3.5 fill-brand-600 text-brand-600" />
-                <span>On-Demand Certified Specialists</span>
+                <span>{t('home.onDemandBadge', 'On-Demand Certified Specialists')}</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                Professional Electrical &amp; Technology Services
+                {t('home.servicesTitle', 'Professional Electrical & Technology Services')}
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl leading-relaxed">
-                Book verified master electricians and IT technicians in Moulvibazar and across Bangladesh. Transparent pricing, genuine parts, and post-service digital warranty.
+                {t('home.servicesSubtitle', 'Book verified master electricians and IT technicians in Moulvibazar and across Bangladesh. Transparent pricing, genuine parts, and post-service digital warranty.')}
               </p>
             </div>
 
@@ -264,7 +266,7 @@ export default function HomePage() {
               href="/services"
               className="text-xs sm:text-sm font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1.5 group shrink-0"
             >
-              <span>Explore All Services</span>
+              <span>{t('home.exploreAllServices', 'Explore All Services')}</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
@@ -272,10 +274,10 @@ export default function HomePage() {
           {/* Filter Tabs */}
           <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
             {[
-              { id: 'all', label: 'All Services' },
-              { id: 'electrical', label: 'Electrical Wiring' },
-              { id: 'cctv', label: 'CCTV & Security' },
-              { id: 'computer', label: 'Computer & Hardware' },
+              { id: 'all', label: t('home.tabAll', 'All Services') },
+              { id: 'electrical', label: t('home.tabElectrical', 'Electrical Wiring') },
+              { id: 'cctv', label: t('home.tabCctv', 'CCTV & Security') },
+              { id: 'computer', label: t('home.tabComputer', 'Computer & Hardware') },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -314,7 +316,7 @@ export default function HomePage() {
                     {service.isEmergencyService && (
                       <span className="absolute top-2 right-2 bg-red-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-xs flex items-center gap-1">
                         <Zap className="w-2.5 h-2.5 fill-white" />
-                        Rapid 24/7
+                        {t('home.rapidEmergency', 'Rapid 24/7')}
                       </span>
                     )}
                   </div>
@@ -340,13 +342,13 @@ export default function HomePage() {
                       <div>
                         <span className="text-[10px] sm:text-xs text-slate-500">
                           {service.priceType === 'INSPECTION_BASED'
-                            ? 'Insp: '
+                            ? t('home.inspectionBased', 'Insp: ')
                             : service.priceType === 'STARTING_FROM'
-                            ? 'From: '
-                            : 'Fixed: '}
+                            ? t('home.startingFrom', 'From: ')
+                            : t('home.fixedPrice', 'Fixed: ')}
                         </span>
                         <strong className="text-xs sm:text-base font-extrabold text-slate-900">
-                          ৳{Number(service.basePrice).toLocaleString()}
+                          {formatPrice(service.basePrice)}
                         </strong>
                       </div>
                     </div>
@@ -359,7 +361,7 @@ export default function HomePage() {
                     href={`/services/${service.slug}`}
                     className="btn-secondary text-[10px] sm:text-xs py-1.5 sm:py-2 px-1 text-center rounded-lg sm:rounded-xl truncate"
                   >
-                    Details
+                    {t('common.details', 'Details')}
                   </Link>
                   <Link
                     href={`/booking?service=${service.id || service.slug}`}
@@ -367,7 +369,7 @@ export default function HomePage() {
                       service.isEmergencyService ? 'btn-danger' : 'btn-primary'
                     }`}
                   >
-                    Book
+                    {t('common.bookNow', 'Book')}
                   </Link>
                 </div>
               </div>
@@ -379,14 +381,14 @@ export default function HomePage() {
             <div className="flex items-center gap-2.5">
               <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
               <span>
-                <strong>Post-Service Workmanship Warranty:</strong> Every verified electrical and tech service includes 30 days coverage registered in your customer dashboard.
+                <strong>{t('home.warrantyBanner', 'Post-Service Workmanship Warranty: Every verified electrical and tech service includes 30 days coverage registered in your customer dashboard.')}</strong>
               </span>
             </div>
             <Link
               href="/booking"
               className="btn-primary text-xs py-2 px-4 shrink-0 shadow-sm"
             >
-              Book Custom Service
+              {t('home.bookCustomService', 'Book Custom Service')}
             </Link>
           </div>
         </div>
@@ -400,11 +402,11 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
             <div>
-              <span className="text-xs font-bold tracking-wider uppercase text-brand-600">Curated &amp; Tested Hardware</span>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">Featured Technology Products</h2>
+              <span className="text-xs font-bold tracking-wider uppercase text-brand-600">{t('home.featuredProductsTag', 'Curated & Tested Hardware')}</span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">{t('home.featuredProductsTitle', 'Featured Technology Products')}</h2>
             </div>
             <Link href="/shop" className="text-sm font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1 group">
-              Explore All Products
+              {t('home.exploreAllProducts', 'Explore All Products')}
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
@@ -427,21 +429,21 @@ export default function HomePage() {
                 <div className="lg:col-span-2 space-y-4">
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50/80 border border-brand-200/60 text-brand-700 text-xs font-bold">
                     <ShieldCheck className="w-3.5 h-3.5 text-brand-600" />
-                    Verified Equipment &amp; Institutional Procurement
+                    {t('home.procurementBadge', 'Verified Equipment & Institutional Procurement')}
                   </div>
                   <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                    Official Hardware Inventory &amp; Custom Lab Sourcing
+                    {t('home.inventoryTitle', 'Official Hardware Inventory & Custom Lab Sourcing')}
                   </h3>
                   <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-2xl">
-                    NEED ELECTRO provides corporate and retail sourcing for enterprise laptops, high-definition CCTV security packages, high-speed Wi-Fi 6 networking, and Pure Sine Wave IPS backup systems. All hardware undergoes rigorous diagnostics at our Moulvibazar lab before delivery.
+                    {t('home.inventoryDesc', 'NEED ELECTRO provides corporate and retail sourcing for enterprise laptops, high-definition CCTV security packages, high-speed Wi-Fi 6 networking, and Pure Sine Wave IPS backup systems. All hardware undergoes rigorous diagnostics at our Moulvibazar lab before delivery.')}
                   </p>
                   <div className="flex flex-wrap gap-4 pt-2">
                     <Link href="/contact" className="btn-primary text-xs py-2.5 px-5 flex items-center gap-2 shadow-glass-glow">
                       <PhoneCall className="w-3.5 h-3.5" />
-                      Inquire Hardware Procurement
+                      {t('home.inquireProcurement', 'Inquire Hardware Procurement')}
                     </Link>
                     <Link href="/services" className="btn-secondary text-xs py-2.5 px-5 flex items-center gap-2">
-                      Explore Technical Services
+                      {t('home.exploreTechServices', 'Explore Technical Services')}
                       <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
                   </div>
@@ -452,29 +454,29 @@ export default function HomePage() {
                     <div className="w-8 h-8 rounded-xl bg-brand-500/10 text-brand-600 flex items-center justify-center mx-auto mb-1">
                       <Cpu className="w-4 h-4" />
                     </div>
-                    <p className="text-xs font-bold text-slate-900">Lab-Certified</p>
-                    <p className="text-[10px] text-slate-500">Every unit tested</p>
+                    <p className="text-xs font-bold text-slate-900">{t('home.labCertified', 'Lab-Certified')}</p>
+                    <p className="text-[10px] text-slate-500">{t('home.labCertifiedSub', 'Every unit tested')}</p>
                   </div>
                   <div className="glass-card p-4 rounded-2xl border border-white/90 shadow-2xs text-center space-y-1">
                     <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mx-auto mb-1">
                       <ShieldCheck className="w-4 h-4" />
                     </div>
-                    <p className="text-xs font-bold text-slate-900">Digital Warranty</p>
-                    <p className="text-[10px] text-slate-500">12 - 24 Months QR</p>
+                    <p className="text-xs font-bold text-slate-900">{t('home.digitalWarranty', 'Digital Warranty')}</p>
+                    <p className="text-[10px] text-slate-500">{t('home.digitalWarrantySub', '12 - 24 Months QR')}</p>
                   </div>
                   <div className="glass-card p-4 rounded-2xl border border-white/90 shadow-2xs text-center space-y-1">
                     <div className="w-8 h-8 rounded-xl bg-sky-500/10 text-sky-600 flex items-center justify-center mx-auto mb-1">
                       <Wrench className="w-4 h-4" />
                     </div>
-                    <p className="text-xs font-bold text-slate-900">On-Site Setup</p>
-                    <p className="text-[10px] text-slate-500">Certified technicians</p>
+                    <p className="text-xs font-bold text-slate-900">{t('home.onsiteSetup', 'On-Site Setup')}</p>
+                    <p className="text-[10px] text-slate-500">{t('home.onsiteSetupSub', 'Certified technicians')}</p>
                   </div>
                   <div className="glass-card p-4 rounded-2xl border border-white/90 shadow-2xs text-center space-y-1">
                     <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center mx-auto mb-1">
                       <Award className="w-4 h-4" />
                     </div>
-                    <p className="text-xs font-bold text-slate-900">Amdads Group</p>
-                    <p className="text-[10px] text-slate-500">Trusted heritage</p>
+                    <p className="text-xs font-bold text-slate-900">{t('home.trustedHeritage', 'Amdads Group')}</p>
+                    <p className="text-[10px] text-slate-500">{t('home.trustedHeritageSub', 'Trusted heritage')}</p>
                   </div>
                 </div>
               </div>
@@ -487,9 +489,9 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>
-            <span className="text-xs font-bold tracking-wider uppercase text-brand-600">The Digital Advantage</span>
+            <span className="text-xs font-bold tracking-wider uppercase text-brand-600">{t('home.digitalAdvantage', 'The Digital Advantage')}</span>
             <h2 className="text-3xl font-extrabold text-slate-900 mt-1 mb-6">
-              Why Homeowners &amp; Businesses Rely on NEED ELECTRO
+              {t('home.whyTrustTitle', 'Why Homeowners & Businesses Rely on NEED ELECTRO')}
             </h2>
             <div className="space-y-4">
               <div className="glass-card-hover flex gap-4 p-5 rounded-2xl">
@@ -497,9 +499,9 @@ export default function HomePage() {
                   <ShieldCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-slate-900 text-sm">Verified Technician Accountability</h4>
+                  <h4 className="font-bold text-slate-900 text-sm">{t('home.whyReason1Title', 'Verified Technician Accountability')}</h4>
                   <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
-                    Every electrician and technician passes NID validation, background skill assessment, and peer review before dispatch.
+                    {t('home.whyReason1Desc', 'Every electrician and technician passes NID validation, background skill assessment, and peer review before dispatch.')}
                   </p>
                 </div>
               </div>
@@ -509,9 +511,9 @@ export default function HomePage() {
                   <Award className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-slate-900 text-sm">Integrated Digital Warranty</h4>
+                  <h4 className="font-bold text-slate-900 text-sm">{t('home.whyReason2Title', 'Integrated Digital Warranty')}</h4>
                   <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
-                    No lost paper receipts. Every serial-numbered product and service inspection is tracked directly in your customer account.
+                    {t('home.whyReason2Desc', 'No lost paper receipts. Every serial-numbered product and service inspection is tracked directly in your customer account.')}
                   </p>
                 </div>
               </div>
@@ -521,9 +523,9 @@ export default function HomePage() {
                   <Cpu className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-slate-900 text-sm">End-to-End Technology Ecosystem</h4>
+                  <h4 className="font-bold text-slate-900 text-sm">{t('home.whyReason3Title', 'End-to-End Technology Ecosystem')}</h4>
                   <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
-                    From whole-building copper wiring to smart Wi-Fi CCTV cameras, workstations, and inverters — solve every tech need under one roof.
+                    {t('home.whyReason3Desc', 'From whole-building copper wiring to smart Wi-Fi CCTV cameras, workstations, and inverters — solve every tech need under one roof.')}
                   </p>
                 </div>
               </div>
@@ -536,7 +538,7 @@ export default function HomePage() {
 
             <h3 className="text-xl font-bold tracking-tight text-white flex items-center gap-2 relative z-10">
               <Zap className="w-5 h-5 text-brand-400 fill-brand-400" />
-              How NEED ELECTRO Works
+              {t('home.howWorksTitle', 'How NEED ELECTRO Works')}
             </h3>
             
             <div className="space-y-6 text-xs text-slate-300 relative z-10">
@@ -545,8 +547,8 @@ export default function HomePage() {
                   1
                 </div>
                 <div>
-                  <h5 className="font-bold text-sm text-white">Select Service or Hardware</h5>
-                  <p className="text-slate-300 mt-0.5">Describe your requirement, upload photos if needed, and pick your preferred time slot.</p>
+                  <h5 className="font-bold text-sm text-white">{t('home.howStep1Title', 'Select Service or Hardware')}</h5>
+                  <p className="text-slate-300 mt-0.5">{t('home.howStep1Desc', 'Describe your requirement, upload photos if needed, and pick your preferred time slot.')}</p>
                 </div>
               </div>
 
@@ -555,8 +557,8 @@ export default function HomePage() {
                   2
                 </div>
                 <div>
-                  <h5 className="font-bold text-sm text-white">Verified Technician Assigned</h5>
-                  <p className="text-slate-300 mt-0.5">Our smart matching system notifies the closest qualified specialist in your area.</p>
+                  <h5 className="font-bold text-sm text-white">{t('home.howStep2Title', 'Verified Technician Assigned')}</h5>
+                  <p className="text-slate-300 mt-0.5">{t('home.howStep2Desc', 'Our smart matching system notifies the closest qualified specialist in your area.')}</p>
                 </div>
               </div>
 
@@ -565,8 +567,8 @@ export default function HomePage() {
                   3
                 </div>
                 <div>
-                  <h5 className="font-bold text-sm text-white">Realtime Progress Tracking</h5>
-                  <p className="text-slate-300 mt-0.5">Track technician arrival (On the Way, Arrived, In Progress, Work Completed).</p>
+                  <h5 className="font-bold text-sm text-white">{t('home.howStep3Title', 'Realtime Progress Tracking')}</h5>
+                  <p className="text-slate-300 mt-0.5">{t('home.howStep3Desc', 'Track technician arrival (On the Way, Arrived, In Progress, Work Completed).')}</p>
                 </div>
               </div>
 
@@ -575,15 +577,15 @@ export default function HomePage() {
                   4
                 </div>
                 <div>
-                  <h5 className="font-bold text-sm text-white">Payment &amp; Warranty Recorded</h5>
-                  <p className="text-slate-300 mt-0.5">Pay via bKash, Nagad, Card or Cash. Rate your experience and enjoy peace of mind.</p>
+                  <h5 className="font-bold text-sm text-white">{t('home.howStep4Title', 'Payment & Warranty Recorded')}</h5>
+                  <p className="text-slate-300 mt-0.5">{t('home.howStep4Desc', 'Pay via bKash, Nagad, Card or Cash. Rate your experience and enjoy peace of mind.')}</p>
                 </div>
               </div>
             </div>
 
             <div className="pt-2 relative z-10">
               <Link href="/services" className="btn-primary w-full text-xs py-3">
-                Experience It Now
+                {t('home.experienceNow', 'Experience It Now')}
               </Link>
             </div>
           </div>
@@ -593,12 +595,12 @@ export default function HomePage() {
       {/* 5. VERIFIED TECHNICIANS NETWORK SHOWCASE */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 content-deferred">
         <div className="text-center max-w-2xl mx-auto mb-10">
-          <span className="text-xs font-bold tracking-wider uppercase text-brand-600">The Human Backbone</span>
+          <span className="text-xs font-bold tracking-wider uppercase text-brand-600">{t('home.techniciansTag', 'The Human Backbone')}</span>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
-            Meet Our Verified Technicians
+            {t('home.techniciansTitle', 'Meet Our Verified Technicians')}
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 mt-2">
-            Certified specialists ready to assist your residential, commercial, or enterprise infrastructure.
+            {t('home.techniciansSubtitle', 'Certified specialists ready to assist your residential, commercial, or enterprise infrastructure.')}
           </p>
         </div>
 
@@ -617,14 +619,14 @@ export default function HomePage() {
                 <div className="flex items-center gap-1.5">
                   <h4 className="font-bold text-slate-900 text-sm">Md. Abul Kalam</h4>
                   <span className="inline-flex items-center text-[10px] bg-brand-50 text-brand-600 font-bold px-1.5 py-0.5 rounded">
-                    Verified
+                    {t('common.verified', 'Verified')}
                   </span>
                 </div>
                 <p className="text-xs text-brand-600 font-medium">Master Electrician &bull; 8 Yrs Exp</p>
                 <div className="flex items-center gap-1 text-amber-500 text-xs mt-1">
                   <Star className="w-3.5 h-3.5 fill-amber-500" />
                   <span className="font-bold text-slate-800">4.9</span>
-                  <span className="text-slate-400 text-[11px]">(48 Completed Jobs)</span>
+                  <span className="text-slate-400 text-[11px]">(48 {t('home.completedJobs', 'Completed Jobs')})</span>
                 </div>
               </div>
             </div>
@@ -640,9 +642,9 @@ export default function HomePage() {
             </div>
 
             <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-              <span className="text-slate-500">Service Area: <strong className="text-slate-800">Moulvibazar Sadar</strong></span>
+              <span className="text-slate-500">{t('home.serviceArea', 'Service Area')}: <strong className="text-slate-800">Moulvibazar Sadar</strong></span>
               <Link href="/services/complete-house-electrical-wiring" className="text-brand-600 font-semibold hover:underline">
-                Book Tech
+                {t('home.bookTech', 'Book Tech')}
               </Link>
             </div>
           </div>
@@ -661,14 +663,14 @@ export default function HomePage() {
                 <div className="flex items-center gap-1.5">
                   <h4 className="font-bold text-slate-900 text-sm">Tariqul Islam</h4>
                   <span className="inline-flex items-center text-[10px] bg-brand-50 text-brand-600 font-bold px-1.5 py-0.5 rounded">
-                    Verified
+                    {t('common.verified', 'Verified')}
                   </span>
                 </div>
                 <p className="text-xs text-purple-600 font-medium">CCTV &amp; Network Specialist &bull; 5 Yrs Exp</p>
                 <div className="flex items-center gap-1 text-amber-500 text-xs mt-1">
                   <Star className="w-3.5 h-3.5 fill-amber-500" />
                   <span className="font-bold text-slate-800">4.85</span>
-                  <span className="text-slate-400 text-[11px]">(31 Completed Jobs)</span>
+                  <span className="text-slate-400 text-[11px]">(31 {t('home.completedJobs', 'Completed Jobs')})</span>
                 </div>
               </div>
             </div>
@@ -684,9 +686,9 @@ export default function HomePage() {
             </div>
 
             <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-              <span className="text-slate-500">Service Area: <strong className="text-slate-800">Kusumbag &amp; Sreemangal</strong></span>
+              <span className="text-slate-500">{t('home.serviceArea', 'Service Area')}: <strong className="text-slate-800">Kusumbag &amp; Sreemangal</strong></span>
               <Link href="/services/cctv-camera-installation-setup" className="text-brand-600 font-semibold hover:underline">
-                Book Tech
+                {t('home.bookTech', 'Book Tech')}
               </Link>
             </div>
           </div>
@@ -697,14 +699,14 @@ export default function HomePage() {
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-brand-400 text-white flex items-center justify-center mx-auto shadow-md shadow-brand-500/30 border border-white/20">
                 <Wrench className="w-6 h-6" />
               </div>
-              <h4 className="font-extrabold text-slate-900 text-base">Are You a Skilled Technician?</h4>
+              <h4 className="font-extrabold text-slate-900 text-base">{t('home.joinNetworkTitle', 'Are You a Skilled Technician?')}</h4>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Join NEED ELECTRO network. Receive confirmed local service requests, build your profile, and receive fast payouts to your digital wallet.
+                {t('home.joinNetworkDesc', 'Join NEED ELECTRO network. Receive confirmed local service requests, build your profile, and receive fast payouts to your digital wallet.')}
               </p>
             </div>
             <div>
               <Link href="/become-a-technician" className="btn-primary w-full text-xs py-2.5">
-                Join Verified Network
+                {t('home.joinNetworkBtn', 'Join Verified Network')}
               </Link>
             </div>
           </div>
@@ -717,10 +719,10 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="space-y-2 text-center md:text-left">
-              <span className="text-xs font-bold uppercase tracking-wider text-brand-400">Bangladesh-Wide Coverage</span>
-              <h2 className="text-2xl font-extrabold text-white">Serving All 64 Districts Nationwide</h2>
+              <span className="text-xs font-bold uppercase tracking-wider text-brand-400">{t('home.nationwideTag', 'Bangladesh-Wide Coverage')}</span>
+              <h2 className="text-2xl font-extrabold text-white">{t('home.nationwideTitle', 'Serving All 64 Districts Nationwide')}</h2>
               <p className="text-xs text-slate-300 max-w-xl">
-                Fast courier delivery of genuine laptops, computers, CCTV surveillance kits, and networking equipment to all 64 districts. On-site technical support available in verified regional hubs.
+                {t('home.nationwideDesc', 'Fast courier delivery of genuine laptops, computers, CCTV surveillance kits, and networking equipment to all 64 districts. On-site technical support available in verified regional hubs.')}
               </p>
             </div>
             <div className="flex flex-col sm:flex-row items-center gap-3">
@@ -729,7 +731,7 @@ export default function HomePage() {
                 className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold transition shadow-lg shadow-brand-600/30 flex items-center gap-2"
               >
                 <MapPin className="w-4 h-4" />
-                <span>Explore 64 Districts Coverage</span>
+                <span>{t('home.nationwideBtn', 'Explore 64 Districts Coverage')}</span>
               </Link>
             </div>
           </div>
@@ -743,13 +745,13 @@ export default function HomePage() {
           
           <div className="space-y-3 text-center md:text-left relative z-10 w-full">
             <span className="inline-block px-3.5 py-1 rounded-full text-[11px] font-bold bg-white/20 backdrop-blur-md border border-white/30 text-white">
-              NEED HELP? WE ARE HERE 7 DAYS A WEEK
+              {t('home.hotlineTag', 'NEED HELP? WE ARE HERE 7 DAYS A WEEK')}
             </span>
             <h2 className="text-xl sm:text-3xl font-black text-white">
-              Speak Directly With Our Electrical &amp; Tech Engineers
+              {t('home.hotlineTitle', 'Speak Directly With Our Electrical & Tech Engineers')}
             </h2>
             <p className="text-xs sm:text-sm text-brand-100 max-w-lg mx-auto md:mx-0">
-              Have questions about wiring safety, computer repairs, or warranty claims? Call our direct hotline or connect with our support desk online.
+              {t('home.hotlineDesc', 'Have questions about wiring safety, computer repairs, or warranty claims? Call our direct hotline or connect with our support desk online.')}
             </p>
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 relative z-10 w-full sm:w-auto">
@@ -764,7 +766,7 @@ export default function HomePage() {
               href="/contact"
               className="w-full sm:w-auto text-center px-5 py-3 rounded-xl border border-white/40 bg-white/10 backdrop-blur-md text-white hover:bg-white/20 text-sm font-semibold transition shadow-xs"
             >
-              Contact Support Desk
+              {t('home.contactSupportBtn', 'Contact Support Desk')}
             </Link>
           </div>
         </div>

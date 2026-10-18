@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/lib/context/AuthContext';
+import { useLanguage } from '@/lib/context/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import CustomerProfileView from '@/components/profile/CustomerProfileView';
 import {
@@ -44,6 +45,7 @@ interface AddressItem {
 
 function CustomerDashboardContent() {
   const { user, logout, refreshUser } = useAuth();
+  const { t, formatPrice } = useLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab') as TabKey | null;
@@ -334,12 +336,12 @@ function CustomerDashboardContent() {
   }
 
   const NAV_TABS: NavTabItem[] = [
-    { key: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { key: 'bookings', label: 'Bookings', icon: Wrench, badge: activeBookings.length },
-    { key: 'orders', label: 'Orders', icon: Package, badge: pendingOrders.length },
-    { key: 'warranty', label: 'Warranty', icon: Shield },
-    { key: 'support', label: 'Support', icon: LifeBuoy, badge: openTickets.length },
-    { key: 'profile', label: 'My Profile', icon: User },
+    { key: 'overview', label: t('customer.dashboard', 'Overview'), icon: LayoutDashboard },
+    { key: 'bookings', label: t('customer.bookingsTab', 'Bookings'), icon: Wrench, badge: activeBookings.length },
+    { key: 'orders', label: t('customer.ordersTab', 'Orders'), icon: Package, badge: pendingOrders.length },
+    { key: 'warranty', label: t('navigation.warrantyCheck', 'Warranty'), icon: Shield },
+    { key: 'support', label: t('navigation.support', 'Support'), icon: LifeBuoy, badge: openTickets.length },
+    { key: 'profile', label: t('customer.myProfile', 'My Profile'), icon: User },
   ];
 
   return (
@@ -360,7 +362,7 @@ function CustomerDashboardContent() {
               className="h-8 w-auto object-contain group-hover:scale-105 transition-transform"
             />
             <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded-md">
-              Customer
+              {t('common.customer', 'Customer')}
             </span>
           </Link>
 
@@ -381,7 +383,7 @@ function CustomerDashboardContent() {
                 )}
               </div>
               <span className="text-[10px] font-bold text-white/80 flex items-center gap-1 bg-white/10 px-2 py-1 rounded-lg backdrop-blur-sm">
-                Edit <ChevronRight className="w-3 h-3" />
+                {t('common.edit', 'Edit')} <ChevronRight className="w-3 h-3" />
               </span>
             </div>
             <div>
@@ -419,33 +421,33 @@ function CustomerDashboardContent() {
               className="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-bold text-red-600 hover:bg-red-50/80 transition"
             >
               <LogOut className="w-4 h-4" />
-              Sign Out
+              {t('navigation.signOut', 'Sign Out')}
             </button>
           </nav>
 
           {/* Quick Actions */}
           <div className="glass-card rounded-3xl p-4 space-y-2 shadow-sm">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Quick Actions</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{t('common.actions', 'Quick Actions')}</p>
             <Link
               href="/services"
               className="flex items-center gap-2 text-xs font-bold text-slate-700 hover:text-brand-600 py-1.5 transition"
             >
               <Zap className="w-3.5 h-3.5 text-brand-500" />
-              Book a Service
+              {t('navigation.bookService', 'Book a Service')}
             </Link>
             <Link
               href="/parts"
               className="flex items-center gap-2 text-xs font-bold text-slate-700 hover:text-brand-600 py-1.5 transition"
             >
               <ShoppingBag className="w-3.5 h-3.5 text-brand-500" />
-              Spare Parts & Materials
+              {t('navigation.parts', 'Spare Parts & Materials')}
             </Link>
             <Link
               href="/warranty"
               className="flex items-center gap-2 text-xs font-bold text-slate-700 hover:text-brand-600 py-1.5 transition"
             >
               <Shield className="w-3.5 h-3.5 text-brand-500" />
-              Check Warranty
+              {t('navigation.warrantyCheck', 'Check Warranty')}
             </Link>
           </div>
         </aside>
@@ -463,7 +465,7 @@ function CustomerDashboardContent() {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h1 className="text-xl font-black text-slate-950">
-                  Welcome back, {user.name.split(' ')[0]}! 👋
+                  {t('customer.welcome', 'Welcome back')}, {user.name.split(' ')[0]}! 👋
                 </h1>
                 <div className="flex items-center gap-2">
                   <Link
@@ -471,14 +473,14 @@ function CustomerDashboardContent() {
                     className="text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl shadow-xs transition"
                   >
                     <Zap className="w-3.5 h-3.5 fill-white" />
-                    Book a Service (3-Click)
+                    {t('navigation.bookService', 'Book a Service')}
                   </Link>
                   <button
                     onClick={() => setActiveTab('profile')}
                     className="text-xs font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1.5 bg-brand-50 px-3 py-1.5 rounded-xl border border-brand-100 transition"
                   >
                     <User className="w-3.5 h-3.5" />
-                    Edit Profile
+                    {t('common.edit', 'Edit Profile')}
                   </button>
                 </div>
               </div>
@@ -486,10 +488,10 @@ function CustomerDashboardContent() {
               {/* Stat Cards */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { label: 'Total Bookings', value: bookings.length, icon: Wrench, color: 'text-brand-600 bg-brand-50' },
-                  { label: 'Total Orders', value: orders.length, icon: Package, color: 'text-purple-600 bg-purple-50' },
-                  { label: 'Active Warranties', value: warranties.filter((w) => w.status === 'ACTIVE').length, icon: Shield, color: 'text-emerald-600 bg-emerald-50' },
-                  { label: 'Open Tickets', value: openTickets.length, icon: LifeBuoy, color: 'text-amber-600 bg-amber-50' },
+                  { label: t('customer.totalBookings', 'Total Bookings'), value: bookings.length, icon: Wrench, color: 'text-brand-600 bg-brand-50' },
+                  { label: t('customer.totalOrders', 'Total Orders'), value: orders.length, icon: Package, color: 'text-purple-600 bg-purple-50' },
+                  { label: t('customer.activeWarranties', 'Active Warranties'), value: warranties.filter((w) => w.status === 'ACTIVE').length, icon: Shield, color: 'text-emerald-600 bg-emerald-50' },
+                  { label: t('customer.openTickets', 'Open Tickets'), value: openTickets.length, icon: LifeBuoy, color: 'text-amber-600 bg-amber-50' },
                 ].map(({ label, value, icon: Icon, color }) => (
                   <div key={label} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm space-y-2">
                     <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${color}`}>

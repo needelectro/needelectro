@@ -5,11 +5,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/context/AuthContext';
 import BrandLogo from '@/components/common/BrandLogo';
+import { useLanguage } from '@/lib/context/LanguageContext';
+import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import { Zap, Phone, Mail, MapPin, Globe, ShieldCheck } from 'lucide-react';
 
 export default function Footer() {
   const pathname = usePathname();
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   // Isolate Admin & Technician: Do not render public customer footer on admin or technician routes or for those roles
   const isAdmin = user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN');
@@ -30,7 +33,7 @@ export default function Footer() {
             <BrandLogo theme="dark" size="md" />
 
             <p className="text-sm text-slate-400 leading-relaxed max-w-sm">
-              A comprehensive electrical and technological service ecosystem connecting residential and commercial clients with verified technicians, genuine technology products, and warranty protection.
+              {t('footer.brandStatement', 'A comprehensive electrical and technological service ecosystem connecting residential and commercial clients with verified technicians, genuine technology products, and warranty protection.')}
             </p>
 
 
@@ -128,7 +131,7 @@ export default function Footer() {
 
           {/* Contact & Nationwide Support */}
           <div className="space-y-3">
-            <h4 className="text-sm font-bold text-white uppercase tracking-wider">Nationwide Support</h4>
+            <h4 className="text-sm font-bold text-white uppercase tracking-wider">{t('footer.contactTitle', 'Nationwide Support')}</h4>
             <ul className="space-y-2.5 text-xs text-slate-400">
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-brand-400 shrink-0" />
@@ -154,9 +157,10 @@ export default function Footer() {
             <Link href="/policies/refund" className="hover:text-slate-400">Refund Policy</Link>
             <Link href="/policies/service" className="hover:text-slate-400">Service Policy</Link>
             <Link href="/locations" className="hover:text-slate-400">Districts Directory</Link>
+            <LanguageSwitcher variant="footer" />
           </div>
           <div>
-            &copy; {new Date().getFullYear()} NEED ELECTRO. All rights reserved. | Serving Customers Across Bangladesh | A Sister Concern of AMDADS Group
+            &copy; {new Date().getFullYear()} {t('footer.copyright', 'NEED ELECTRO. All rights reserved.')} | {t('footer.sisterConcern', 'A Sister Concern of AMDADS Group')}
           </div>
         </div>
       </div>

@@ -10,6 +10,7 @@ import {
   Building, Home, Info, Lock, ChevronDown, ChevronUp, Check
 } from 'lucide-react';
 import { useAuth } from '@/lib/context/AuthContext';
+import { useLanguage } from '@/lib/context/LanguageContext';
 import { BANGLADESH_DISTRICTS, DistrictData } from '@/lib/data/districts';
 
 const BANGLADESH_DIVISIONS = [
@@ -54,6 +55,7 @@ const TIME_SLOTS = [
 
 function BookingFormInner() {
   const { user, isLoading: authLoading } = useAuth();
+  const { t, formatPrice } = useLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -303,23 +305,23 @@ function BookingFormInner() {
 
           <div className="space-y-2">
             <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-              <Sparkles className="w-3.5 h-3.5" /> Booking Confirmed &amp; Dispatched
+              <Sparkles className="w-3.5 h-3.5" /> {t('booking.bookingSuccess', 'Booking Confirmed & Dispatched')}
             </span>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
-              Technician Request Registered!
+              {t('booking.bookingSuccessTitle', 'Technician Request Registered!')}
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto">
-              Your service request is in our pending assignment queue. Our operations coordinator will contact you to confirm technician arrival.
+              {t('booking.bookingSuccessDesc', 'Your service request is in our pending assignment queue. Our operations coordinator will contact you to confirm technician arrival.')}
             </p>
             <div className="pt-2">
-              <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">Your Booking Reference Number</span>
+              <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">{t('booking.bookingRefLabel', 'Your Booking Reference Number')}</span>
               <p className="text-xl sm:text-2xl font-mono font-black text-brand-600 bg-brand-50 inline-block px-4 py-1.5 rounded-xl border border-brand-200 mt-1">
                 {bookingResult.bookingNumber}
               </p>
             </div>
             <div className="pt-1">
               <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200">
-                <Clock className="w-3.5 h-3.5" /> Status: Awaiting Technician Assignment
+                <Clock className="w-3.5 h-3.5" /> {t('booking.awaitingAssignment', 'Status: Awaiting Technician Assignment')}
               </span>
             </div>
           </div>
@@ -327,11 +329,11 @@ function BookingFormInner() {
           {/* Booking Summary Box */}
           <div className="bg-slate-50 p-5 rounded-2xl text-xs text-left space-y-2.5 text-slate-700 border border-slate-200/80">
             <div className="flex justify-between items-center pb-2 border-b border-slate-200/60">
-              <span className="text-slate-500 font-semibold">Service:</span>
+              <span className="text-slate-500 font-semibold">{t('navigation.services', 'Service')}:</span>
               <span className="font-bold text-slate-900">{selectedService?.name || form.categoryId}</span>
             </div>
             <div className="flex justify-between items-center pb-2 border-b border-slate-200/60">
-              <span className="text-slate-500 font-semibold">Service Location:</span>
+              <span className="text-slate-500 font-semibold">{t('booking.serviceAddress', 'Service Location')}:</span>
               <span className="font-bold text-slate-900">
                 {locationMode === 'SAVED' && activeSavedAddress 
                   ? `${activeSavedAddress.addressLine}, ${activeSavedAddress.upazila}, ${activeSavedAddress.district}` 
@@ -339,11 +341,11 @@ function BookingFormInner() {
               </span>
             </div>
             <div className="flex justify-between items-center pb-2 border-b border-slate-200/60">
-              <span className="text-slate-500 font-semibold">Scheduled Window:</span>
+              <span className="text-slate-500 font-semibold">{t('booking.preferredTime', 'Scheduled Window')}:</span>
               <span className="font-bold text-slate-900">{form.preferredDate} ({form.preferredTimeSlot})</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-slate-500 font-semibold">On-Site Contact:</span>
+              <span className="text-slate-500 font-semibold">{t('booking.contactPerson', 'On-Site Contact')}:</span>
               <span className="font-bold text-brand-600 font-mono">
                 {form.contactPersonName || user?.name} ({form.contactPhone || user?.phone})
               </span>
@@ -358,13 +360,13 @@ function BookingFormInner() {
               rel="noopener noreferrer"
               className="flex-1 inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition shadow-md shadow-emerald-600/20 app-tap"
             >
-              <MessageCircle className="w-4 h-4" /> Message on WhatsApp
+              <MessageCircle className="w-4 h-4" /> {t('booking.messageWhatsApp', 'Message on WhatsApp')}
             </a>
             <Link
               href="/customer/dashboard?tab=bookings"
               className="flex-1 btn-primary text-xs py-3 justify-center"
             >
-              Track in Customer Portal
+              {t('booking.trackInPortal', 'Track in Customer Portal')}
             </Link>
           </div>
         </div>
@@ -374,19 +376,19 @@ function BookingFormInner() {
           <div className="bg-gradient-to-r from-brand-600 via-brand-500 to-sky-600 text-white rounded-3xl p-6 sm:p-7 shadow-xl relative overflow-hidden">
             <div className="max-w-2xl space-y-2 relative z-10">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-[11px] font-black uppercase tracking-wider text-white border border-white/30">
-                <Zap className="w-3.5 h-3.5 fill-amber-300 text-amber-300" /> Three-Click Service Booking
+                <Zap className="w-3.5 h-3.5 fill-amber-300 text-amber-300" /> {t('booking.threeClickBadge', 'Three-Click Service Booking')}
               </div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-                Book a Certified Technician
+                {t('booking.headerTitle', 'Book a Certified Technician')}
               </h1>
               <p className="text-xs sm:text-sm text-brand-100 leading-relaxed">
-                Fast, 3-click service booking. Verified electricians, CCTV specialists, and computer technicians dispatched to your doorstep.
+                {t('booking.headerSubtitle', 'Fast, 3-click service booking. Verified electricians, CCTV specialists, and computer technicians dispatched to your doorstep.')}
               </p>
             </div>
 
             {/* Quick Hotline Strip */}
             <div className="mt-4 pt-3 border-t border-white/20 flex flex-wrap items-center gap-3 text-xs">
-              <span className="text-brand-100 font-semibold">Emergency?</span>
+              <span className="text-brand-100 font-semibold">{t('booking.emergencyQ', 'Emergency?')}</span>
               <a
                 href="tel:01733983752"
                 className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white text-brand-700 font-black hover:bg-brand-50 transition shadow-xs text-xs"
@@ -399,7 +401,7 @@ function BookingFormInner() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500 text-white font-bold hover:bg-emerald-600 transition shadow-xs text-xs"
               >
-                <MessageCircle className="w-3.5 h-3.5" /> WhatsApp Support
+                <MessageCircle className="w-3.5 h-3.5" /> {t('booking.whatsappSupport', 'WhatsApp Support')}
               </a>
             </div>
           </div>
@@ -413,10 +415,10 @@ function BookingFormInner() {
                 </div>
                 <div className="space-y-1">
                   <h3 className="text-sm sm:text-base font-black text-amber-950">
-                    Customer Account Required to Book Services
+                    {t('booking.accountRequiredTitle', 'Customer Account Required to Book Services')}
                   </h3>
                   <p className="text-xs text-amber-900 leading-relaxed">
-                    Under NEED ELECTRO security and warranty policies, bookings are linked to verified customer accounts. Please sign in or register to schedule a technician. Your selected trade and problem description will be preserved.
+                    {t('booking.accountRequiredDesc', 'Under NEED ELECTRO security and warranty policies, bookings are linked to verified customer accounts. Please sign in or register to schedule a technician. Your selected trade and problem description will be preserved.')}
                   </p>
                 </div>
               </div>
@@ -427,13 +429,13 @@ function BookingFormInner() {
                   className="btn-primary text-xs py-2.5 px-6 justify-center shadow-md shadow-brand-500/20"
                 >
                   <UserCheck className="w-4 h-4 mr-1.5" />
-                  Sign In as Customer
+                  {t('booking.signInCustomer', 'Sign In as Customer')}
                 </Link>
                 <Link
                   href={`/customer/register?redirect=${encodeURIComponent(redirectTarget)}`}
                   className="btn-secondary text-xs py-2.5 px-6 justify-center bg-white border-amber-300 hover:bg-amber-100 text-amber-950"
                 >
-                  Create Customer Account &rarr;
+                  {t('booking.createAccount', 'Create Customer Account')} &rarr;
                 </Link>
               </div>
             </div>
@@ -468,7 +470,7 @@ function BookingFormInner() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="w-6 h-6 rounded-full bg-brand-600 text-white text-xs font-bold flex items-center justify-center">1</span>
-                  <h3 className="text-sm font-black text-slate-900">Click 1: Service Trade Selection</h3>
+                  <h3 className="text-sm font-black text-slate-900">{t('booking.step1Title', 'Click 1: Service Trade Selection')}</h3>
                 </div>
                 {form.serviceId && (
                   <span className="text-[11px] font-bold text-emerald-600 flex items-center gap-1">
@@ -500,7 +502,7 @@ function BookingFormInner() {
               {filteredServices.length > 0 && (
                 <div className="pt-2 border-t border-slate-100">
                   <label className="block text-xs font-bold text-slate-700 mb-2">
-                    Specific Service Package:
+                    {t('services.title', 'Specific Service Package')}:
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {filteredServices.slice(0, 6).map((svc) => (
@@ -523,7 +525,7 @@ function BookingFormInner() {
                           <span className="truncate">{svc.name}</span>
                         </div>
                         <span className="text-[11px] font-black text-brand-600 shrink-0 ml-1">
-                          {svc.basePrice > 0 ? `৳${svc.basePrice}` : 'Free Quote'}
+                          {svc.basePrice > 0 ? formatPrice(svc.basePrice) : 'Free Quote'}
                         </span>
                       </label>
                     ))}
@@ -537,7 +539,7 @@ function BookingFormInner() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="w-6 h-6 rounded-full bg-brand-600 text-white text-xs font-bold flex items-center justify-center">2</span>
-                  <h3 className="text-sm font-black text-slate-900">Click 2: Describe Your Problem</h3>
+                  <h3 className="text-sm font-black text-slate-900">{t('booking.step2Title', 'Click 2: Describe Your Problem')}</h3>
                 </div>
                 <span className="text-[11px] text-slate-400 font-medium">Supports Bengali &amp; English</span>
               </div>
@@ -547,7 +549,7 @@ function BookingFormInner() {
                 <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
                     <MapPin className="w-3.5 h-3.5 text-brand-600" />
-                    Service Address:
+                    {t('booking.serviceAddress', 'Service Address')}:
                   </span>
                   {user && savedAddresses.length > 0 && (
                     <button
@@ -555,7 +557,7 @@ function BookingFormInner() {
                       onClick={() => setLocationMode(locationMode === 'SAVED' ? 'CUSTOM' : 'SAVED')}
                       className="text-[11px] font-bold text-brand-600 hover:underline"
                     >
-                      {locationMode === 'SAVED' ? '+ Use Another Location' : '← Back to Saved Addresses'}
+                      {locationMode === 'SAVED' ? t('booking.useAnotherLocation', '+ Use Another Location') : t('booking.backToSaved', '← Back to Saved Addresses')}
                     </button>
                   )}
                 </label>
@@ -859,15 +861,15 @@ function BookingFormInner() {
             <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-sm space-y-4">
               <div className="flex items-center gap-2">
                 <span className="w-6 h-6 rounded-full bg-brand-600 text-white text-xs font-bold flex items-center justify-center">3</span>
-                <h3 className="text-sm font-black text-slate-900">Click 3: Confirm &amp; Submit Booking</h3>
+                <h3 className="text-sm font-black text-slate-900">{t('booking.step3Title', 'Click 3: Confirm & Submit Booking')}</h3>
               </div>
 
               {/* Workmanship Warranty & Pricing Strip */}
               <div className="p-3 bg-brand-50/70 border border-brand-100 rounded-2xl flex items-center gap-3 text-xs text-brand-950">
                 <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
                 <div>
-                  <p className="font-bold">30-Day Workmanship Warranty Included</p>
-                  <p className="text-[11px] text-slate-500">Transparent pricing. Standard inspection fee from ৳500. Genuine parts billing on-site.</p>
+                  <p className="font-bold">{t('booking.warrantyIncluded', '30-Day Workmanship Warranty Included')}</p>
+                  <p className="text-[11px] text-slate-500">{t('booking.warrantyPricingNote', 'Transparent pricing. Standard inspection fee from ৳500. Genuine parts billing on-site.')}</p>
                 </div>
               </div>
 
@@ -879,11 +881,11 @@ function BookingFormInner() {
                   className="btn-primary w-full py-4 text-base font-black justify-center shadow-xl shadow-brand-500/25 active:scale-[0.99] transition"
                 >
                   {loading ? (
-                    'Registering Technician Booking...'
+                    t('booking.registeringBtn', 'Registering Technician Booking...')
                   ) : (
                     <>
                       <Zap className="w-5 h-5 mr-2 fill-white" />
-                      Confirm &amp; Submit Booking
+                      {t('booking.confirmSubmitBtn', 'Confirm & Submit Booking')}
                     </>
                   )}
                 </button>
@@ -893,7 +895,7 @@ function BookingFormInner() {
                   className="btn-primary w-full py-4 text-base font-black justify-center shadow-xl shadow-brand-500/25 active:scale-[0.99] transition"
                 >
                   <Lock className="w-5 h-5 mr-2" />
-                  Sign In to Confirm &amp; Submit Booking
+                  {t('booking.signInToSubmit', 'Sign In to Confirm & Submit Booking')}
                 </Link>
               )}
             </div>
