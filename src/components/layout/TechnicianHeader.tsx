@@ -183,9 +183,6 @@ export default function TechnicianHeader() {
             </div>
           </Link>
 
-            {/* Language Switcher Mobile */}
-            <LanguageSwitcher variant="header-mobile" />
-
             <button
               onClick={handleToggleAvailability}
               disabled={loadingStatus}

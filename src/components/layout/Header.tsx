@@ -174,22 +174,6 @@ export default function Header() {
 
           {/* Right Actions */}
           <div className="flex items-center gap-1.5">
-            {/* PWA App Install Button */}
-            {!isInstalled && (
-              <button
-                type="button"
-                onClick={handleInstallClick}
-                className="flex items-center gap-1 px-2 py-1 rounded-full bg-gradient-to-r from-brand-600 via-brand-500 to-sky-500 text-white text-[10px] font-black shadow-sm active:scale-95 border border-white/40 app-tap shrink-0"
-                title="Install as Mobile App"
-                aria-label="Install NEED ELECTRO as Mobile App"
-              >
-                <Smartphone className="w-3 h-3 animate-pulse" />
-                <span>{t('navigation.appInstall', 'App')}</span>
-              </button>
-            )}
-
-            {/* Language Switcher on Mobile Header */}
-            <LanguageSwitcher variant="header-mobile" />
 
             {/* Hotline Call */}
             <a
