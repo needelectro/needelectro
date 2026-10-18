@@ -162,8 +162,6 @@ export default function Header() {
               <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />
               <span>{t('navigation.warrantyCheck', 'Warranty Check')}</span>
             </Link>
-            <span className="text-slate-600">|</span>
-            <LanguageSwitcher variant="header-desktop" showIcon={false} />
           </div>
         </div>
       </div>
