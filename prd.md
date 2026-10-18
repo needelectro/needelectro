@@ -124,13 +124,16 @@ technicians, and reporting.
 Customers must be able to:
 
 -   Register and log in.
--   Manage profile and addresses.
+-   Access dedicated customer profile (`/customer/profile`) and embedded dashboard tab (`/customer/dashboard?tab=profile`).
+-   Manage profile identity (full name, phone, email, join date, verified customer ID badge).
+-   Update account password with bcrypt validation of current password in a dedicated security modal.
+-   Manage multiple delivery addresses and switch default delivery location.
 -   Search products and services.
--   Book services.
+-   Book services via 3-click mobile booking flow.
 -   Upload photos and other permitted media.
--   Track booking status.
+-   Track booking status in real-time.
 -   View technician information after appropriate assignment.
--   Purchase products.
+-   Purchase products with nationwide delivery calculation across all 64 districts.
 -   Track orders.
 -   View invoices.
 -   Register and view devices.
@@ -239,13 +242,12 @@ The platform must be:
 
 The initial product is successful when:
 
-1.  A customer can register and book a service end to end.
-2.  A technician can register, be verified, accept a job, and complete
-    it.
-3.  A customer can purchase a product and track the order.
-4.  Warranty information can be stored and retrieved.
-5.  Admins can manage the entire operational workflow.
-6.  Critical financial and operational actions are auditable.
-7.  The same backend supports both web and PWA experiences.
-8.  The architecture can connect to NEED ELECTRO ERP without rebuilding
-    the core platform.
+1.  A customer can register, manage profile identity, and book a service end to end.
+2.  A technician can register, be verified, accept a job, and complete it with automated 85% revenue split.
+3.  A customer can purchase a product and track nationwide delivery across all 64 districts.
+4.  Warranty information can be stored and retrieved with digital claim tracking.
+5.  Admins can manage the entire operational workflow via real-time KPIs and audit logs.
+6.  Critical financial and operational actions are auditable and strictly role-isolated.
+7.  The same backend supports both web and PWA experiences with zero-wait warm caching.
+8.  The architecture can connect to NEED ELECTRO ERP without rebuilding the core platform.
+9.  100% of the 104 automated test cases pass with zero TypeScript compilation errors.

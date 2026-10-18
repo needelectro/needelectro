@@ -248,19 +248,20 @@ Become a Technician
 
 ## 11. Service UI
 
-Service cards should show:
+Service cards present:
 
-Icon/image
+-   Service image or icon banner
+-   Category badge (`text-[9px]` on mobile)
+-   Service title and concise description
+-   Base pricing (`৳...` onwards)
+-   Customer rating & review count
+-   Action buttons: Quick Details link & Book Now button
 
-Service name
-
-Short description
-
-Price or pricing model
-
-Rating where applicable
-
-Book button
+### Mobile Service Card Optimization (50% Size Reduction)
+On mobile displays (<640px), service cards are rendered in an ergonomic 2-column grid (`grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3`):
+-   Image aspect ratio: Square (`aspect-square sm:aspect-[4/3]`) to conserve vertical screen space.
+-   Typography: Compact title (`text-xs sm:text-base line-clamp-1`), price indicator (`text-xs font-bold`), and rating pill.
+-   Dual Action Buttons: Side-by-side mini buttons (Outline "Details" + Blue "Book") providing 1-tap engagement without excessive scrolling.
 
 ## 12. Product UI
 
@@ -516,3 +517,18 @@ What can the user do here?
 Make the primary action obvious.
 
 Do not overload the interface with unnecessary information.
+
+## 26. Customer Profile UI Design System
+
+The Customer Profile (`/customer/profile` and dashboard tab) delivers a premium marketplace account experience:
+
+-   **Color Identity**: Electric Blue (`#008CFF`), Dark Navy (`#002B5B`), Slate Gray (`#F8FAFC`), and Pure White (`#FFFFFF`).
+-   **Identity Banner**:
+    -   Profile Avatar with auto-generated initial badge
+    -   User full name with Verified Customer checkmark
+    -   Customer ID pill: `NE-CUST-[ID]`
+    -   Account creation date: "Member since [Month Year]"
+-   **Navigation Tabs**: Personal Information, Addresses, and Security Settings.
+-   **Form Controls**: Bordered inputs with focus rings (`focus:ring-2 focus:ring-blue-500`), clear validation errors, and disabled state indicators.
+-   **Security Modal**: Password change dialog requiring current password verification with bcrypt, new password confirmation, and error dismissal.
+-   **Dual-Context Responsiveness**: Supports full-bleed standalone layout as well as nested container dashboard tab.

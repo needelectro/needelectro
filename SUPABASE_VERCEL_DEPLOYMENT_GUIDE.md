@@ -10,7 +10,7 @@ This guide walks you step-by-step through deploying the **NEED ELECTRO** web app
                       ┌──────────────────────────────────────┐
                       │          Vercel Platform             │
                       │   Next.js 15 App Router Edge/Node    │
-                      │  60 Routes (Web, PWA & Admin Portal) │
+                      │  61 Routes (Web, PWA & Admin Portal) │
                       └──────────────────┬───────────────────┘
                                          │
              ┌───────────────────────────┴───────────────────────────┐
@@ -114,12 +114,13 @@ From your local computer terminal in `d:\NEED ELECTRO FINAL WEBSITE`:
 | `JWT_SECRET` | `need_electro_super_secure_production_jwt_key_2026_moulvibazar` | Auth signing secret |
 | `NEXT_PUBLIC_APP_URL` | `https://your-project-name.vercel.app` (or your custom domain) | Base site URL |
 | `NEXT_PUBLIC_APP_NAME` | `NEED ELECTRO` | Brand name |
+| `NEXT_PUBLIC_TAGLINE` | `Trusted Electrical and Technological Solutions` | Official Tagline |
 | `NEXT_PUBLIC_SUPPORT_PHONE` | `01733 983752` | Hotline |
 | `NEXT_PUBLIC_SUPPORT_EMAIL` | `needelectro23@gmail.com` | Official email |
 | `NEXT_PUBLIC_OFFICE_ADDRESS` | `Moulvibazar, Bangladesh` | Regional office |
 
 6. Click **"Deploy"**.
-7. Vercel will install dependencies, generate Prisma Client, compile all 60 routes, and provision your live HTTPS URL (e.g. `https://need-electro.vercel.app`).
+7. Vercel will install dependencies, generate Prisma Client, compile all 61 routes, and provision your live HTTPS URL (e.g. `https://need-electro.vercel.app`).
 
 ---
 

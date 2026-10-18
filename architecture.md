@@ -36,30 +36,14 @@ Auth  Services Orders Payments
  NEED ELECTRO ERP
 ```
 
-## 3. Recommended Stack
+### Production Stack
 
-### Frontend
-
--   Next.js
--   TypeScript
--   App Router
--   Tailwind CSS
--   Reusable component system
--   PWA support
-
-### Backend
-
--   NestJS
--   TypeScript
--   REST API
--   Swagger/OpenAPI
--   Modular architecture
-
-### Database
-
--   PostgreSQL
--   Supabase may provide PostgreSQL, storage, authentication support,
-    and realtime features where appropriate.
+-   **Frontend & API Engine**: Next.js 15 (App Router, Server & Client Components)
+-   **UI Library**: React 19, Tailwind CSS 3.4, Lucide React
+-   **Database & ORM**: Prisma 6.3 with Supabase PostgreSQL (Port 6543 Transaction Pooler with PgBouncer)
+-   **Authentication**: JWT token-based auth with bcryptjs password hashing and role-based access control
+-   **Caching & State**: Client-side warm cache (`initWarmCache`) + Optimistic UI state updates
+-   **PWA**: Offline technician job caching, service worker (`sw.js`), and Web App Manifest
 
 ### Storage
 
@@ -320,12 +304,35 @@ the beginning.
 
 ## 16. Deployment
 
-Suggested deployment model:
+Production deployment model:
 
--   Next.js frontend on Vercel or equivalent.
--   NestJS API on a suitable production server.
--   PostgreSQL/Supabase for database infrastructure.
--   Object storage for files.
--   Separate development, staging, and production environments.
+-   Next.js frontend and API routes on Vercel Edge/Serverless.
+-   Database on Supabase PostgreSQL (Singapore/Sydney region) using Port 6543 Transaction Pooler.
+-   Automated keep-alive cron endpoint (`/api/v1/keep-alive`) to prevent serverless database cold starts.
+-   Environment configuration via Vercel secrets and `.env`.
 
-Never commit secrets to source control.
+## 17. Customer Profile Dual-Context Architecture
+
+The customer profile employs a dual-context presentation pattern:
+
+-   **Standalone Route**: `/customer/profile` for deep links from header navigation, profile dropdown, and mobile navigation drawer.
+-   **Embedded Dashboard Tab**: `/customer/dashboard?tab=profile` allowing fluid tab switching within the customer dashboard.
+-   **Unified Component**: `src/components/profile/CustomerProfileView.tsx` accepts an `isStandalonePage` boolean flag to adapt its container styling, header presentation, and internal tab routes without code duplication.
+-   **Identity & Security**: Real customer ID generation (`NE-CUST-[ID]`), authentic account creation date from `/api/v1/auth/me`, editable contact attributes, and dedicated bcrypt-verified password modal.
+
+## 18. Zero-Wait Performance & Caching Strategy
+
+To deliver an instantaneous experience on high-latency mobile networks in Bangladesh:
+
+-   **Client Warm Cache**: `src/lib/cache.ts` provides `initWarmCache()` to pre-fill in-memory data before remote responses arrive.
+-   **Fast Fetch (`fastFetch`)**: In-flight deduplication and cache-first retrieval for frequently requested datasets.
+-   **Optimistic UI Updates**: State transitions (e.g. technician status changes, address updates) render immediately with automatic rollback on network failure.
+-   **Database Indexes**: Composite and targeted indexes on foreign keys (`userId`, `technicianId`, `bookingId`), status enums, and timestamp fields.
+
+## 19. Strict Portal & Role Separation Middleware
+
+To guarantee security and eliminate customer/technician confusion:
+
+-   **Boundary Enforcement**: Middleware and layout guards redirect technicians attempting to access customer routes (`/customer/*`, `/cart`, `/checkout`, `/booking`) to `/technician/dashboard`.
+-   **Customer Boundary**: Customers attempting to view `/technician/*` or `/admin/*` are strictly bounced to `/auth/login` or their respective dashboard.
+-   **API Isolation**: API routes enforce role checks on decoded JWTs, forbidding technician accounts from placing orders or booking services directly.

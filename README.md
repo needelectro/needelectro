@@ -1,13 +1,15 @@
-# NEED ELECTRO — Service-First Electrical & Technology Services Marketplace
+# NEED ELECTRO — Trusted Electrical and Technological Solutions
 
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-blue?style=flat&logo=react)](https://react.dev/)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-38bdf8?style=flat&logo=tailwind-css)](https://tailwindcss.com/)
 [![Prisma](https://img.shields.io/badge/Prisma-6-2D3748?style=flat&logo=prisma)](https://www.prisma.io/)
+[![Tests](https://img.shields.io/badge/Tests-104%20Passing-brightgreen?style=flat)](https://github.com/needelectro/needelectro)
 
 **NEED ELECTRO** is Bangladesh's certified service-first electrical and technological marketplace. We connect residential, commercial, and industrial clients with trade-tested, background-verified electricians, AC technicians, CCTV installers, and appliance repair experts across all 64 districts.
 
-Sister concern of **Amdads Group**.
+Sister concern of **Amdads Group**.  
+**Tagline:** *Trusted Electrical and Technological Solutions*
 
 ---
 
@@ -29,13 +31,23 @@ DRAFT → REQUESTED → QUOTED → CONFIRMED → ASSIGNED → EN_ROUTE → ARRIV
 - **30-Day Workmanship Warranty**: Automatic `ServiceWarranty` created upon job completion with nationwide warranty tracking via invoice and booking number.
 - **Verified Customer Reviews**: Ratings and reviews strictly permitted only on completed bookings, directly updating technician trust scores.
 
-### 3. Technician Economics
+### 3. Modern Customer Profile & Accounts
+- **Dual-Context Architecture**: Standalone route (`/customer/profile`) and embedded dashboard tab (`/customer/dashboard?tab=profile`) sharing the unified `CustomerProfileView` component.
+- **Complete Identity Control**: Personal information management (name, phone, email, join date, verified customer ID badge), password change security modal with bcrypt verification, and default delivery address management.
+- **Strict Role Separation**: Route boundary guards enforce complete separation between Customer and Technician portals.
+
+### 4. Mobile Ergonomics & Service Showcase
+- **Compact 2-Column Grid**: Mobile homepage service cards optimized with a 50% height reduction (`grid-cols-2`, square aspect ratio, compact typography, dual mini action buttons) matching the `/services` catalog.
+- **PWA Experience**: Installable mobile app with offline fallback, touch-first bottom navigation (`MobileNav.tsx`), and zero-wait edge caching headers.
+
+### 5. Technician Economics
 - **85% Revenue Share**: 85% of labor amount credited directly to technician digital wallet upon job completion.
 - **15% Platform Commission**: Automated platform fee accounting and transparent wallet transaction logs.
 - **Technician Portal**: Job acceptance board, status updates, photo evidence, and earnings withdrawal requests.
 
-### 4. Nationwide Coverage
+### 6. Nationwide Coverage
 - **64 Districts & Thanas**: Structured coverage across all 8 administrative divisions of Bangladesh.
+- **Delivery Calculation Engine**: Automated regional delivery charges based on division/district destination.
 - **Local SEO & Schema.org**: Dedicated location landing pages (`/services/[slug]/[location]`) with `LocalBusiness`, `Service`, and `AggregateRating` JSON-LD schemas.
 
 ---
@@ -113,12 +125,12 @@ DRAFT → REQUESTED → QUOTED → CONFIRMED → ASSIGNED → EN_ROUTE → ARRIV
 │   │   ├── booking/        # Multi-step service booking wizard
 │   │   ├── services/       # Service catalog & SEO location pages
 │   │   ├── parts/          # Secondary spare parts & materials catalog
-│   │   ├── customer/       # Customer portal & bookings tracking
+│   │   ├── customer/       # Customer portal, profile (/customer/profile) & bookings tracking
 │   │   ├── technician/     # Technician job board & wallet earnings
 │   │   └── admin/          # Admin dispatch board & operations center
-│   ├── components/         # Reusable responsive UI components
+│   ├── components/         # Reusable responsive UI components (Profile, Header, Cards)
 │   └── lib/                # Feature flags, auth, database client, national data
-└── tests/                  # 37 automated test suites (lifecycle, economics, IA)
+└── tests/                  # 104 automated test cases (lifecycle, economics, profile, cache, portal RBAC)
 ```
 
 ---

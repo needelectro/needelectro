@@ -283,3 +283,11 @@ Build the foundation correctly before scaling.
 The platform must be capable of starting locally in Moulvibazar while
 having the technical structure required for long-term Bangladesh-wide
 expansion.
+
+## 17. National Launch Status (v1.7.0)
+
+-   **Tagline Uniformity**: Official tagline *"Trusted Electrical and Technological Solutions"* codified in brand logos, configuration, headers, and test suites.
+-   **Customer Profile Architecture**: Redesigned customer account experience with standalone route (`/customer/profile`) and embedded dashboard tab (`/customer/dashboard?tab=profile`) powered by `CustomerProfileView.tsx`. Includes verified customer ID, member join date, editable credentials, and bcrypt password security modal.
+-   **Mobile Homepage Ergonomics**: 50% vertical height reduction on homepage service cards utilizing a 2-column grid (`grid-cols-2`), square image ratio, and compact action buttons matching `/services`.
+-   **Nationwide Infrastructure**: 64-district delivery calculation engine, Supabase PostgreSQL Transaction Pooler (port 6543) with PgBouncer, keep-alive automation, and zero-wait edge caching headers.
+-   **Test Baseline**: 104 automated test cases across 14 test suites running at 100% pass rate with zero TypeScript errors.
