@@ -168,45 +168,47 @@ export default function Header() {
 
       {/* ═══ MOBILE HEADER (App-Style, lg:hidden) ═══ */}
       <header className="lg:hidden sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-slate-200/90 shadow-[0_1px_8px_rgba(15,23,42,0.06)] select-none pt-safe">
-        <div className="px-3 h-14 flex items-center justify-between">
-          {/* Logo */}
-          <BrandLogo size="xs" priority />
+        <div className="px-2.5 sm:px-3 h-14 flex items-center justify-between gap-1 w-full max-w-full">
+          {/* Logo (compact for mobile screens to give full room to action buttons) */}
+          <div className="min-w-0 shrink flex items-center">
+            <BrandLogo size="xs" priority showSubtitle={false} />
+          </div>
 
-          {/* Right Actions */}
-          <div className="flex items-center gap-1.5">
+          {/* Right Actions - Guaranteed fit and visibility on small screens */}
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
 
             {/* Hotline Call */}
             <a
               href="tel:01733983752"
-              className="p-1.5 text-slate-600 hover:text-brand-600 rounded-xl app-tap"
-              title="Call 24/7 Hotline"
+              className="w-8 h-8 sm:w-8.5 sm:h-8.5 flex items-center justify-center text-brand-600 bg-brand-50/90 hover:bg-brand-100 hover:text-brand-700 rounded-lg sm:rounded-xl border border-brand-200/50 app-tap transition shrink-0"
+              title="Call 24/7 Hotline: 01733 983752"
               aria-label="Call NEED ELECTRO Hotline"
             >
-              <PhoneCall className="w-4 h-4 text-brand-600" />
+              <PhoneCall className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-600" />
             </a>
 
             {/* Search */}
             <button
               type="button"
               onClick={() => setSearchOpen(!searchOpen)}
-              className="p-2 text-slate-600 hover:text-brand-600 rounded-xl app-tap"
+              className="w-8 h-8 sm:w-8.5 sm:h-8.5 flex items-center justify-center text-slate-600 hover:text-brand-600 hover:bg-slate-100 rounded-lg sm:rounded-xl app-tap transition shrink-0"
               title={t('common.search', 'Search')}
               aria-label="Search services and products"
             >
-              <Search className="w-[18px] h-[18px]" />
+              <Search className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
             </button>
 
             {/* Cart (Hidden for Technician) */}
             {user?.role !== 'TECHNICIAN' && (
               <Link
                 href="/cart"
-                className="relative p-2 text-slate-600 hover:text-brand-600 rounded-xl app-tap"
+                className="relative w-8 h-8 sm:w-8.5 sm:h-8.5 flex items-center justify-center text-slate-600 hover:text-brand-600 hover:bg-slate-100 rounded-lg sm:rounded-xl app-tap transition shrink-0"
                 title={t('navigation.viewCart', 'View Cart')}
                 aria-label="View Cart"
               >
-                <ShoppingCart className="w-[18px] h-[18px]" />
+                <ShoppingCart className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
                 {itemCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 bg-brand-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs animate-in zoom-in">
+                  <span className="absolute -top-1 -right-1 bg-brand-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs animate-in zoom-in">
                     {itemCount > 9 ? '9+' : itemCount}
                   </span>
                 )}
@@ -217,11 +219,11 @@ export default function Header() {
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-slate-700 hover:text-brand-600 rounded-xl app-tap focus:outline-none"
+              className="w-8 h-8 sm:w-8.5 sm:h-8.5 flex items-center justify-center text-slate-700 hover:text-brand-600 hover:bg-slate-100 rounded-lg sm:rounded-xl app-tap focus:outline-none transition shrink-0"
               aria-label="Open mobile navigation drawer"
               aria-expanded={mobileMenuOpen}
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {mobileMenuOpen ? <X className="w-4.5 h-4.5 sm:w-5 sm:h-5" /> : <Menu className="w-4.5 h-4.5 sm:w-5 sm:h-5" />}
             </button>
           </div>
         </div>

@@ -172,8 +172,8 @@ export default function TechnicianHeader() {
 
       {/* ═══ MOBILE HEADER (App-Style) ═══ */}
       <header className="lg:hidden sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-slate-200/90 shadow-xs select-none">
-        <div className="px-3 h-14 flex items-center justify-between">
-          <Link href="/technician/dashboard" className="flex items-center gap-2">
+        <div className="px-2.5 sm:px-3 h-14 flex items-center justify-between gap-1 w-full max-w-full">
+          <Link href="/technician/dashboard" className="flex items-center gap-2 shrink-0">
             <Image src="/brand/needelectro-icon.png" alt="NEED ELECTRO" width={28} height={28} className="rounded-lg shadow-xs" />
             <div>
               <p className="font-black text-xs text-slate-900 leading-tight">NEED ELECTRO</p>
@@ -183,6 +183,7 @@ export default function TechnicianHeader() {
             </div>
           </Link>
 
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
             <button
               onClick={handleToggleAvailability}
               disabled={loadingStatus}
@@ -218,7 +219,8 @@ export default function TechnicianHeader() {
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
-        </header>
+        </div>
+      </header>
 
       {/* ═══ MOBILE NAVIGATION DRAWER ═══ */}
       {mobileMenuOpen && (
