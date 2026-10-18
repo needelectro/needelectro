@@ -291,53 +291,61 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Services Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          {/* Services Grid (Compact 2-Column on Mobile, 4-Column on Desktop) */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             {filteredServices.map((service) => (
               <div
                 key={service.id || service.slug}
-                className="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+                className={`card-premium overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:-translate-y-1 ${
+                  service.isEmergencyService ? 'border-amber-300 bg-amber-50/10' : ''
+                }`}
               >
                 <div>
                   {/* Image Container with Top-Left Category Badge */}
-                  <div className="relative aspect-[4/3] w-full bg-slate-100 overflow-hidden">
+                  <div className="relative aspect-square sm:aspect-[4/3] w-full bg-slate-100 overflow-hidden">
                     <img
                       src={service.imageUrl || 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800'}
                       alt={service.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
-                    <span className="absolute top-3 left-3 bg-white/95 backdrop-blur-md text-slate-800 text-[11px] font-bold px-3 py-1 rounded-full shadow-xs">
+                    <span className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-white/90 backdrop-blur-md text-slate-800 text-[9px] sm:text-[11px] font-bold px-2 py-0.5 sm:px-3 sm:py-1 rounded-full shadow-xs">
                       {service.category?.name || 'Electrical Services'}
                     </span>
+                    {service.isEmergencyService && (
+                      <span className="absolute top-2 right-2 bg-red-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-xs flex items-center gap-1">
+                        <Zap className="w-2.5 h-2.5 fill-white" />
+                        Rapid 24/7
+                      </span>
+                    )}
                   </div>
 
                   {/* Content Area */}
-                  <div className="p-4 space-y-1.5">
-                    <h3 className="font-bold text-slate-900 text-base leading-tight truncate group-hover:text-brand-600 transition-colors">
+                  <div className="p-3 sm:p-4 space-y-1.5">
+                    <h3 className="font-bold text-slate-900 text-xs sm:text-base leading-tight line-clamp-1 group-hover:text-brand-600 transition-colors">
                       <Link href={`/services/${service.slug}`}>
                         {service.name}
                       </Link>
                     </h3>
 
-                    <p className="text-xs text-slate-500 leading-snug truncate">
+                    <p className="text-[11px] sm:text-xs text-slate-500 leading-snug line-clamp-2">
                       {service.shortDescription}
                     </p>
 
-                    <div className="pt-2.5 flex items-center justify-between text-xs border-t border-slate-100">
-                      <div className="flex items-center gap-1.5 text-slate-500">
-                        <Clock className="w-4 h-4 text-slate-500 shrink-0" />
-                        <span>{service.estimatedDuration || '1-2 Hours'}</span>
+                    <div className="pt-1.5 sm:pt-2.5 flex items-center justify-between text-[11px] sm:text-xs border-t border-slate-100">
+                      <div className="flex items-center gap-1 sm:gap-1.5 text-slate-500">
+                        <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-slate-500 shrink-0" />
+                        <span className="text-[10px] sm:text-xs">{service.estimatedDuration || '1-2 Hours'}</span>
                       </div>
 
                       <div>
-                        <span className="text-slate-500 text-xs">
+                        <span className="text-[10px] sm:text-xs text-slate-500">
                           {service.priceType === 'INSPECTION_BASED'
                             ? 'Insp: '
                             : service.priceType === 'STARTING_FROM'
                             ? 'From: '
                             : 'Fixed: '}
                         </span>
-                        <strong className="text-base font-bold text-slate-900">
+                        <strong className="text-xs sm:text-base font-extrabold text-slate-900">
                           ৳{Number(service.basePrice).toLocaleString()}
                         </strong>
                       </div>
@@ -346,16 +354,18 @@ export default function HomePage() {
                 </div>
 
                 {/* Bottom Action Buttons */}
-                <div className="p-4 pt-0 grid grid-cols-2 gap-2.5">
+                <div className="p-3 sm:p-4 pt-0 grid grid-cols-2 gap-1.5 sm:gap-2">
                   <Link
                     href={`/services/${service.slug}`}
-                    className="py-2 px-3 text-center rounded-xl font-bold text-xs bg-white border border-slate-200 text-slate-800 hover:bg-slate-50 transition shadow-2xs"
+                    className="btn-secondary text-[10px] sm:text-xs py-1.5 sm:py-2 px-1 text-center rounded-lg sm:rounded-xl truncate"
                   >
                     Details
                   </Link>
                   <Link
                     href={`/booking?service=${service.id || service.slug}`}
-                    className="py-2 px-3 text-center rounded-xl font-bold text-xs bg-[#008CFF] hover:bg-[#0070cc] text-white transition shadow-sm flex items-center justify-center"
+                    className={`text-[10px] sm:text-xs py-1.5 sm:py-2 px-1 rounded-lg sm:rounded-xl text-center truncate flex items-center justify-center ${
+                      service.isEmergencyService ? 'btn-danger' : 'btn-primary'
+                    }`}
                   >
                     Book
                   </Link>
