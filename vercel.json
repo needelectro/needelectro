@@ -2,11 +2,5 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "buildCommand": "prisma generate && next build",
-  "regions": ["sin1"],
-  "crons": [
-    {
-      "path": "/api/v1/health?action=keep-alive&token=ne_live_keepalive_token_2026_moulvibazar",
-      "schedule": "0 4 */8 * *"
-    }
-  ]
+  "regions": ["sin1"]
 }
