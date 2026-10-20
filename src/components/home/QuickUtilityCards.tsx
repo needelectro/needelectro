@@ -93,30 +93,33 @@ export default function QuickUtilityCards() {
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+      {/* Mobile: 1-line compact horizontal scroll | Desktop: 4-column grid */}
+      <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 overflow-x-auto pb-2 pt-0.5 scrollbar-none snap-x snap-mandatory">
         {utilities.map((item, idx) => (
           <Link
             key={idx}
             href={item.href}
-            className="group relative overflow-hidden rounded-2xl bg-white p-4 sm:p-5 border border-slate-200/80 shadow-sm hover:shadow-md hover:border-slate-300 transition-all duration-300 flex flex-col justify-between"
+            className="group shrink-0 w-[165px] xs:w-[185px] sm:w-auto snap-start relative overflow-hidden rounded-xl sm:rounded-2xl bg-white p-3 sm:p-5 border border-slate-200/90 shadow-xs hover:shadow-md hover:border-slate-300 transition-all duration-300 flex flex-col justify-between"
           >
             {/* Top row with Icon and Badge */}
-            <div className="flex items-center justify-between gap-3 mb-3">
-              <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center shadow-md shadow-slate-200/50 group-hover:scale-105 transition-transform duration-300`}>
-                {item.icon}
+            <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3">
+              <div className={`w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center shadow-xs sm:shadow-md shadow-slate-200/50 group-hover:scale-105 transition-transform duration-300 shrink-0`}>
+                {React.cloneElement(item.icon, {
+                  className: 'w-4 h-4 sm:w-5 sm:h-5 text-white',
+                })}
               </div>
-              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${item.badgeBg}`}>
+              <span className={`text-[9px] sm:text-[11px] font-semibold px-1.5 sm:px-2 py-0.5 rounded-full border truncate ${item.badgeBg}`}>
                 {item.badge}
               </span>
             </div>
 
             {/* Content */}
             <div>
-              <h3 className="font-bold text-slate-900 group-hover:text-brand-600 text-sm sm:text-base transition-colors flex items-center justify-between">
-                <span>{item.title}</span>
-                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-brand-600 group-hover:translate-x-1 transition-all" />
+              <h3 className="font-bold text-slate-900 group-hover:text-brand-600 text-xs sm:text-base transition-colors flex items-center justify-between gap-1 leading-snug">
+                <span className="truncate">{item.title}</span>
+                <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 text-slate-400 group-hover:text-brand-600 group-hover:translate-x-0.5 transition-all shrink-0" />
               </h3>
-              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+              <p className="text-[10px] sm:text-xs text-slate-500 mt-0.5 sm:mt-1 leading-tight line-clamp-1 sm:line-clamp-2">
                 {item.subtitle}
               </p>
             </div>
