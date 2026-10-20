@@ -149,32 +149,46 @@ export async function POST(req: NextRequest) {
     const {
       name,
       categorySlug,
+      categoryId,
       brandName,
+      brandId,
       price,
       salePrice,
       sku,
-      stockQuantity = 0,
-      warrantyMonths = 0,
+      stockQuantity = 10,
+      warrantyMonths = 12,
       shortDescription = '',
+      description = '',
+      specifications,
       condition = 'NEW',
+      images,
+      isFeatured = false,
+      isActive = true,
+      deliveryInfo,
       sellerId = null,
       approvalStatus = 'APPROVED',
     } = body;
 
-    if (!name || !price) {
-      return NextResponse.json({ error: 'Name and price are required' }, { status: 400 });
+    if (!name || price === undefined || price === null || price === '') {
+      return NextResponse.json({ error: 'Product name and price are required' }, { status: 400 });
     }
 
     // Slug generator
-    const slug = name
+    const baseSlug = name
       .toLowerCase()
+      .trim()
       .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)+/g, '') + '-' + Math.random().toString(36).substring(2, 6);
+      .replace(/(^-|-$)+/g, '');
+    const slug = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`;
 
-    // Find or create category
-    let category = await prisma.productCategory.findFirst({
-      where: categorySlug ? { slug: categorySlug } : undefined,
-    });
+    // Resolve category
+    let category = null;
+    if (categoryId) {
+      category = await prisma.productCategory.findUnique({ where: { id: categoryId } });
+    }
+    if (!category && categorySlug) {
+      category = await prisma.productCategory.findFirst({ where: { slug: categorySlug } });
+    }
     if (!category) {
       category = await prisma.productCategory.findFirst();
     }
@@ -184,39 +198,77 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Find or create brand
-    let brand = await prisma.brand.findFirst({
-      where: brandName ? { name: brandName } : undefined,
-    });
+    // Resolve brand
+    let brand = null;
+    if (brandId) {
+      brand = await prisma.brand.findUnique({ where: { id: brandId } });
+    }
+    if (!brand && brandName) {
+      brand = await prisma.brand.findFirst({ where: { name: { equals: brandName, mode: 'insensitive' } } });
+    }
+    if (!brand && brandName) {
+      const brandSlug = brandName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+      brand = await prisma.brand.create({
+        data: { name: brandName, slug: brandSlug || 'generic' },
+      });
+    }
     if (!brand) {
       brand = await prisma.brand.findFirst();
     }
-    if (!brand) {
-      brand = await prisma.brand.create({
-        data: { name: brandName || 'Generic', slug: (brandName || 'generic').toLowerCase() },
-      });
+
+    // Handle images cleanly
+    let formattedImages = '/logo.png';
+    if (Array.isArray(images) && images.length > 0) {
+      const valid = images.filter((img) => typeof img === 'string' && img.trim().length > 0);
+      if (valid.length > 0) formattedImages = valid.join(',');
+    } else if (typeof images === 'string' && images.trim().length > 0) {
+      formattedImages = images.trim();
+    }
+
+    // Ensure unique SKU
+    let finalSku = sku ? sku.trim().toUpperCase() : `NE-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const existingSku = await prisma.product.findUnique({ where: { sku: finalSku } });
+    if (existingSku) {
+      finalSku = `${finalSku}-${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
+    }
+
+    // Ensure specifications format
+    let formattedSpecs = null;
+    if (specifications) {
+      formattedSpecs = typeof specifications === 'string' ? specifications : JSON.stringify(specifications);
     }
 
     const product = await prisma.product.create({
       data: {
-        name,
+        name: name.trim(),
         slug,
         categoryId: category.id,
-        brandId: brand.id,
+        brandId: brand ? brand.id : null,
         price: Number(price),
-        discountPrice: salePrice ? Number(salePrice) : null,
-        sku: sku || `NE-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
-        stock: Number(stockQuantity || 10),
-        warrantyPeriodMonths: Number(warrantyMonths || 12),
-        shortDescription,
-        description: shortDescription,
-        condition,
-        images: '/logo.png',
-        isActive: true,
+        discountPrice: salePrice && Number(salePrice) > 0 ? Number(salePrice) : null,
+        sku: finalSku,
+        stock: Math.max(0, Number(stockQuantity || 0)),
+        warrantyPeriodMonths: Math.max(0, Number(warrantyMonths || 0)),
+        shortDescription: shortDescription || name,
+        description: description || shortDescription || name,
+        specifications: formattedSpecs,
+        condition: condition === 'REFURBISHED' ? 'REFURBISHED' : 'NEW',
+        images: formattedImages,
+        isFeatured: Boolean(isFeatured),
+        isActive: Boolean(isActive),
+        deliveryInfo: deliveryInfo || 'Delivery within 24-48 hours in Moulvibazar. 3-5 days across Bangladesh.',
         sellerId: sellerId || null,
         approvalStatus: approvalStatus || 'APPROVED',
       },
+      include: {
+        category: true,
+        brand: true,
+      },
     });
+
+    // Invalidate cached categories/brands
+    cachedCategories = null;
+    cachedBrands = null;
 
     return NextResponse.json({ success: true, product });
   } catch (error: any) {
@@ -231,7 +283,7 @@ export async function PATCH(req: NextRequest) {
     if (!auth.authorized) return auth.response!;
 
     const body = await req.json();
-    const { id, ...updates } = body;
+    const { id, categorySlug, brandName, ...updates } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });
@@ -243,24 +295,60 @@ export async function PATCH(req: NextRequest) {
     }
 
     const dataToUpdate: any = {};
-    if (updates.name !== undefined) dataToUpdate.name = updates.name;
+    if (updates.name !== undefined) dataToUpdate.name = updates.name.trim();
     if (updates.price !== undefined) dataToUpdate.price = Number(updates.price);
-    if (updates.discountPrice !== undefined) {
-      dataToUpdate.discountPrice = updates.discountPrice ? Number(updates.discountPrice) : null;
+    if (updates.discountPrice !== undefined || updates.salePrice !== undefined) {
+      const discountVal = updates.discountPrice !== undefined ? updates.discountPrice : updates.salePrice;
+      dataToUpdate.discountPrice = discountVal && Number(discountVal) > 0 ? Number(discountVal) : null;
     }
-    if (updates.stock !== undefined) dataToUpdate.stock = Number(updates.stock);
-    if (updates.sku !== undefined) dataToUpdate.sku = updates.sku;
+    if (updates.stock !== undefined || updates.stockQuantity !== undefined) {
+      const stockVal = updates.stock !== undefined ? updates.stock : updates.stockQuantity;
+      dataToUpdate.stock = Math.max(0, Number(stockVal));
+    }
+    if (updates.sku !== undefined) dataToUpdate.sku = updates.sku.trim().toUpperCase();
     if (updates.condition !== undefined) dataToUpdate.condition = updates.condition;
-    if (updates.warrantyPeriodMonths !== undefined) {
-      dataToUpdate.warrantyPeriodMonths = Number(updates.warrantyPeriodMonths);
+    if (updates.warrantyPeriodMonths !== undefined || updates.warrantyMonths !== undefined) {
+      const wVal = updates.warrantyPeriodMonths !== undefined ? updates.warrantyPeriodMonths : updates.warrantyMonths;
+      dataToUpdate.warrantyPeriodMonths = Math.max(0, Number(wVal));
     }
     if (updates.shortDescription !== undefined) dataToUpdate.shortDescription = updates.shortDescription;
     if (updates.description !== undefined) dataToUpdate.description = updates.description;
-    if (updates.images !== undefined) dataToUpdate.images = Array.isArray(updates.images) ? updates.images.join(',') : updates.images;
+    
+    // Images handling
+    if (updates.images !== undefined) {
+      if (Array.isArray(updates.images)) {
+        const valid = updates.images.filter((img: any) => typeof img === 'string' && img.trim().length > 0);
+        dataToUpdate.images = valid.length > 0 ? valid.join(',') : '/logo.png';
+      } else if (typeof updates.images === 'string') {
+        dataToUpdate.images = updates.images.trim() || '/logo.png';
+      }
+    }
+
     if (updates.isFeatured !== undefined) dataToUpdate.isFeatured = Boolean(updates.isFeatured);
     if (updates.isActive !== undefined) dataToUpdate.isActive = Boolean(updates.isActive);
-    if (updates.categoryId !== undefined) dataToUpdate.categoryId = updates.categoryId;
-    if (updates.brandId !== undefined) dataToUpdate.brandId = updates.brandId;
+    if (updates.deliveryInfo !== undefined) dataToUpdate.deliveryInfo = updates.deliveryInfo;
+
+    // Category resolution
+    if (updates.categoryId !== undefined) {
+      dataToUpdate.categoryId = updates.categoryId;
+    } else if (categorySlug) {
+      const cat = await prisma.productCategory.findFirst({ where: { slug: categorySlug } });
+      if (cat) dataToUpdate.categoryId = cat.id;
+    }
+
+    // Brand resolution
+    if (updates.brandId !== undefined) {
+      dataToUpdate.brandId = updates.brandId;
+    } else if (brandName) {
+      let b = await prisma.brand.findFirst({ where: { name: { equals: brandName, mode: 'insensitive' } } });
+      if (!b) {
+        b = await prisma.brand.create({
+          data: { name: brandName, slug: brandName.toLowerCase().replace(/[^a-z0-9]+/g, '-') },
+        });
+      }
+      dataToUpdate.brandId = b.id;
+    }
+
     if (updates.sellerId !== undefined) dataToUpdate.sellerId = updates.sellerId || null;
     if (updates.approvalStatus !== undefined) dataToUpdate.approvalStatus = updates.approvalStatus;
     if (updates.specifications !== undefined) {
