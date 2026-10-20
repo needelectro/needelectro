@@ -219,10 +219,6 @@ export default function ProductDetailClient({ product, relatedProducts = [] }: P
             <h1 className="text-xl sm:text-3xl font-black text-slate-950 leading-tight">
               {product.name}
             </h1>
-
-            <p className="text-xs sm:text-sm text-slate-600 mt-2.5 leading-relaxed">
-              {product.shortDescription || 'Genuine hardware stock supplied with digital warranty tracking.'}
-            </p>
           </div>
 
           {/* Pricing Box */}
@@ -333,10 +329,63 @@ export default function ProductDetailClient({ product, relatedProducts = [] }: P
       {/* Specifications & Description */}
       <div className="bg-white p-5 sm:p-8 md:p-10 rounded-3xl border border-slate-200/80 shadow-xs space-y-8">
         <div>
-          <h2 className="text-base sm:text-lg font-black text-slate-900 mb-3">Product Overview</h2>
-          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed whitespace-pre-line">
-            {product.description || product.shortDescription}
-          </p>
+          <h2 className="text-base sm:text-lg font-black text-slate-900 mb-4 pb-2 border-b border-slate-100">
+            Product Overview &amp; Details
+          </h2>
+          {(() => {
+            const rawText = product.description || product.shortDescription;
+            if (!rawText) {
+              return (
+                <p className="text-xs sm:text-sm text-slate-500 italic">
+                  No additional description provided for this product.
+                </p>
+              );
+            }
+
+            // Clean lines and format headings, lists, and paragraphs
+            const lines = rawText.split('\n');
+            return (
+              <div className="space-y-3 text-xs sm:text-sm text-slate-700 leading-relaxed">
+                {lines.map((line: string, idx: number) => {
+                  const trimmed = line.trim();
+                  if (!trimmed) return null;
+
+                  if (trimmed.startsWith('# ') || trimmed.startsWith('## ') || trimmed.startsWith('### ')) {
+                    const cleanHeading = trimmed.replace(/^#+\s*/, '');
+                    return (
+                      <h3 key={idx} className="text-sm sm:text-base font-bold text-slate-900 pt-3 border-b border-slate-100 pb-1">
+                        {cleanHeading}
+                      </h3>
+                    );
+                  }
+
+                  if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+                    const cleanBullet = trimmed.replace(/^[-*]\s*/, '').replace(/\*\*(.*?)\*\*/g, '$1');
+                    return (
+                      <div key={idx} className="flex items-start gap-2 pl-2">
+                        <span className="text-brand-600 font-bold">•</span>
+                        <span>{cleanBullet}</span>
+                      </div>
+                    );
+                  }
+
+                  if (trimmed.includes('|---') || trimmed === '|---|') {
+                    return null;
+                  }
+
+                  const cleanLine = trimmed
+                    .replace(/\*\*(.*?)\*\*/g, '$1')
+                    .replace(/^\|\s*|\s*\|$/g, '');
+
+                  return (
+                    <p key={idx} className="leading-relaxed">
+                      {cleanLine}
+                    </p>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </div>
 
         {product.specifications && Object.keys(product.specifications).length > 0 && (
