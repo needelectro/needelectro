@@ -27,6 +27,10 @@ import {
 import { fastFetch } from '@/lib/fastFetch';
 import { useLanguage } from '@/lib/context/LanguageContext';
 import ProductCard from '@/components/common/ProductCard';
+import AnnouncementTicker from '@/components/home/AnnouncementTicker';
+import QuickUtilityCards from '@/components/home/QuickUtilityCards';
+import FeaturedCategoryCircles from '@/components/home/FeaturedCategoryCircles';
+import ShowroomInfoSection from '@/components/home/ShowroomInfoSection';
 
 const DEFAULT_FEATURED_SERVICES = [
   {
@@ -137,8 +141,11 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col space-y-10 sm:space-y-14">
+      {/* 0. ANNOUNCEMENT & STATUS TICKER */}
+      <AnnouncementTicker />
+
       {/* 1. HERO SECTION */}
-      <section className="relative overflow-hidden pt-6 pb-6 md:pt-10 md:pb-8">
+      <section className="relative overflow-hidden pt-4 pb-6 md:pt-8 md:pb-8">
         {/* Hardware-accelerated radial light sources */}
         <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-[radial-gradient(ellipse_at_center,rgba(8,127,229,0.18)_0%,rgba(8,127,229,0)_70%)] pointer-events-none" />
         <div className="absolute -top-10 right-10 w-[400px] h-[400px] bg-[radial-gradient(ellipse_at_center,rgba(56,189,248,0.14)_0%,rgba(56,189,248,0)_70%)] pointer-events-none" />
@@ -241,6 +248,12 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* QUICK UTILITY ACTION SHORTCUTS */}
+      <QuickUtilityCards />
+
+      {/* FEATURED CIRCULAR CATEGORIES & SERVICES */}
+      <FeaturedCategoryCircles />
 
       {/* 2. VERIFIED SERVICES SHOWCASE (PLACED DIRECTLY ABOVE FEATURED PRODUCTS) */}
       <section className="relative pt-0 pb-0 overflow-hidden">
@@ -737,6 +750,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* 6.5. PHYSICAL SHOWROOM & SERVICE HUB SECTION */}
+      <ShowroomInfoSection />
 
       {/* 7. NEED HELP / HOTLINE CALLOUT - Frosted Gradient Sheen Banner */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 content-deferred">
