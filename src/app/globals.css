@@ -151,13 +151,66 @@
   -webkit-user-select: none;
 }
 
-/* no-scrollbar: Hide scrollbar while keeping scroll functionality */
-.no-scrollbar {
-  -ms-overflow-style: none;  /* IE/Edge */
-  scrollbar-width: none;     /* Firefox */
+/* Cross-browser scrollbar elimination */
+.no-scrollbar,
+.scrollbar-none {
+  -ms-overflow-style: none !important;  /* IE and Edge */
+  scrollbar-width: none !important;     /* Firefox */
 }
-.no-scrollbar::-webkit-scrollbar {
-  display: none;             /* Chrome/Safari */
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar {
+  display: none !important;             /* Chrome, Safari, Opera */
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* ─── Hardware-Accelerated Auto-Scroll Keyframes & Classes ─── */
+@keyframes auto-scroll-track-4 {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-25%, 0, 0);
+  }
+}
+
+@keyframes auto-scroll-track-2 {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-auto-scroll-utility {
+  display: flex;
+  width: max-content;
+  animation: auto-scroll-track-4 30s linear infinite;
+  will-change: transform;
+}
+
+.animate-auto-scroll-category {
+  display: flex;
+  width: max-content;
+  animation: auto-scroll-track-4 38s linear infinite;
+  will-change: transform;
+}
+
+.pause-hover:hover,
+.pause-hover:active,
+.pause-hover:focus-within {
+  animation-play-state: paused !important;
+}
+
+.animation-paused {
+  animation-play-state: paused !important;
+}
+
+/* Smooth gradient edge mask for infinite scrolling rails */
+.mask-edge-fade {
+  mask-image: linear-gradient(to right, transparent 0%, black 28px, black calc(100% - 28px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 28px, black calc(100% - 28px), transparent 100%);
 }
 
 /* scrollbar-thin: Thin styled scrollbar for admin/dashboard panels */
