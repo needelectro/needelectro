@@ -65,25 +65,39 @@ export async function POST(req: NextRequest) {
     const {
       name,
       categorySlug,
+      categoryId,
       basePrice,
-      pricingType = 'STARTING_AT',
-      estimatedDuration = '1-2 hours',
+      priceType,
+      pricingType,
+      estimatedDuration = '1-2 Hours',
       isEmergencyService = false,
       shortDescription = '',
+      fullDescription = '',
+      imageUrl = null,
+      serviceAreas = 'Moulvibazar, Sreemangal, Kamalganj, Rajnagar',
+      requiredSkills = '',
+      isActive = true,
     } = body;
 
-    if (!name || !basePrice) {
-      return NextResponse.json({ error: 'Name and base price are required' }, { status: 400 });
+    if (!name || basePrice === undefined || basePrice === null || basePrice === '') {
+      return NextResponse.json({ error: 'Service name and base price are required' }, { status: 400 });
     }
 
-    const slug = name
+    const baseSlug = name
       .toLowerCase()
+      .trim()
       .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)+/g, '') + '-' + Math.random().toString(36).substring(2, 6);
+      .replace(/(^-|-$)+/g, '');
+    const slug = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`;
 
-    let category = await prisma.serviceCategory.findFirst({
-      where: categorySlug ? { slug: categorySlug } : undefined,
-    });
+    // Resolve category
+    let category = null;
+    if (categoryId) {
+      category = await prisma.serviceCategory.findUnique({ where: { id: categoryId } });
+    }
+    if (!category && categorySlug) {
+      category = await prisma.serviceCategory.findFirst({ where: { slug: categorySlug } });
+    }
     if (!category) {
       category = await prisma.serviceCategory.findFirst();
     }
@@ -93,18 +107,28 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // Normalize priceType
+    let normalizedPriceType = priceType || pricingType || 'FIXED';
+    if (normalizedPriceType === 'STARTING_AT') normalizedPriceType = 'STARTING_FROM';
+
     const service = await prisma.service.create({
       data: {
-        name,
+        name: name.trim(),
         slug,
         categoryId: category.id,
         basePrice: Number(basePrice),
-        priceType: pricingType || 'FIXED',
+        priceType: normalizedPriceType,
         estimatedDuration: estimatedDuration || '1-2 Hours',
         isEmergencyService: Boolean(isEmergencyService),
-        shortDescription,
-        fullDescription: shortDescription,
-        isActive: true,
+        shortDescription: shortDescription || name,
+        fullDescription: fullDescription || shortDescription || name,
+        imageUrl: imageUrl || null,
+        serviceAreas: serviceAreas || 'Moulvibazar, Sreemangal, Kamalganj, Rajnagar',
+        requiredSkills: requiredSkills || null,
+        isActive: Boolean(isActive),
+      },
+      include: {
+        category: true,
       },
     });
 
@@ -118,7 +142,7 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, ...updates } = body;
+    const { id, categorySlug, pricingType, ...updates } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Service ID is required' }, { status: 400 });
@@ -130,16 +154,30 @@ export async function PATCH(req: NextRequest) {
     }
 
     const dataToUpdate: any = {};
-    if (updates.name !== undefined) dataToUpdate.name = updates.name;
+    if (updates.name !== undefined) dataToUpdate.name = updates.name.trim();
     if (updates.basePrice !== undefined) dataToUpdate.basePrice = Number(updates.basePrice);
-    if (updates.priceType !== undefined) dataToUpdate.priceType = updates.priceType;
+    if (updates.priceType !== undefined || pricingType !== undefined) {
+      let pType = updates.priceType || pricingType;
+      if (pType === 'STARTING_AT') pType = 'STARTING_FROM';
+      dataToUpdate.priceType = pType;
+    }
     if (updates.estimatedDuration !== undefined) dataToUpdate.estimatedDuration = updates.estimatedDuration;
     if (updates.isEmergencyService !== undefined) dataToUpdate.isEmergencyService = Boolean(updates.isEmergencyService);
     if (updates.shortDescription !== undefined) dataToUpdate.shortDescription = updates.shortDescription;
     if (updates.fullDescription !== undefined) dataToUpdate.fullDescription = updates.fullDescription;
+    if (updates.imageUrl !== undefined) dataToUpdate.imageUrl = updates.imageUrl;
+    if (updates.serviceAreas !== undefined) dataToUpdate.serviceAreas = updates.serviceAreas;
+    if (updates.requiredSkills !== undefined) dataToUpdate.requiredSkills = updates.requiredSkills;
     if (updates.isActive !== undefined) dataToUpdate.isActive = Boolean(updates.isActive);
     if (updates.sortOrder !== undefined) dataToUpdate.sortOrder = Number(updates.sortOrder);
-    if (updates.categoryId !== undefined) dataToUpdate.categoryId = updates.categoryId;
+
+    // Category resolution
+    if (updates.categoryId !== undefined) {
+      dataToUpdate.categoryId = updates.categoryId;
+    } else if (categorySlug) {
+      const cat = await prisma.serviceCategory.findFirst({ where: { slug: categorySlug } });
+      if (cat) dataToUpdate.categoryId = cat.id;
+    }
 
     const updated = await prisma.service.update({
       where: { id },
