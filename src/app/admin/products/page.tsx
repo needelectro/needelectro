@@ -61,7 +61,7 @@ export default function AdminProductsPage() {
     name: '',
     categorySlug: '',
     brandName: '',
-    price: 1500,
+    price: '' as unknown as number,
     salePrice: '',
     sku: '',
     stockQuantity: 10,
@@ -107,8 +107,8 @@ export default function AdminProductsPage() {
     setForm({
       name: '',
       categorySlug: categories[0]?.slug || 'general',
-      brandName: brands[0]?.name || 'NEED ELECTRO',
-      price: 1500,
+      brandName: '',
+      price: '' as any,
       salePrice: '',
       sku: `NE-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
       stockQuantity: 10,
@@ -247,8 +247,8 @@ export default function AdminProductsPage() {
       setSaving(false);
       return;
     }
-    if (form.price === undefined || form.price === null || Number(form.price) < 0) {
-      setErrorMessage('A valid price is required.');
+    if (form.price === undefined || form.price === null || (form.price as any) === '' || Number(form.price) <= 0) {
+      setErrorMessage('Please enter a valid regular price.');
       setActiveTab('basic');
       setSaving(false);
       return;
@@ -850,7 +850,8 @@ export default function AdminProductsPage() {
                           required
                           min={0}
                           value={form.price}
-                          onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
+                          onChange={(e) => setForm({ ...form, price: e.target.value === '' ? ('' as any) : Number(e.target.value) })}
+                          placeholder="e.g. 2500"
                           className="w-full pl-8 pr-3 py-2.5 border border-slate-300 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
                         />
                       </div>
